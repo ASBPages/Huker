@@ -8,33 +8,44 @@ const path = require("path");
 
 const app = express();
 
-// データとアップロード保存用のフォルダを作成（KoyebのVolumes用）
-if (!fs.existsSync("data")) fs.mkdirSync("data");
-if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
+/* ===== Railway対応: 1つのVolume(storage)にデータをまとめる ===== */
+// 環境変数 STORAGE_DIR があればそれを使用、なければ現在のフォルダ内の "storage"
+const STORAGE_DIR = process.env.STORAGE_DIR || path.join(__dirname, "storage");
+const DATA_DIR = path.join(STORAGE_DIR, "data");
+const UPLOADS_DIR = path.join(STORAGE_DIR, "uploads");
 
-const db = new Database("data/database.sqlite");
+// フォルダが存在しない場合は自動作成
+if (!fs.existsSync(STORAGE_DIR)) fs.mkdirSync(STORAGE_DIR, { recursive: true });
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
-// ZIPアップロードの設定
+// データベースは storage/data/database.sqlite に保存
+const db = new Database(path.join(DATA_DIR, "database.sqlite"));
+
+// ZIPアップロードの設定 (storage/uploads/ に保存)
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
   filename: (req, file, cb) => {
-    // ファイル名を「タイムスタンプ_元のファイル名」にして被りを防ぐ
-    cb(null, Date.now() + "_" + file.originalname);
+    // 日本語ファイル名の文字化け対策 & 重複防止
+    const safeName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    cb(null, Date.now() + "_" + safeName);
   }
 });
 const upload = multer({ storage });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || "asb_secret",
+  secret: process.env.SESSION_SECRET || "asb_super_secret_key",
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 }
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24時間
 }));
 
 app.use(express.static("public"));
-app.use("/uploads", express.static("uploads")); // アップロードファイルへのアクセス許可
+// ブラウザから /uploads/〜 でZIPファイルにアクセスできるようにする
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 /* --- DB初期化 --- */
 try {
@@ -52,7 +63,10 @@ try {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
-} catch (err) { console.error("DB Error:", err.message); }
+  console.log("Database initialized successfully.");
+} catch (err) {
+  console.error("DB Error:", err.message);
+}
 
 /* --- 認証ミドルウェア --- */
 function auth(req, res, next){
@@ -61,7 +75,6 @@ function auth(req, res, next){
 }
 
 /* ===== Discord OAuth2 ログイン ===== */
-
 app.get("/auth/discord", (req, res) => {
   const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
   res.redirect(url);
@@ -101,8 +114,8 @@ app.get("/auth/discord/callback", async (req, res) => {
 
     // 3. ロールチェック
     if (memberData.roles && memberData.roles.includes(process.env.ALLOWED_ROLE_ID)) {
-      req.session.admin = true; // 管理者としてセッションを保存
-      req.session.username = memberData.user.username;
+      req.session.admin = true;
+      req.session.username = memberData.user ? memberData.user.username : "Admin";
       res.redirect("/admin.html");
     } else {
       res.status(403).send("Error: 管理者ロールを持っていません。");
@@ -126,8 +139,12 @@ app.get("/logout", (req, res) => {
 /* ===== Software API ===== */
 
 app.get("/api/software", (req, res) => {
-  const list = db.prepare("SELECT id, name, version, description, downloads, is_beta, is_update, is_maintenance FROM software ORDER BY created_at DESC").all();
-  res.json(list);
+  try {
+    const list = db.prepare("SELECT id, name, version, description, file_path, downloads, is_beta, is_update, is_maintenance FROM software ORDER BY created_at DESC").all();
+    res.json(list);
+  } catch(e) {
+    res.status(500).json({error: "Database error"});
+  }
 });
 
 // ZIPアップロード対応のPOST
@@ -147,30 +164,39 @@ app.post("/api/software", auth, upload.single("file"), (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
+    console.error(e);
     res.status(500).json({error: e.message});
   }
 });
 
 app.delete("/api/software/:id", auth, (req, res) => {
-  // ファイルも削除する処理
-  const item = db.prepare("SELECT file_path FROM software WHERE id=?").get(req.params.id);
-  if (item && item.file_path) {
-    const fullPath = path.join(__dirname, item.file_path);
-    if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+  try {
+    const item = db.prepare("SELECT file_path FROM software WHERE id=?").get(req.params.id);
+    if (item && item.file_path) {
+      const filename = item.file_path.replace('/uploads/', '');
+      const fullPath = path.join(UPLOADS_DIR, filename);
+      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    }
+    db.prepare("DELETE FROM software WHERE id=?").run(req.params.id);
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({error: e.message});
   }
-  db.prepare("DELETE FROM software WHERE id=?").run(req.params.id);
-  res.json({ success: true });
 });
 
 app.post("/api/download/:id", (req, res) => {
-  const item = db.prepare("SELECT file_path, is_maintenance FROM software WHERE id=?").get(req.params.id);
-  if(!item) return res.status(404).json({error:"Not found"});
-  if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
+  try {
+    const item = db.prepare("SELECT file_path, is_maintenance FROM software WHERE id=?").get(req.params.id);
+    if(!item) return res.status(404).json({error:"Not found"});
+    if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
 
-  db.prepare("UPDATE software SET downloads=downloads+1 WHERE id=?").run(req.params.id);
-  res.json({ link: item.file_path }); // ZIPファイルのURLを返す
+    db.prepare("UPDATE software SET downloads=downloads+1 WHERE id=?").run(req.params.id);
+    res.json({ link: item.file_path });
+  } catch(e) {
+    res.status(500).json({error: "Server error"});
+  }
 });
 
-
+/* Railwayの自動ポート割り当てに対応 */
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(">> Server running on port " + PORT));
+app.listen(PORT, () => console.log(`>> Server running on port ${PORT}`));
