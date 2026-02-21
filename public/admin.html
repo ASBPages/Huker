@@ -24,7 +24,6 @@
   input, textarea { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; font-family: 'Inter', sans-serif;}
   input:focus, textarea:focus { outline: none; border-color: var(--primary); }
   
-  /* ファイル入力ボタンのデザイン */
   input[type="file"] { padding: 10px; background: #1a1a1f; cursor: pointer; }
 
   button.action-btn { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
@@ -43,15 +42,12 @@
   .tag { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #000; }
   .del-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
   .del-btn:hover { background: var(--error); color: #fff; }
-
-  #errorMsg { color: var(--error); text-align: center; margin-bottom: 10px; display: none; }
 </style>
 </head>
 <body>
 
 <div class="container">
   <h1>ASB SYSTEM ADMIN</h1>
-  <div id="errorMsg"></div>
 
   <!-- LOGIN PANEL -->
   <div id="loginPanel" class="panel" style="text-align:center; display:none;">
@@ -75,8 +71,7 @@
       <input id="name" placeholder="Software Name (e.g. Auto click ASB)">
       <div style="display:flex; gap:10px;">
         <input id="version" placeholder="v1.0.0" style="width:30%;">
-        <!-- URL入力の代わりにファイルアップロード -->
-        <input type="file" id="file" accept=".zip,.rar,.7z" style="width:70%;">
+        <input type="file" id="file" accept=".zip,.rar,.7z,.exe" style="width:70%;">
       </div>
       <textarea id="description" placeholder="Description / Features"></textarea>
       
@@ -98,14 +93,18 @@
 
 <script>
 async function checkAuth() {
-  const res = await fetch("/api/me");
-  const data = await res.json();
-  if(data.loggedIn) {
-    document.getElementById("loginPanel").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-    document.getElementById("adminName").innerText = data.user;
-    loadItems();
-  } else {
+  try {
+    const res = await fetch("/api/me");
+    const data = await res.json();
+    if(data.loggedIn) {
+      document.getElementById("loginPanel").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("adminName").innerText = data.user;
+      loadItems();
+    } else {
+      document.getElementById("loginPanel").style.display = "block";
+    }
+  } catch (e) {
     document.getElementById("loginPanel").style.display = "block";
   }
 }
@@ -140,11 +139,10 @@ async function addItem(){
   const fileInput = document.getElementById("file");
   
   if(!name || !fileInput.files[0]) {
-    alert("Name and ZIP file are required!");
+    alert("Name and File are required!");
     return;
   }
   
-  // ファイル送信用のFormDataを作成
   const formData = new FormData();
   formData.append("name", name);
   formData.append("version", document.getElementById("version").value);
@@ -157,7 +155,7 @@ async function addItem(){
   try {
     const res = await fetch("/api/software", {
       method: "POST",
-      body: formData // Content-Typeは自動設定されるため不要
+      body: formData
     });
     
     if(res.ok) {
