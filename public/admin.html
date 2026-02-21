@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASB Admin Console</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --panel: #131316;
+    --border: #2e2e33;
+    --primary: #8be9ff;
+    --discord: #5865F2;
+    --text: #e0e0e0;
+    --error: #ff5555;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; box-sizing: border-box;}
+  .container { width: 100%; max-width: 900px; }
+  h1 { font-family: 'JetBrains Mono', monospace; color: var(--primary); text-align: center; margin-bottom: 30px; letter-spacing: 2px;}
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .panel h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; color: #fff; }
+  
+  input, textarea { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; font-family: 'Inter', sans-serif;}
+  input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+  
+  /* ファイル入力ボタンのデザイン */
+  input[type="file"] { padding: 10px; background: #1a1a1f; cursor: pointer; }
+
+  button.action-btn { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+  button.action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  
+  button.discord-btn { background: var(--discord); color: #fff; font-size: 16px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+  button.discord-btn:hover { background: #4752C4; }
+
+  .options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+  .toggle-wrap { background: #1a1a1f; padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+  .toggle-wrap:has(input:checked) { border-color: var(--primary); background: rgba(139, 233, 255, 0.1); }
+  
+  .item { background: #000; border: 1px solid var(--border); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .item-info strong { color: #fff; font-size: 16px; display: block; }
+  .tags { margin-top: 5px; display: flex; gap: 5px; }
+  .tag { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #000; }
+  .del-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+  .del-btn:hover { background: var(--error); color: #fff; }
+
+  #errorMsg { color: var(--error); text-align: center; margin-bottom: 10px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>ASB SYSTEM ADMIN</h1>
+  <div id="errorMsg"></div>
+
+  <!-- LOGIN PANEL -->
+  <div id="loginPanel" class="panel" style="text-align:center; display:none;">
+    <h2>RESTRICTED ACCESS</h2>
+    <p style="color:#888; margin-bottom:20px; font-size:14px;">ASB管理チーム専用のダッシュボードです。<br>指定のDiscordロールを持つアカウントでログインしてください。</p>
+    <button class="action-btn discord-btn" onclick="location.href='/auth/discord'">
+      Login with Discord
+    </button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <p>Welcome, <strong id="adminName" style="color:var(--primary);"></strong></p>
+      <button onclick="location.href='/logout'" style="padding:8px 16px; background:#333; color:#fff; border:none; border-radius:4px; cursor:pointer;">Logout</button>
+    </div>
+
+    <!-- ADD -->
+    <div class="panel">
+      <h2>DEPLOY SOFTWARE</h2>
+      <input id="name" placeholder="Software Name (e.g. Auto click ASB)">
+      <div style="display:flex; gap:10px;">
+        <input id="version" placeholder="v1.0.0" style="width:30%;">
+        <!-- URL入力の代わりにファイルアップロード -->
+        <input type="file" id="file" accept=".zip,.rar,.7z" style="width:70%;">
+      </div>
+      <textarea id="description" placeholder="Description / Features"></textarea>
+      
+      <div class="options-grid">
+        <label class="toggle-wrap"><input type="checkbox" id="isBeta"> <span>BETA BUILD</span></label>
+        <label class="toggle-wrap"><input type="checkbox" id="isUpdate"> <span>UPDATING</span></label>
+        <label class="toggle-wrap"><input type="checkbox" id="isMaint"> <span>MAINTENANCE</span></label>
+      </div>
+      <button class="action-btn" onclick="addItem()">UPLOAD & DEPLOY</button>
+    </div>
+
+    <!-- LIST -->
+    <div class="panel">
+      <h2>ACTIVE RELEASES</h2>
+      <div id="list">loading...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function checkAuth() {
+  const res = await fetch("/api/me");
+  const data = await res.json();
+  if(data.loggedIn) {
+    document.getElementById("loginPanel").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("adminName").innerText = data.user;
+    loadItems();
+  } else {
+    document.getElementById("loginPanel").style.display = "block";
+  }
+}
+
+async function loadItems(){
+  const res = await fetch("/api/software");
+  const data = await res.json();
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  if(data.length === 0) return list.innerHTML = "<div style='text-align:center; color:#555;'>No software found.</div>";
+
+  data.forEach(item => {
+    let tags = "";
+    if(item.is_beta) tags += `<span class="tag" style="background:#f1c40f;">BETA</span>`;
+    if(item.is_update) tags += `<span class="tag" style="background:#e74c3c;">UPDATE</span>`;
+    if(item.is_maintenance) tags += `<span class="tag" style="background:#95a5a6;">MAINT</span>`;
+
+    list.innerHTML += `
+      <div class="item">
+        <div class="item-info">
+          <strong>${item.name}</strong>
+          <span style="font-size:12px; color:#666;">v${item.version} | DLs: ${item.downloads}</span>
+          <div class="tags">${tags}</div>
+        </div>
+        <button class="del-btn" onclick="delItem(${item.id})">DELETE</button>
+      </div>`;
+  });
+}
+
+async function addItem(){
+  const name = document.getElementById("name").value;
+  const fileInput = document.getElementById("file");
+  
+  if(!name || !fileInput.files[0]) {
+    alert("Name and ZIP file are required!");
+    return;
+  }
+  
+  // ファイル送信用のFormDataを作成
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("version", document.getElementById("version").value);
+  formData.append("description", document.getElementById("description").value);
+  formData.append("file", fileInput.files[0]);
+  formData.append("is_beta", document.getElementById("isBeta").checked);
+  formData.append("is_update", document.getElementById("isUpdate").checked);
+  formData.append("is_maintenance", document.getElementById("isMaint").checked);
+
+  try {
+    const res = await fetch("/api/software", {
+      method: "POST",
+      body: formData // Content-Typeは自動設定されるため不要
+    });
+    
+    if(res.ok) {
+      document.getElementById("name").value = "";
+      document.getElementById("version").value = "";
+      document.getElementById("description").value = "";
+      document.getElementById("file").value = "";
+      document.getElementById("isBeta").checked = false;
+      document.getElementById("isUpdate").checked = false;
+      document.getElementById("isMaint").checked = false;
+      loadItems();
+    } else {
+      alert("Upload failed.");
+    }
+  } catch(e) {
+    alert("Error uploading file.");
+  }
+}
+
+async function delItem(id){
+  if(confirm("Are you sure you want to delete this software? The file will be removed from the server.")) {
+    await fetch("/api/software/" + id, { method: "DELETE" });
+    loadItems();
+  }
+}
+
+window.onload = checkAuth;
+</script>
+</body>
+</html>

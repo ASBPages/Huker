@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASB Official</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #8be9ff;
+    --primary-glow: rgba(139, 233, 255, 0.4);
+    --bg: #05070c;
+    --card-bg: rgba(255, 255, 255, 0.03);
+    --border: rgba(255, 255, 255, 0.08);
+    --text-main: #ffffff;
+    --text-sub: #a0aec0;
+  }
+
+  * { box-sizing: border-box; scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: 'Noto Sans JP', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* --- ヘッダー --- */
+  header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    background: rgba(5, 7, 12, 0.85);
+    backdrop-filter: blur(12px);
+    z-index: 1000;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #fff, var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* タブナビゲーション */
+  nav {
+    overflow-x: auto; /* スマホでは横スクロール可能に */
+  }
+  nav ul {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+  nav li {
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-sub);
+    transition: color 0.3s;
+    position: relative;
+    padding: 24px 0;
+    display: flex;
+    align-items: center;
+  }
+  nav li:hover, nav li.active { color: #fff; }
+  nav li.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary);
+    box-shadow: 0 0 10px var(--primary);
+  }
+  
+  /* 外部リンク用のスタイル */
+  nav a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  nav a:hover { text-shadow: 0 0 10px var(--primary-glow); }
+
+  /* --- コンテンツエリア切替 --- */
+  .tab-content {
+    display: none;
+    padding-top: 70px;
+    min-height: 100vh;
+    animation: fadeIn 0.4s ease;
+  }
+  .tab-content.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- 汎用コンテナ --- */
+  .container {
+    padding: 60px 10%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 40px;
+    text-align: center;
+    margin-bottom: 40px;
+    letter-spacing: 2px;
+  }
+
+  /* --- HOME TAB --- */
+  .hero {
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: url("background.jpg") center/cover no-repeat;
+    position: relative;
+    text-align: center;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(5,7,12,0.4), var(--bg));
+  }
+  .hero-inner { position: relative; z-index: 2; }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 100px;
+    margin: 0;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 0%, #a0d8ef 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero p { font-size: 20px; letter-spacing: 4px; margin-top: 20px; color: #cbd5e0; }
+  
+  .btn-explore {
+    margin-top: 40px;
+    padding: 12px 30px;
+    border: 1px solid var(--primary);
+    background: rgba(139, 233, 255, 0.1);
+    color: var(--primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 30px;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-explore:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow); }
+
+  .info-section {
+    padding: 80px 10%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+  }
+  .panel { background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 16px; }
+  .panel h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin-top: 0; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 15px;}
+  .news-item { border-bottom: 1px solid var(--border); padding: 15px 0; font-size: 14px; color: var(--text-sub); }
+  .news-item span { color: var(--primary); font-weight: bold; margin-right: 10px; }
+
+  /* --- SOFTWARE TAB --- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 30px; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .card h3 { margin: 0 0 5px 0; font-size: 22px; }
+  .version { font-size: 13px; color: var(--primary); font-family: monospace; }
+  
+  .badge { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-top: 10px; }
+  .b-beta { border: 1px solid #f1c40f; color: #f1c40f; background: rgba(241, 196, 15, 0.1); }
+  .b-update { border: 1px solid #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+  .b-maint { border: 1px solid #95a5a6; color: #95a5a6; background: rgba(149, 165, 166, 0.1); }
+
+  .desc { margin: 20px 0; font-size: 14px; color: var(--text-sub); line-height: 1.6; flex-grow: 1; white-space: pre-wrap; }
+  .card-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px; }
+  .dl-count { font-size: 12px; color: #666; }
+  
+  .dl-btn {
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #8be9ff, #3b82f6);
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .dl-btn:hover { box-shadow: 0 0 15px var(--primary-glow); }
+  .dl-btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
+
+  /* --- TEXT DOCUMENT STYLE (Legal, Security, Roadmap) --- */
+  .doc-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    margin-bottom: 40px;
+    line-height: 1.8;
+  }
+  .doc-section h3 { color: var(--primary); font-size: 20px; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
+  .doc-section h4 { color: #fff; margin-top: 25px; margin-bottom: 10px; font-size: 16px;}
+  .doc-section p, .doc-section li { color: var(--text-sub); font-size: 14px; margin-bottom: 15px; }
+  .doc-section ul { padding-left: 20px; }
+
+  /* Footer */
+  footer { text-align: center; padding: 50px; color: #444; font-size: 12px; border-top: 1px solid var(--border); margin-top: 50px;}
+
+  @media (max-width: 768px) {
+    header { padding: 0 20px; }
+    .hero h1 { font-size: 50px; }
+    .info-section { grid-template-columns: 1fr; padding: 40px 5%; }
+    .doc-section { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">ASB.</div>
+  <nav>
+    <ul>
+      <li onclick="switchTab('home', this)" class="active">Home</li>
+      <li onclick="switchTab('software', this)">Software</li>
+      <li onclick="switchTab('security', this)">Security</li>
+      <li onclick="switchTab('legal', this)">Legal</li>
+      <li onclick="switchTab('roadmap', this)">Roadmap</li>
+      <!-- Discord Link -->
+      <li>
+        <a href="https://discord.gg/ubDnwje9" target="_blank">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.545 2.907a13.227 13.227 0 0 0-3.257-1.011.05.05 0 0 0-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 0 0-3.658 0 8.258 8.258 0 0 0-.412-.833.051.051 0 0 0-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 0 0-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 0 0 3.995 2.02.05.05 0 0 0 .056-.019c.308-.42.582-.863.818-1.329a.05.05 0 0 0-.01-.059.051.051 0 0 0-.018-.011 8.875 8.875 0 0 1-1.248-.595.05.05 0 0 1-.02-.066.051.051 0 0 1 .015-.019c.084-.063.168-.129.248-.195a.05.05 0 0 1 .051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 0 1 .053.007c.08.066.164.132.248.195a.051.051 0 0 1-.004.085 8.254 8.254 0 0 1-1.249.594.05.05 0 0 0-.03.03.052.052 0 0 0 .003.041c.24.465.515.909.817 1.329a.05.05 0 0 0 .056.019 13.235 13.235 0 0 0 4.001-2.02.049.049 0 0 0 .021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 0 0-.02-.019zM5.89 8.631c-.598 0-1.082-.533-1.082-1.183 0-.651.484-1.183 1.082-1.183.608 0 1.092.532 1.082 1.183 0 .65-.484 1.183-1.082 1.183zm4.22 0c-.598 0-1.082-.533-1.082-1.183 0-.651.484-1.183 1.082-1.183.608 0 1.092.532 1.082 1.183 0 .65-.484 1.183-1.082 1.183z"/></svg>
+          Discord
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<!-- HOME TAB -->
+<div id="home" class="tab-content active">
+  <div class="hero">
+    <div class="hero-inner">
+      <h1>ASB</h1>
+      <p>静寂の中に設計される創造。</p>
+      <button class="btn-explore" onclick="switchTab('software', document.querySelectorAll('nav li')[1])">Explore Software</button>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <div class="panel">
+      <h2>Latest News</h2>
+      <div class="news-item"><span>2026.02.21</span> 公式サイト及びデータポータルをローンチ。</div>
+      <div class="news-item"><span>2026.02.20</span> 「Auto click ASB」初期ベータテスト準備完了。</div>
+      <div class="news-item"><span>2026.01.15</span> ASB Project 始動。Discordサーバー開設。</div>
+    </div>
+    <div class="panel">
+      <h2>Community Access</h2>
+      <p style="color:#aaa;">最新のアップデート情報、バグ報告、およびサポートは公式Discordサーバーにて行っています。ソフトウェアを利用する前に必ずご参加ください。</p>
+      <a href="https://discord.gg/ubDnwje9" target="_blank" class="btn-explore" style="margin-top:20px; text-decoration:none;">Join Community</a>
+    </div>
+  </div>
+</div>
+
+<!-- SOFTWARE TAB -->
+<div id="software" class="tab-content">
+  <div class="container">
+    <h1 class="page-title">Downloads</h1>
+    <p style="text-align:center; color:#aaa; margin-bottom:40px;">※ソフトウェアをダウンロードする前に、必ず「Legal（利用規約）」をご確認ください。</p>
+    <div id="software-list" class="grid">
+      <div style="color:#666; width:100%; text-align:center;">Loading software...</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECURITY TAB (認証・安全性) -->
+<div id="security" class="tab-content">
+  <div class="container">
+    <h1 class="page-title">Security & Authentication</h1>
+    
+    <div class="doc-section">
+      <h3>システムの安全性について (Safety)</h3>
+      <p>ASBが提供するすべてのソフトウェアは、配布前に厳格なマルウェアスキャンを実施しています。悪意のあるコード（ウイルス、トロイの木馬、スパイウェア等）は一切含まれておりません。</p>
+      <p>ただし、自動化ツール（マクロ等）の性質上、一部のアンチウイルスソフト（Windows Defender等）によって「誤検知（False Positive）」される場合があります。ダウンロード時に警告が出た場合は、ブラウザやセキュリティソフトの例外設定への追加をお願いいたします。</p>
+    </div>
+
+    <div class="doc-section">
+      <h3>認証システム (Authentication)</h3>
+      <p>ASBの一部のソフトウェア（プレミアム機能やクローズドベータ等）は、不正利用を防ぐために独自のオンライン認証システム（HWID認証等）を採用している場合があります。</p>
+      <ul>
+        <li>認証情報は暗号化された安全な通信（HTTPS）を通じてサーバーに送信されます。</li>
+        <li>クラック行為やリバースエンジニアリング、認証の迂回を試みる行為は固く禁じられており、発覚次第HWID（ハードウェアID）単位でのアクセスブロックを実施します。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- LEGAL TAB (利用規約・プライバシーポリシー) -->
+<div id="legal" class="tab-content">
+  <div class="container">
+    <h1 class="page-title">Legal Documents</h1>
+    
+    <!-- 利用規約 -->
+    <div class="doc-section">
+      <h3>利用規約 (Terms of Service)</h3>
+      <p>ASBの提供するソフトウェア（以下「本ソフトウェア」）をダウンロード、または利用した時点で、ユーザーは以下の規約にすべて同意したものとみなします。</p>
+
+      <h4>1. 免責事項（重要）</h4>
+      <p>本ソフトウェアは「現状有姿」で提供されます。本ソフトウェア（Auto click ASB等の自動化ツールを含む）を使用したことによって生じた、いかなる損害（ゲームアカウントのBAN、利用停止措置、データの消失、ハードウェアの故障、その他一切の不利益）について、開発者および運営者は<strong>一切の責任を負いません。</strong>すべてユーザーの自己責任において利用してください。</p>
+
+      <h4>2. 禁止事項</h4>
+      <ul>
+        <li>本ソフトウェアのリバースエンジニアリング、逆アセンブル、改変行為。</li>
+        <li>本ソフトウェアの再配布、販売、または第三者への譲渡。</li>
+        <li>他者への嫌がらせ、サーバーへの攻撃、その他法律・法令に違反する目的での利用。</li>
+      </ul>
+
+      <h4>3. 規約の変更</h4>
+      <p>運営者は、事前の通知なく本規約を変更できるものとします。変更後の規約は、当サイトに掲載された時点で効力を生じるものとします。</p>
+    </div>
+
+    <!-- プライバシーポリシー -->
+    <div class="doc-section">
+      <h3>プライバシーポリシー (Privacy Policy)</h3>
+      
+      <h4>1. 収集する情報</h4>
+      <p>当サイトおよびソフトウェアの利用にあたり、以下の情報を自動的に取得する場合があります。</p>
+      <ul>
+        <li>IPアドレス、ブラウザの種類、アクセス日時（サイト解析・セキュリティ維持のため）</li>
+        <li>ハードウェアID（HWID）、Discord ID等（認証機能付きソフトウェアを利用する場合のみ）</li>
+      </ul>
+
+      <h4>2. 情報の利用目的</h4>
+      <p>収集した情報は、ソフトウェアの認証、不正利用（クラッキング等）の防止、およびサービスの品質向上のためのみに使用し、その他の目的で利用することはありません。</p>
+
+      <h4>3. 第三者への開示</h4>
+      <p>法令に基づく公的機関からの要請がある場合を除き、ユーザーの個人を特定できる情報を第三者に開示・提供することはありません。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ROADMAP TAB -->
+<div id="roadmap" class="tab-content">
+  <div class="container">
+    <h1 class="page-title">Roadmap</h1>
+    <div class="doc-section" style="border-left: 4px solid var(--primary);">
+      <h3>2026 Q1 - Foundation</h3>
+      <p>・公式サイト「ASB Official」のローンチ<br>
+         ・Discordコミュニティの開設<br>
+         ・「Auto click ASB」のベータテスト開始</p>
+    </div>
+    <div class="doc-section" style="border-left: 4px solid #f1c40f;">
+      <h3>2026 Q2 - Expansion</h3>
+      <p>・ソフトウェアの安定化とUI/UX改善<br>
+         ・新規ツールの発表<br>
+         ・認証システムの大幅アップデート</p>
+    </div>
+    <div class="doc-section" style="border-left: 4px solid #555;">
+      <h3>Future - Evolution</h3>
+      <p>未定。コミュニティのフィードバックを基に決定されます。</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2026 ASB Project. All rights reserved.</p>
+  <p style="color:#666;">Design by ASB Team.</p>
+</footer>
+
+<script>
+// タブ切り替え機能
+function switchTab(tabId, element) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  
+  document.querySelectorAll('nav li').forEach(el => el.classList.remove('active'));
+  if(element) element.classList.add('active');
+  
+  window.scrollTo(0, 0); // タブ切り替え時にトップへ戻る
+
+  if(tabId === 'software') loadSoftware();
+}
+
+// ソフトウェア読み込み
+async function loadSoftware() {
+  const listEl = document.getElementById("software-list");
+  
+  try {
+    const res = await fetch("/api/software");
+    if (!res.ok) throw new Error("Server not available");
+    const data = await res.json();
+    
+    listEl.innerHTML = "";
+    if(data.length === 0) {
+      listEl.innerHTML = "<p style='color:#666; text-align:center; grid-column:1/-1;'>公開中のソフトウェアはありません。</p>";
+      return;
+    }
+
+    data.forEach(item => {
+      const isMaint = item.is_maintenance || 0;
+      const isBeta = item.is_beta || 0;
+      const isUpdate = item.is_update || 0;
+      
+      let badgeHtml = "";
+      if(isMaint) badgeHtml += `<span class="badge b-maint">MAINTENANCE</span>`;
+      else if(isUpdate) badgeHtml += `<span class="badge b-update">UPDATING</span>`;
+      if(isBeta) badgeHtml += ` <span class="badge b-beta">BETA</span>`;
+
+      let btnHtml = isMaint 
+        ? `<button class="dl-btn" disabled>Unavailable</button>` 
+        : `<button class="dl-btn" onclick="downloadSw(${item.id})">Download</button>`;
+
+      listEl.innerHTML += `
+        <div class="card">
+          <h3>${item.name}</h3>
+          <span class="version">v${item.version}</span>
+          <div>${badgeHtml}</div>
+          <div class="desc">${item.description || "No description."}</div>
+          <div class="card-bottom">
+            <span class="dl-count">Downloads: ${item.downloads || 0}</span>
+            ${btnHtml}
+          </div>
+        </div>
+      `;
+    });
+  } catch (e) {
+    listEl.innerHTML = "<p style='color:red; text-align:center; grid-column:1/-1;'>Failed to connect to server.</p>";
+  }
+}
+
+// ダウンロード処理
+async function downloadSw(id) {
+  try {
+    const res = await fetch("/api/download/" + id, { method: "POST" });
+    if(res.status === 403) return alert("Currently under maintenance.");
+    
+    const data = await res.json();
+    if(data.link) {
+      window.open(data.link, '_blank');
+      setTimeout(loadSoftware, 1000); 
+    } else {
+      alert("Link not found.");
+    }
+  } catch(e) {
+    alert("Connection failed.");
+  }
+}
+</script>
+
+</body>
+</html>
