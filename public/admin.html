@@ -47,10 +47,7 @@
 
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(5px); }
   .modal-content { background:var(--panel); padding:30px; border-radius:12px; border:1px solid var(--border); width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.7); max-height: 90vh; overflow-y: auto;}
-
-  .preview-box { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); display: none; margin-top: 5px; background-color: #000; }
-
-  /* ★ Dashboard Stats */
+  .preview-box { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); display: none; margin-top: 5px; background-color: #000; image-rendering: -webkit-optimize-contrast; image-rendering: high-quality; }
   .stats-container { display:flex; gap:15px; margin-bottom:20px; }
   .stat-box { flex:1; background:#1a1a1f; border:1px solid var(--border); padding:15px; border-radius:8px; text-align:center; }
   .stat-title { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
@@ -73,7 +70,6 @@
       <button onclick="location.href='/logout'" style="padding:8px 16px; background:#333; color:#fff; border:none; border-radius:4px; cursor:pointer;">Logout</button>
     </div>
 
-    <!-- TABS -->
     <div class="admin-tabs">
       <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">SOFTWARE MANAGER</div>
       <div class="admin-tab" onclick="switchAdminTab('settingsTab', this)">SITE SETTINGS</div>
@@ -81,8 +77,6 @@
 
     <!-- SOFTWARE TAB -->
     <div id="softwareTab">
-      
-      <!-- ★ STATISTICS -->
       <div class="stats-container">
         <div class="stat-box">
           <div class="stat-title">Total Softwares</div>
@@ -104,14 +98,8 @@
         <input id="version" placeholder="Version (e.g. v1.0.0)">
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-          <div>
-            <label style="font-size:12px; color:#888;">ZIP Download URL</label>
-            <input type="url" id="zipUrl" placeholder="https://..." style="margin-bottom:0;">
-          </div>
-          <div>
-            <label style="font-size:12px; color:#888;">APK Download URL</label>
-            <input type="url" id="apkUrl" placeholder="https://..." style="margin-bottom:0;">
-          </div>
+          <div><label style="font-size:12px; color:#888;">ZIP Download URL</label><input type="url" id="zipUrl" placeholder="https://..." style="margin-bottom:0;"></div>
+          <div><label style="font-size:12px; color:#888;">APK Download URL</label><input type="url" id="apkUrl" placeholder="https://..." style="margin-bottom:0;"></div>
         </div>
         <textarea id="description" placeholder="Description"></textarea>
         
@@ -128,7 +116,6 @@
       <div class="panel">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <h2>RELEASES</h2>
-          <!-- ★ SEARCH BAR -->
           <input type="text" id="searchInput" placeholder="Search..." oninput="renderList()" style="width:200px; padding:6px; margin-bottom:15px;">
         </div>
         <div id="list">loading...</div>
@@ -141,10 +128,24 @@
         <h2>GLOBAL SETTINGS</h2>
         <label style="font-size:12px; color:#888;">Hero Title (大見出し)</label>
         <input id="set_hero_title" placeholder="ASB">
+        
         <label style="font-size:12px; color:#888;">Hero Subtitle (小見出し)</label>
         <input id="set_hero_subtitle" placeholder="Production greatly advances freedom.">
-        <label style="font-size:12px; color:#888;">Discord Community Link (招待URL)</label>
+        
+        <!-- ★ SNS Links -->
+        <h3 style="color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Social Links</h3>
+        <p style="font-size:12px; color:#888; margin-bottom:15px;">※空欄にするとサイトからボタンが非表示になります。</p>
+        
+        <label style="font-size:12px; color:#888;">Discord Community Link</label>
         <input type="url" id="set_discord_link" placeholder="https://discord.gg/...">
+        
+        <label style="font-size:12px; color:#888;">X (Twitter) Link</label>
+        <input type="url" id="set_x_link" placeholder="https://x.com/...">
+        
+        <label style="font-size:12px; color:#888;">YouTube Link</label>
+        <input type="url" id="set_youtube_link" placeholder="https://youtube.com/...">
+
+        <h3 style="color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Background</h3>
         <label style="font-size:12px; color:#888;">Background Media (画像 or MP4/GIF動画)</label>
         <input type="file" id="set_bg_image" accept="image/*, video/mp4, video/webm">
         
@@ -153,6 +154,7 @@
           <img id="bg_preview_img" class="preview-box" src="" alt="Preview">
           <video id="bg_preview_vid" class="preview-box" src="" autoplay loop muted playsinline></video>
         </div>
+        
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
       </div>
     </div>
@@ -164,7 +166,6 @@
   <div class="modal-content">
     <h2>EDIT SOFTWARE</h2>
     <input type="hidden" id="editId">
-    
     <label style="font-size:12px; color:#888;">Software Name</label>
     <input id="editName" placeholder="Name">
     <label style="font-size:12px; color:#888;">Version</label>
@@ -174,12 +175,10 @@
       <div><label style="font-size:12px; color:#888;">ZIP URL</label><input type="url" id="editZipUrl"></div>
       <div><label style="font-size:12px; color:#888;">APK URL</label><input type="url" id="editApkUrl"></div>
     </div>
-
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-      <div><label style="font-size:12px; color:var(--primary);">ZIP DLs (手動変更)</label><input type="number" id="editZipDl" style="border-color:var(--primary);"></div>
-      <div><label style="font-size:12px; color:var(--primary);">APK DLs (手動変更)</label><input type="number" id="editApkDl" style="border-color:var(--primary);"></div>
+      <div><label style="font-size:12px; color:var(--primary);">ZIP DLs</label><input type="number" id="editZipDl" style="border-color:var(--primary);"></div>
+      <div><label style="font-size:12px; color:var(--primary);">APK DLs</label><input type="number" id="editApkDl" style="border-color:var(--primary);"></div>
     </div>
-
     <label style="font-size:12px; color:#888;">Description</label>
     <textarea id="editDescription" placeholder="Description"></textarea>
     
@@ -240,6 +239,9 @@ async function loadSettings() {
   document.getElementById("set_hero_title").value = data.hero_title || "";
   document.getElementById("set_hero_subtitle").value = data.hero_subtitle || "";
   document.getElementById("set_discord_link").value = data.discord_link || "";
+  document.getElementById("set_x_link").value = data.x_link || "";
+  document.getElementById("set_youtube_link").value = data.youtube_link || "";
+  
   if (data.bg_image) {
     const isVideo = data.bg_image.match(/\.(mp4|webm|ogg)$/i);
     const imgPrev = document.getElementById('bg_preview_img');
@@ -254,6 +256,8 @@ async function saveSettings() {
   fd.append("hero_title", document.getElementById("set_hero_title").value);
   fd.append("hero_subtitle", document.getElementById("set_hero_subtitle").value);
   fd.append("discord_link", document.getElementById("set_discord_link").value);
+  fd.append("x_link", document.getElementById("set_x_link").value);
+  fd.append("youtube_link", document.getElementById("set_youtube_link").value);
   const bgFile = document.getElementById("set_bg_image").files[0];
   if(bgFile) fd.append("bg_image", bgFile);
 
@@ -264,23 +268,17 @@ async function saveSettings() {
 async function loadItems(){
   const res = await fetch("/api/software");
   currentData = await res.json();
-  
-  // ★ 統計の更新
   document.getElementById("statTotal").innerText = currentData.length;
   document.getElementById("statZipDl").innerText = currentData.reduce((sum, item) => sum + (item.zip_downloads || 0), 0);
   document.getElementById("statApkDl").innerText = currentData.reduce((sum, item) => sum + (item.apk_downloads || 0), 0);
-
   renderList();
 }
 
-// ★ 検索とリスト表示機能
 function renderList() {
   const list = document.getElementById("list");
   const query = document.getElementById("searchInput").value.toLowerCase();
   list.innerHTML = "";
-  
   const filtered = currentData.filter(item => item.name.toLowerCase().includes(query));
-
   if(filtered.length === 0) return list.innerHTML = "<div style='text-align:center; color:#555;'>No software found.</div>";
 
   filtered.forEach(item => {
@@ -293,14 +291,11 @@ function renderList() {
     if(item.is_update) tags += `<span class="tag" style="background:#e74c3c;">UPDATE</span>`;
     if(item.is_maintenance) tags += `<span class="tag" style="background:#95a5a6;">MAINT</span>`;
 
-    const dlZip = item.zip_downloads || 0;
-    const dlApk = item.apk_downloads || 0;
-
     list.innerHTML += `
       <div class="item">
         <div class="item-info">
           <strong>${item.name}</strong>
-          <span style="font-size:12px; color:#666;">v${item.version} | ZIP DL: ${dlZip} | APK DL: ${dlApk}</span>
+          <span style="font-size:12px; color:#666;">v${item.version} | ZIP DL: ${item.zip_downloads||0} | APK DL: ${item.apk_downloads||0}</span>
           <div class="tags">${tags}</div>
         </div>
         <div class="btn-group">
