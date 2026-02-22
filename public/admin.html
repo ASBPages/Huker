@@ -6,50 +6,46 @@
 <title>ASB Admin Console</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0c;
-    --panel: #131316;
-    --border: #2e2e33;
-    --primary: #8be9ff;
-    --discord: #5865F2;
-    --text: #e0e0e0;
-    --error: #ff5555;
-    --warning: #f1c40f;
-  }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; box-sizing: border-box;}
-  .container { width: 100%; max-width: 900px; }
-  h1 { font-family: 'JetBrains Mono', monospace; color: var(--primary); text-align: center; margin-bottom: 30px; letter-spacing: 2px;}
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-  .panel h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; color: #fff; }
+  :root { --bg:#0a0a0c; --panel:#131316; --border:#2e2e33; --primary:#8be9ff; --discord:#5865F2; --text:#e0e0e0; --error:#ff5555; --warning:#f1c40f; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; display:flex; justify-content:center; padding:40px 20px; min-height:100vh; box-sizing:border-box; }
+  .container { width:100%; max-width:900px; }
+  h1 { font-family:'JetBrains Mono',monospace; color:var(--primary); text-align:center; margin-bottom:30px; letter-spacing:2px; }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:30px; margin-bottom:20px; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: fadeIn 0.3s; }
+  .panel h2 { margin-top:0; font-size:18px; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:20px; color:#fff; }
   
-  input, textarea { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; font-family: 'Inter', sans-serif;}
-  input:focus, textarea:focus { outline: none; border-color: var(--primary); }
-  input[type="file"] { padding: 10px; background: #1a1a1f; cursor: pointer; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-  button.action-btn { width: 100%; padding: 14px; background: var(--primary); color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-  button.action-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-  
-  button.discord-btn { background: var(--discord); color: #fff; font-size: 16px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+  input, textarea { width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:12px; border-radius:6px; margin-bottom:15px; box-sizing:border-box; font-family:'Inter',sans-serif; }
+  input:focus, textarea:focus { outline:none; border-color:var(--primary); }
+  input[type="file"] { padding:10px; background:#1a1a1f; cursor:pointer; }
 
-  .options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-  .toggle-wrap { background: #1a1a1f; padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-  .toggle-wrap:has(input:checked) { border-color: var(--primary); background: rgba(139, 233, 255, 0.1); }
-  
-  .item { background: #000; border: 1px solid var(--border); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-  .item-info strong { color: #fff; font-size: 16px; display: block; }
-  .tags { margin-top: 5px; display: flex; gap: 5px; }
-  .tag { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #000; }
-  
-  .btn-group { display: flex; gap: 10px; }
-  .edit-btn { background: transparent; border: 1px solid var(--warning); color: var(--warning); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-  .edit-btn:hover { background: var(--warning); color: #000; }
-  .del-btn { background: transparent; border: 1px solid var(--error); color: var(--error); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-  .del-btn:hover { background: var(--error); color: #fff; }
+  button.action-btn { width:100%; padding:14px; background:var(--primary); color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; transition:0.2s; }
+  button.action-btn:hover { opacity:0.9; transform:translateY(-1px); }
+  button.discord-btn { background:var(--discord); color:#fff; font-size:16px; display:flex; justify-content:center; align-items:center; gap:10px; }
 
-  /* Modal Style */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
-  .modal-content { background: var(--panel); padding: 30px; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 600px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); animation: popUp 0.3s ease; }
-  @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  /* Tab Menu */
+  .admin-tabs { display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;}
+  .admin-tab { padding:10px 20px; background:transparent; border:1px solid var(--border); border-radius:6px; cursor:pointer; font-weight:bold; color:var(--text); transition:0.2s; flex:1; text-align:center; }
+  .admin-tab:hover { background:var(--border); }
+  .admin-tab.active { background:var(--primary); color:#000; border-color:var(--primary); }
+
+  .options-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:15px; margin-bottom:20px; }
+  .toggle-wrap { background:#1a1a1f; padding:10px; border-radius:6px; display:flex; align-items:center; gap:10px; cursor:pointer; border:1px solid transparent; transition:0.2s; }
+  .toggle-wrap:has(input:checked) { border-color:var(--primary); background:rgba(139,233,255,0.1); }
+  
+  .item { background:#000; border:1px solid var(--border); padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  .item-info strong { color:#fff; font-size:16px; display:block; }
+  .tags { margin-top:5px; display:flex; gap:5px; flex-wrap:wrap; }
+  .tag { font-size:10px; padding:3px 6px; border-radius:3px; font-weight:bold; color:#000; }
+  
+  .btn-group { display:flex; gap:10px; }
+  .edit-btn { background:transparent; border:1px solid var(--warning); color:var(--warning); padding:6px 12px; border-radius:4px; cursor:pointer; }
+  .edit-btn:hover { background:var(--warning); color:#000; }
+  .del-btn { background:transparent; border:1px solid var(--error); color:var(--error); padding:6px 12px; border-radius:4px; cursor:pointer; }
+  .del-btn:hover { background:var(--error); color:#fff; }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(5px); }
+  .modal-content { background:var(--panel); padding:30px; border-radius:12px; border:1px solid var(--border); width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.7); }
 </style>
 </head>
 <body>
@@ -57,41 +53,75 @@
 <div class="container">
   <h1>ASB SYSTEM ADMIN</h1>
 
-  <!-- LOGIN PANEL -->
   <div id="loginPanel" class="panel" style="text-align:center; display:none;">
     <h2>RESTRICTED ACCESS</h2>
     <button class="action-btn discord-btn" onclick="location.href='/auth/discord'">Login with Discord</button>
   </div>
 
-  <!-- DASHBOARD -->
   <div id="dashboard" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <p>Logged in as: <strong id="adminName" style="color:var(--primary);"></strong></p>
       <button onclick="location.href='/logout'" style="padding:8px 16px; background:#333; color:#fff; border:none; border-radius:4px; cursor:pointer;">Logout</button>
     </div>
 
-    <!-- ADD -->
-    <div class="panel">
-      <h2>DEPLOY NEW</h2>
-      <input id="name" placeholder="Name">
-      <div style="display:flex; gap:10px;">
-        <input id="version" placeholder="v1.0.0" style="width:30%;">
-        <input type="file" id="file" style="width:70%;">
-      </div>
-      <textarea id="description" placeholder="Description"></textarea>
-      
-      <div class="options-grid">
-        <label class="toggle-wrap"><input type="checkbox" id="isBeta"> <span>BETA</span></label>
-        <label class="toggle-wrap"><input type="checkbox" id="isUpdate"> <span>UPDATE</span></label>
-        <label class="toggle-wrap"><input type="checkbox" id="isMaint"> <span>MAINT</span></label>
-      </div>
-      <button class="action-btn" onclick="addItem()">DEPLOY</button>
+    <!-- TABS -->
+    <div class="admin-tabs">
+      <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">SOFTWARE MANAGER</div>
+      <div class="admin-tab" onclick="switchAdminTab('settingsTab', this)">SITE SETTINGS</div>
     </div>
 
-    <!-- LIST -->
-    <div class="panel">
-      <h2>RELEASES</h2>
-      <div id="list">loading...</div>
+    <!-- SOFTWARE TAB -->
+    <div id="softwareTab">
+      <div class="panel">
+        <h2>DEPLOY NEW</h2>
+        <input id="name" placeholder="Name">
+        <input id="version" placeholder="Version (e.g. v1.0.0)">
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+          <div>
+            <label style="font-size:12px; color:#888;">ZIP File (Windows/PC)</label>
+            <input type="file" id="zipFile" accept=".zip,.rar,.7z" style="margin-bottom:0;">
+          </div>
+          <div>
+            <label style="font-size:12px; color:#888;">APK File (Android)</label>
+            <input type="file" id="apkFile" accept=".apk" style="margin-bottom:0;">
+          </div>
+        </div>
+        
+        <textarea id="description" placeholder="Description"></textarea>
+        
+        <div class="options-grid">
+          <label class="toggle-wrap"><input type="checkbox" id="isBeta"> <span>BETA</span></label>
+          <label class="toggle-wrap"><input type="checkbox" id="isUpdate"> <span>UPDATE</span></label>
+          <label class="toggle-wrap"><input type="checkbox" id="isMaint"> <span>MAINT</span></label>
+        </div>
+        <button class="action-btn" onclick="addItem()">DEPLOY</button>
+      </div>
+
+      <div class="panel">
+        <h2>RELEASES</h2>
+        <div id="list">loading...</div>
+      </div>
+    </div>
+
+    <!-- SITE SETTINGS TAB -->
+    <div id="settingsTab" style="display:none;">
+      <div class="panel">
+        <h2>GLOBAL SETTINGS</h2>
+        <p style="font-size:13px; color:#888; margin-bottom:20px;">トップページの表示内容を編集します。</p>
+
+        <label style="font-size:12px; color:#888;">Hero Title (大見出し)</label>
+        <input id="set_hero_title" placeholder="ASB">
+
+        <label style="font-size:12px; color:#888;">Hero Subtitle (小見出し)</label>
+        <input id="set_hero_subtitle" placeholder="Production greatly advances freedom.">
+
+        <label style="font-size:12px; color:#888;">Background Image (背景画像)</label>
+        <input type="file" id="set_bg_image" accept="image/*">
+        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:20px;">※選択しない場合は現在の画像が維持されます。</p>
+
+        <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
+      </div>
     </div>
   </div>
 </div>
@@ -102,11 +132,19 @@
     <h2>EDIT SOFTWARE</h2>
     <input type="hidden" id="editId">
     <input id="editName" placeholder="Name">
-    <div style="display:flex; gap:10px;">
-      <input id="editVersion" placeholder="Version" style="width:30%;">
-      <input type="file" id="editFile" style="width:70%;">
+    <input id="editVersion" placeholder="Version">
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:5px;">
+      <div>
+        <label style="font-size:12px; color:#888;">Update ZIP File</label>
+        <input type="file" id="editZip" accept=".zip,.rar,.7z">
+      </div>
+      <div>
+        <label style="font-size:12px; color:#888;">Update APK File</label>
+        <input type="file" id="editApk" accept=".apk">
+      </div>
     </div>
-    <p style="font-size:12px; color:#888; margin-top:-10px; margin-bottom:10px;">※ ファイルを選択しない場合、現在のファイルが維持されます。</p>
+
     <textarea id="editDescription" placeholder="Description"></textarea>
     
     <div class="options-grid">
@@ -116,14 +154,23 @@
     </div>
     
     <div style="display:flex; gap:10px;">
-      <button class="action-btn" style="background:#444;" onclick="closeModal()">CANCEL</button>
-      <button class="action-btn" onclick="saveEdit()">SAVE CHANGES</button>
+      <button class="action-btn" style="background:#444; color:#fff;" onclick="closeModal()">CANCEL</button>
+      <button class="action-btn" onclick="saveEdit()">SAVE</button>
     </div>
   </div>
 </div>
 
 <script>
 let currentData = [];
+
+function switchAdminTab(tabId, element) {
+  document.getElementById('softwareTab').style.display = 'none';
+  document.getElementById('settingsTab').style.display = 'none';
+  document.getElementById(tabId).style.display = 'block';
+  
+  document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+  element.classList.add('active');
+}
 
 async function checkAuth() {
   try {
@@ -134,30 +181,59 @@ async function checkAuth() {
       document.getElementById("dashboard").style.display = "block";
       document.getElementById("adminName").innerText = data.user;
       loadItems();
+      loadSettings(); // 設定も読み込む
     } else {
       document.getElementById("loginPanel").style.display = "block";
     }
   } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
 }
 
+// === Site Settings API ===
+async function loadSettings() {
+  const res = await fetch("/api/settings");
+  const data = await res.json();
+  document.getElementById("set_hero_title").value = data.hero_title || "";
+  document.getElementById("set_hero_subtitle").value = data.hero_subtitle || "";
+}
+
+async function saveSettings() {
+  const fd = new FormData();
+  fd.append("hero_title", document.getElementById("set_hero_title").value);
+  fd.append("hero_subtitle", document.getElementById("set_hero_subtitle").value);
+  
+  const bgFile = document.getElementById("set_bg_image").files[0];
+  if(bgFile) fd.append("bg_image", bgFile);
+
+  const res = await fetch("/api/settings", { method: "POST", body: fd });
+  if(res.ok) alert("Settings saved successfully!");
+  else alert("Failed to save settings.");
+}
+
+// === Software API ===
 async function loadItems(){
   const res = await fetch("/api/software");
-  currentData = await res.json(); // データを保存しておく
+  currentData = await res.json();
   const list = document.getElementById("list");
   list.innerHTML = "";
   if(currentData.length === 0) return list.innerHTML = "<div style='text-align:center; color:#555;'>No software found.</div>";
 
   currentData.forEach(item => {
     let tags = "";
+    if(item.zip_path) tags += `<span class="tag" style="background:rgba(52,152,219,0.2); color:#3498db; border:1px solid #3498db;">ZIP</span>`;
+    if(item.apk_path) tags += `<span class="tag" style="background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid #2ecc71;">APK</span>`;
+
     if(item.is_beta) tags += `<span class="tag" style="background:#f1c40f;">BETA</span>`;
     if(item.is_update) tags += `<span class="tag" style="background:#e74c3c;">UPDATE</span>`;
     if(item.is_maintenance) tags += `<span class="tag" style="background:#95a5a6;">MAINT</span>`;
+
+    const dlZip = item.zip_downloads || 0;
+    const dlApk = item.apk_downloads || 0;
 
     list.innerHTML += `
       <div class="item">
         <div class="item-info">
           <strong>${item.name}</strong>
-          <span style="font-size:12px; color:#666;">v${item.version} | DLs: ${item.downloads}</span>
+          <span style="font-size:12px; color:#666;">v${item.version} | ZIP DL: ${dlZip} | APK DL: ${dlApk}</span>
           <div class="tags">${tags}</div>
         </div>
         <div class="btn-group">
@@ -168,31 +244,33 @@ async function loadItems(){
   });
 }
 
-// Add Item
 async function addItem(){
   const name = document.getElementById("name").value;
-  const fileInput = document.getElementById("file");
-  if(!name || !fileInput.files[0]) return alert("Name and File required!");
+  const zipInput = document.getElementById("zipFile");
+  const apkInput = document.getElementById("apkFile");
+  
+  if(!name || (!zipInput.files[0] && !apkInput.files[0])) return alert("Name and at least one file required!");
 
   const fd = new FormData();
   fd.append("name", name);
   fd.append("version", document.getElementById("version").value);
   fd.append("description", document.getElementById("description").value);
-  fd.append("file", fileInput.files[0]);
+  if(zipInput.files[0]) fd.append("zip_file", zipInput.files[0]);
+  if(apkInput.files[0]) fd.append("apk_file", apkInput.files[0]);
   fd.append("is_beta", document.getElementById("isBeta").checked);
   fd.append("is_update", document.getElementById("isUpdate").checked);
   fd.append("is_maintenance", document.getElementById("isMaint").checked);
 
   await fetch("/api/software", { method: "POST", body: fd });
-  // Clear inputs
+  
   document.getElementById("name").value = "";
   document.getElementById("version").value = "";
   document.getElementById("description").value = "";
-  document.getElementById("file").value = "";
+  document.getElementById("zipFile").value = "";
+  document.getElementById("apkFile").value = "";
   loadItems();
 }
 
-// Edit Logic
 function openEdit(id) {
   const item = currentData.find(d => d.id === id);
   if(!item) return;
@@ -204,14 +282,13 @@ function openEdit(id) {
   document.getElementById("editBeta").checked = item.is_beta === 1;
   document.getElementById("editUpdate").checked = item.is_update === 1;
   document.getElementById("editMaint").checked = item.is_maintenance === 1;
-  document.getElementById("editFile").value = ""; // Clear file input
+  document.getElementById("editZip").value = "";
+  document.getElementById("editApk").value = "";
 
   document.getElementById("editModal").style.display = "flex";
 }
 
-function closeModal() {
-  document.getElementById("editModal").style.display = "none";
-}
+function closeModal() { document.getElementById("editModal").style.display = "none"; }
 
 async function saveEdit() {
   const id = document.getElementById("editId").value;
@@ -224,18 +301,14 @@ async function saveEdit() {
   fd.append("is_update", document.getElementById("editUpdate").checked);
   fd.append("is_maintenance", document.getElementById("editMaint").checked);
 
-  const fileInput = document.getElementById("editFile");
-  if(fileInput.files[0]) {
-    fd.append("file", fileInput.files[0]);
-  }
+  const zipInput = document.getElementById("editZip");
+  const apkInput = document.getElementById("editApk");
+  if(zipInput.files[0]) fd.append("zip_file", zipInput.files[0]);
+  if(apkInput.files[0]) fd.append("apk_file", apkInput.files[0]);
 
   const res = await fetch("/api/software/" + id, { method: "PUT", body: fd });
-  if(res.ok) {
-    closeModal();
-    loadItems();
-  } else {
-    alert("Update failed.");
-  }
+  if(res.ok) { closeModal(); loadItems(); } 
+  else { alert("Update failed."); }
 }
 
 async function delItem(id){
