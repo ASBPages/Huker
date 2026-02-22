@@ -6,7 +6,7 @@
 <title>ASB Admin Console</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0a0a0c; --panel:#131316; --border:#2e2e33; --primary:#8be9ff; --discord:#5865F2; --text:#e0e0e0; --error:#ff5555; --warning:#f1c40f; }
+  :root { --bg:#0a0a0c; --panel:#131316; --border:#2e2e33; --primary:#8be9ff; --discord:#5865F2; --text:#e0e0e0; --error:#ff5555; --warning:#f1c40f; --orig:#9b59b6; --third:#e67e22; }
   body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; display:flex; justify-content:center; padding:40px 20px; min-height:100vh; box-sizing:border-box; }
   .container { width:100%; max-width:900px; }
   h1 { font-family:'JetBrains Mono',monospace; color:var(--primary); text-align:center; margin-bottom:30px; letter-spacing:2px; }
@@ -28,9 +28,11 @@
   .admin-tab:hover { background:var(--border); }
   .admin-tab.active { background:var(--primary); color:#000; border-color:var(--primary); }
 
-  .options-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:15px; margin-bottom:20px; }
-  .toggle-wrap { background:#1a1a1f; padding:10px; border-radius:6px; display:flex; align-items:center; gap:10px; cursor:pointer; border:1px solid transparent; transition:0.2s; }
+  .options-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:20px; }
+  .toggle-wrap { background:#1a1a1f; padding:8px 10px; border-radius:6px; display:flex; align-items:center; gap:8px; cursor:pointer; border:1px solid transparent; transition:0.2s; font-size:13px; }
   .toggle-wrap:has(input:checked) { border-color:var(--primary); background:rgba(139,233,255,0.1); }
+  .toggle-wrap.t-orig:has(input:checked) { border-color:var(--orig); background:rgba(155,89,182,0.1); color:var(--orig); }
+  .toggle-wrap.t-third:has(input:checked) { border-color:var(--third); background:rgba(230,126,34,0.1); color:var(--third); }
   
   .item { background:#000; border:1px solid var(--border); padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
   .item-info strong { color:#fff; font-size:16px; display:block; }
@@ -46,20 +48,13 @@
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(5px); }
   .modal-content { background:var(--panel); padding:30px; border-radius:12px; border:1px solid var(--border); width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.7); max-height: 90vh; overflow-y: auto;}
 
-  /* ★ プレビュー枠の強制フィット＆高画質化 */
-  .preview-box {
-    width: 100%;
-    aspect-ratio: 16 / 9; /* 比率を固定して枠を生成 */
-    object-fit: cover; /* 枠に合わせて自動トリミング */
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    display: none;
-    margin-top: 5px;
-    background-color: #000;
-    /* 高画質レンダリング指定 */
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: high-quality;
-  }
+  .preview-box { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); display: none; margin-top: 5px; background-color: #000; }
+
+  /* ★ Dashboard Stats */
+  .stats-container { display:flex; gap:15px; margin-bottom:20px; }
+  .stat-box { flex:1; background:#1a1a1f; border:1px solid var(--border); padding:15px; border-radius:8px; text-align:center; }
+  .stat-title { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
+  .stat-value { font-size:28px; font-family:'JetBrains Mono', monospace; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -86,6 +81,23 @@
 
     <!-- SOFTWARE TAB -->
     <div id="softwareTab">
+      
+      <!-- ★ STATISTICS -->
+      <div class="stats-container">
+        <div class="stat-box">
+          <div class="stat-title">Total Softwares</div>
+          <div class="stat-value" id="statTotal" style="color:var(--primary);">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-title">Total ZIP DLs</div>
+          <div class="stat-value" id="statZipDl" style="color:#3498db;">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-title">Total APK DLs</div>
+          <div class="stat-value" id="statApkDl" style="color:#2ecc71;">0</div>
+        </div>
+      </div>
+
       <div class="panel">
         <h2>DEPLOY NEW (External URL)</h2>
         <input id="name" placeholder="Software Name">
@@ -101,10 +113,11 @@
             <input type="url" id="apkUrl" placeholder="https://..." style="margin-bottom:0;">
           </div>
         </div>
-        
         <textarea id="description" placeholder="Description"></textarea>
         
         <div class="options-grid">
+          <label class="toggle-wrap t-orig"><input type="checkbox" id="isOrig" onchange="if(this.checked) document.getElementById('isThird').checked=false;"> <span>ORIGINAL (自作)</span></label>
+          <label class="toggle-wrap t-third"><input type="checkbox" id="isThird" onchange="if(this.checked) document.getElementById('isOrig').checked=false;"> <span>THIRD-PARTY (他作)</span></label>
           <label class="toggle-wrap"><input type="checkbox" id="isBeta"> <span>BETA</span></label>
           <label class="toggle-wrap"><input type="checkbox" id="isUpdate"> <span>UPDATE</span></label>
           <label class="toggle-wrap"><input type="checkbox" id="isMaint"> <span>MAINT</span></label>
@@ -113,7 +126,11 @@
       </div>
 
       <div class="panel">
-        <h2>RELEASES</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>RELEASES</h2>
+          <!-- ★ SEARCH BAR -->
+          <input type="text" id="searchInput" placeholder="Search..." oninput="renderList()" style="width:200px; padding:6px; margin-bottom:15px;">
+        </div>
         <div id="list">loading...</div>
       </div>
     </div>
@@ -124,25 +141,18 @@
         <h2>GLOBAL SETTINGS</h2>
         <label style="font-size:12px; color:#888;">Hero Title (大見出し)</label>
         <input id="set_hero_title" placeholder="ASB">
-
         <label style="font-size:12px; color:#888;">Hero Subtitle (小見出し)</label>
         <input id="set_hero_subtitle" placeholder="Production greatly advances freedom.">
-
         <label style="font-size:12px; color:#888;">Discord Community Link (招待URL)</label>
         <input type="url" id="set_discord_link" placeholder="https://discord.gg/...">
-
         <label style="font-size:12px; color:#888;">Background Media (画像 or MP4/GIF動画)</label>
         <input type="file" id="set_bg_image" accept="image/*, video/mp4, video/webm">
-        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:15px;">※動画を上げる場合は数十MB以下に圧縮してください。</p>
-
-        <!-- ★ 新しいプレビュー枠 -->
+        
         <div style="margin-bottom: 20px;">
-          <label style="font-size:12px; color:#888;">Current Preview</label>
-          <br>
-          <img id="bg_preview_img" class="preview-box" src="" alt="Background Preview">
+          <label style="font-size:12px; color:#888;">Current Preview</label><br>
+          <img id="bg_preview_img" class="preview-box" src="" alt="Preview">
           <video id="bg_preview_vid" class="preview-box" src="" autoplay loop muted playsinline></video>
         </div>
-
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
       </div>
     </div>
@@ -161,19 +171,21 @@
     <input id="editVersion" placeholder="Version">
     
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-      <div><label style="font-size:12px; color:#888;">ZIP URL</label><input type="url" id="editZipUrl" placeholder="https://..."></div>
-      <div><label style="font-size:12px; color:#888;">APK URL</label><input type="url" id="editApkUrl" placeholder="https://..."></div>
+      <div><label style="font-size:12px; color:#888;">ZIP URL</label><input type="url" id="editZipUrl"></div>
+      <div><label style="font-size:12px; color:#888;">APK URL</label><input type="url" id="editApkUrl"></div>
     </div>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-      <div><label style="font-size:12px; color:var(--primary);">ZIP Downloads (手動)</label><input type="number" id="editZipDl" style="border-color:var(--primary);"></div>
-      <div><label style="font-size:12px; color:var(--primary);">APK Downloads (手動)</label><input type="number" id="editApkDl" style="border-color:var(--primary);"></div>
+      <div><label style="font-size:12px; color:var(--primary);">ZIP DLs (手動変更)</label><input type="number" id="editZipDl" style="border-color:var(--primary);"></div>
+      <div><label style="font-size:12px; color:var(--primary);">APK DLs (手動変更)</label><input type="number" id="editApkDl" style="border-color:var(--primary);"></div>
     </div>
 
     <label style="font-size:12px; color:#888;">Description</label>
     <textarea id="editDescription" placeholder="Description"></textarea>
     
     <div class="options-grid">
+      <label class="toggle-wrap t-orig"><input type="checkbox" id="editOrig" onchange="if(this.checked) document.getElementById('editThird').checked=false;"> <span>ORIGINAL</span></label>
+      <label class="toggle-wrap t-third"><input type="checkbox" id="editThird" onchange="if(this.checked) document.getElementById('editOrig').checked=false;"> <span>THIRD-PARTY</span></label>
       <label class="toggle-wrap"><input type="checkbox" id="editBeta"> <span>BETA</span></label>
       <label class="toggle-wrap"><input type="checkbox" id="editUpdate"> <span>UPDATE</span></label>
       <label class="toggle-wrap"><input type="checkbox" id="editMaint"> <span>MAINT</span></label>
@@ -217,16 +229,8 @@ document.getElementById('set_bg_image').addEventListener('change', function(e) {
     const isVideo = file.type.startsWith('video/');
     const imgPrev = document.getElementById('bg_preview_img');
     const vidPrev = document.getElementById('bg_preview_vid');
-    
-    if (isVideo) {
-      imgPrev.style.display = 'none';
-      vidPrev.src = URL.createObjectURL(file);
-      vidPrev.style.display = 'block';
-    } else {
-      vidPrev.style.display = 'none';
-      imgPrev.src = URL.createObjectURL(file);
-      imgPrev.style.display = 'block';
-    }
+    if (isVideo) { imgPrev.style.display = 'none'; vidPrev.src = URL.createObjectURL(file); vidPrev.style.display = 'block'; } 
+    else { vidPrev.style.display = 'none'; imgPrev.src = URL.createObjectURL(file); imgPrev.style.display = 'block'; }
   }
 });
 
@@ -236,20 +240,12 @@ async function loadSettings() {
   document.getElementById("set_hero_title").value = data.hero_title || "";
   document.getElementById("set_hero_subtitle").value = data.hero_subtitle || "";
   document.getElementById("set_discord_link").value = data.discord_link || "";
-  
   if (data.bg_image) {
     const isVideo = data.bg_image.match(/\.(mp4|webm|ogg)$/i);
     const imgPrev = document.getElementById('bg_preview_img');
     const vidPrev = document.getElementById('bg_preview_vid');
-    if(isVideo) {
-      vidPrev.src = data.bg_image;
-      vidPrev.style.display = 'block';
-      imgPrev.style.display = 'none';
-    } else {
-      imgPrev.src = data.bg_image;
-      imgPrev.style.display = 'block';
-      vidPrev.style.display = 'none';
-    }
+    if(isVideo) { vidPrev.src = data.bg_image; vidPrev.style.display = 'block'; imgPrev.style.display = 'none'; } 
+    else { imgPrev.src = data.bg_image; imgPrev.style.display = 'block'; vidPrev.style.display = 'none'; }
   }
 }
 
@@ -262,19 +258,35 @@ async function saveSettings() {
   if(bgFile) fd.append("bg_image", bgFile);
 
   const res = await fetch("/api/settings", { method: "POST", body: fd });
-  if(res.ok) alert("Settings saved successfully!");
-  else alert("Failed to save settings.");
+  if(res.ok) alert("Settings saved successfully!"); else alert("Failed to save settings.");
 }
 
 async function loadItems(){
   const res = await fetch("/api/software");
   currentData = await res.json();
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-  if(currentData.length === 0) return list.innerHTML = "<div style='text-align:center; color:#555;'>No software found.</div>";
+  
+  // ★ 統計の更新
+  document.getElementById("statTotal").innerText = currentData.length;
+  document.getElementById("statZipDl").innerText = currentData.reduce((sum, item) => sum + (item.zip_downloads || 0), 0);
+  document.getElementById("statApkDl").innerText = currentData.reduce((sum, item) => sum + (item.apk_downloads || 0), 0);
 
-  currentData.forEach(item => {
+  renderList();
+}
+
+// ★ 検索とリスト表示機能
+function renderList() {
+  const list = document.getElementById("list");
+  const query = document.getElementById("searchInput").value.toLowerCase();
+  list.innerHTML = "";
+  
+  const filtered = currentData.filter(item => item.name.toLowerCase().includes(query));
+
+  if(filtered.length === 0) return list.innerHTML = "<div style='text-align:center; color:#555;'>No software found.</div>";
+
+  filtered.forEach(item => {
     let tags = "";
+    if(item.is_original) tags += `<span class="tag" style="background:rgba(155,89,182,0.2); color:#9b59b6; border:1px solid #9b59b6;">ORIGINAL</span>`;
+    if(item.is_thirdparty) tags += `<span class="tag" style="background:rgba(230,126,34,0.2); color:#e67e22; border:1px solid #e67e22;">THIRD-PARTY</span>`;
     if(item.zip_path) tags += `<span class="tag" style="background:rgba(52,152,219,0.2); color:#3498db; border:1px solid #3498db;">ZIP</span>`;
     if(item.apk_path) tags += `<span class="tag" style="background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid #2ecc71;">APK</span>`;
     if(item.is_beta) tags += `<span class="tag" style="background:#f1c40f;">BETA</span>`;
@@ -301,18 +313,18 @@ async function loadItems(){
 
 async function addItem(){
   const name = document.getElementById("name").value;
-  const zipUrl = document.getElementById("zipUrl").value;
-  const apkUrl = document.getElementById("apkUrl").value;
-  if(!name || (!zipUrl && !apkUrl)) return alert("Name and at least one URL required!");
+  if(!name) return alert("Name required!");
 
   const data = {
     name: name, version: document.getElementById("version").value, description: document.getElementById("description").value,
-    zip_url: zipUrl, apk_url: apkUrl,
+    zip_url: document.getElementById("zipUrl").value, apk_url: document.getElementById("apkUrl").value,
+    is_original: document.getElementById("isOrig").checked, is_thirdparty: document.getElementById("isThird").checked,
     is_beta: document.getElementById("isBeta").checked, is_update: document.getElementById("isUpdate").checked, is_maintenance: document.getElementById("isMaint").checked
   };
   await fetch("/api/software", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
   
   document.getElementById("name").value = ""; document.getElementById("version").value = ""; document.getElementById("description").value = ""; document.getElementById("zipUrl").value = ""; document.getElementById("apkUrl").value = "";
+  document.getElementById("isOrig").checked = false; document.getElementById("isThird").checked = false;
   loadItems();
 }
 
@@ -327,6 +339,9 @@ function openEdit(id) {
   document.getElementById("editApkUrl").value = item.apk_path || "";
   document.getElementById("editZipDl").value = item.zip_downloads || 0;
   document.getElementById("editApkDl").value = item.apk_downloads || 0;
+  
+  document.getElementById("editOrig").checked = item.is_original === 1;
+  document.getElementById("editThird").checked = item.is_thirdparty === 1;
   document.getElementById("editBeta").checked = item.is_beta === 1;
   document.getElementById("editUpdate").checked = item.is_update === 1;
   document.getElementById("editMaint").checked = item.is_maintenance === 1;
@@ -340,6 +355,7 @@ async function saveEdit() {
     name: document.getElementById("editName").value, version: document.getElementById("editVersion").value, description: document.getElementById("editDescription").value,
     zip_url: document.getElementById("editZipUrl").value, apk_url: document.getElementById("editApkUrl").value,
     zip_downloads: document.getElementById("editZipDl").value, apk_downloads: document.getElementById("editApkDl").value,
+    is_original: document.getElementById("editOrig").checked, is_thirdparty: document.getElementById("editThird").checked,
     is_beta: document.getElementById("editBeta").checked, is_update: document.getElementById("editUpdate").checked, is_maintenance: document.getElementById("editMaint").checked
   };
   const res = await fetch("/api/software/" + id, { method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
