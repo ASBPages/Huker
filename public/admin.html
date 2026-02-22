@@ -78,7 +78,7 @@
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
           <div>
-            <label style="font-size:12px; color:#888;">ZIP Download URL</label>
+            <label style="font-size:12px; color:#888;">ZIP Download URL (Google Drive等)</label>
             <input type="url" id="zipUrl" placeholder="https://..." style="margin-bottom:0;">
           </div>
           <div>
@@ -116,15 +116,17 @@
         <label style="font-size:12px; color:#888;">Discord Community Link (招待URL)</label>
         <input type="url" id="set_discord_link" placeholder="https://discord.gg/...">
 
-        <label style="font-size:12px; color:#888;">Background Image (背景画像)</label>
-        <input type="file" id="set_bg_image" accept="image/*">
-        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:15px;">画像は数MBなのでアップロードしても安全です。</p>
+        <!-- ★ 画像・動画 両対応 -->
+        <label style="font-size:12px; color:#888;">Background Media (画像 or MP4/GIF動画)</label>
+        <input type="file" id="set_bg_image" accept="image/*, video/mp4, video/webm">
+        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:15px;">※動画を上げる場合は数十MB以下に圧縮してください。</p>
 
-        <!-- ★ 画像プレビュー枠 -->
+        <!-- 画像・動画プレビュー枠 -->
         <div style="margin-bottom: 20px;">
           <label style="font-size:12px; color:#888;">Current Preview</label>
           <br>
-          <img id="bg_preview" src="" alt="Background Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border); display: none; object-fit: cover; margin-top:5px;">
+          <img id="bg_preview_img" src="" style="width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border); display: none; object-fit: cover; margin-top:5px;">
+          <video id="bg_preview_vid" src="" autoplay loop muted playsinline style="width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border); display: none; object-fit: cover; margin-top:5px;"></video>
         </div>
 
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
@@ -141,30 +143,17 @@
     
     <label style="font-size:12px; color:#888;">Software Name</label>
     <input id="editName" placeholder="Name">
-    
     <label style="font-size:12px; color:#888;">Version</label>
     <input id="editVersion" placeholder="Version">
     
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-      <div>
-        <label style="font-size:12px; color:#888;">ZIP URL</label>
-        <input type="url" id="editZipUrl" placeholder="https://...">
-      </div>
-      <div>
-        <label style="font-size:12px; color:#888;">APK URL</label>
-        <input type="url" id="editApkUrl" placeholder="https://...">
-      </div>
+      <div><label style="font-size:12px; color:#888;">ZIP URL</label><input type="url" id="editZipUrl" placeholder="https://..."></div>
+      <div><label style="font-size:12px; color:#888;">APK URL</label><input type="url" id="editApkUrl" placeholder="https://..."></div>
     </div>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-      <div>
-        <label style="font-size:12px; color:var(--primary);">ZIP Downloads (DL数変更)</label>
-        <input type="number" id="editZipDl" style="border-color:var(--primary);">
-      </div>
-      <div>
-        <label style="font-size:12px; color:var(--primary);">APK Downloads (DL数変更)</label>
-        <input type="number" id="editApkDl" style="border-color:var(--primary);">
-      </div>
+      <div><label style="font-size:12px; color:var(--primary);">ZIP Downloads (手動)</label><input type="number" id="editZipDl" style="border-color:var(--primary);"></div>
+      <div><label style="font-size:12px; color:var(--primary);">APK Downloads (手動)</label><input type="number" id="editApkDl" style="border-color:var(--primary);"></div>
     </div>
 
     <label style="font-size:12px; color:#888;">Description</label>
@@ -204,19 +193,27 @@ async function checkAuth() {
       document.getElementById("adminName").innerText = data.user;
       loadItems();
       loadSettings();
-    } else {
-      document.getElementById("loginPanel").style.display = "block";
-    }
+    } else { document.getElementById("loginPanel").style.display = "block"; }
   } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
 }
 
-// ★プレビュー機能のイベントリスナー
+// === 動画か画像か判定してプレビュー ===
 document.getElementById('set_bg_image').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if(file) {
-    const preview = document.getElementById('bg_preview');
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = 'block';
+    const isVideo = file.type.startsWith('video/');
+    const imgPrev = document.getElementById('bg_preview_img');
+    const vidPrev = document.getElementById('bg_preview_vid');
+    
+    if (isVideo) {
+      imgPrev.style.display = 'none';
+      vidPrev.src = URL.createObjectURL(file);
+      vidPrev.style.display = 'block';
+    } else {
+      vidPrev.style.display = 'none';
+      imgPrev.src = URL.createObjectURL(file);
+      imgPrev.style.display = 'block';
+    }
   }
 });
 
@@ -227,11 +224,19 @@ async function loadSettings() {
   document.getElementById("set_hero_subtitle").value = data.hero_subtitle || "";
   document.getElementById("set_discord_link").value = data.discord_link || "";
   
-  // 既存の画像があればプレビュー枠に表示
   if (data.bg_image) {
-    const preview = document.getElementById('bg_preview');
-    preview.src = data.bg_image;
-    preview.style.display = 'block';
+    const isVideo = data.bg_image.match(/\.(mp4|webm|ogg)$/i);
+    const imgPrev = document.getElementById('bg_preview_img');
+    const vidPrev = document.getElementById('bg_preview_vid');
+    if(isVideo) {
+      vidPrev.src = data.bg_image;
+      vidPrev.style.display = 'block';
+      imgPrev.style.display = 'none';
+    } else {
+      imgPrev.src = data.bg_image;
+      imgPrev.style.display = 'block';
+      vidPrev.style.display = 'none';
+    }
   }
 }
 
@@ -240,7 +245,6 @@ async function saveSettings() {
   fd.append("hero_title", document.getElementById("set_hero_title").value);
   fd.append("hero_subtitle", document.getElementById("set_hero_subtitle").value);
   fd.append("discord_link", document.getElementById("set_discord_link").value);
-  
   const bgFile = document.getElementById("set_bg_image").files[0];
   if(bgFile) fd.append("bg_image", bgFile);
 
@@ -286,75 +290,47 @@ async function addItem(){
   const name = document.getElementById("name").value;
   const zipUrl = document.getElementById("zipUrl").value;
   const apkUrl = document.getElementById("apkUrl").value;
-  
   if(!name || (!zipUrl && !apkUrl)) return alert("Name and at least one URL required!");
 
   const data = {
-    name: name,
-    version: document.getElementById("version").value,
-    description: document.getElementById("description").value,
-    zip_url: zipUrl,
-    apk_url: apkUrl,
-    is_beta: document.getElementById("isBeta").checked,
-    is_update: document.getElementById("isUpdate").checked,
-    is_maintenance: document.getElementById("isMaint").checked
+    name: name, version: document.getElementById("version").value, description: document.getElementById("description").value,
+    zip_url: zipUrl, apk_url: apkUrl,
+    is_beta: document.getElementById("isBeta").checked, is_update: document.getElementById("isUpdate").checked, is_maintenance: document.getElementById("isMaint").checked
   };
-
-  await fetch("/api/software", { 
-    method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)
-  });
+  await fetch("/api/software", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
   
-  document.getElementById("name").value = "";
-  document.getElementById("version").value = "";
-  document.getElementById("description").value = "";
-  document.getElementById("zipUrl").value = "";
-  document.getElementById("apkUrl").value = "";
+  document.getElementById("name").value = ""; document.getElementById("version").value = ""; document.getElementById("description").value = ""; document.getElementById("zipUrl").value = ""; document.getElementById("apkUrl").value = "";
   loadItems();
 }
 
 function openEdit(id) {
   const item = currentData.find(d => d.id === id);
   if(!item) return;
-
   document.getElementById("editId").value = item.id;
   document.getElementById("editName").value = item.name;
   document.getElementById("editVersion").value = item.version;
   document.getElementById("editDescription").value = item.description;
   document.getElementById("editZipUrl").value = item.zip_path || "";
   document.getElementById("editApkUrl").value = item.apk_path || "";
-  
   document.getElementById("editZipDl").value = item.zip_downloads || 0;
   document.getElementById("editApkDl").value = item.apk_downloads || 0;
-
   document.getElementById("editBeta").checked = item.is_beta === 1;
   document.getElementById("editUpdate").checked = item.is_update === 1;
   document.getElementById("editMaint").checked = item.is_maintenance === 1;
-
   document.getElementById("editModal").style.display = "flex";
 }
-
 function closeModal() { document.getElementById("editModal").style.display = "none"; }
 
 async function saveEdit() {
   const id = document.getElementById("editId").value;
   const data = {
-    name: document.getElementById("editName").value,
-    version: document.getElementById("editVersion").value,
-    description: document.getElementById("editDescription").value,
-    zip_url: document.getElementById("editZipUrl").value,
-    apk_url: document.getElementById("editApkUrl").value,
-    zip_downloads: document.getElementById("editZipDl").value,
-    apk_downloads: document.getElementById("editApkDl").value,
-    is_beta: document.getElementById("editBeta").checked,
-    is_update: document.getElementById("editUpdate").checked,
-    is_maintenance: document.getElementById("editMaint").checked
+    name: document.getElementById("editName").value, version: document.getElementById("editVersion").value, description: document.getElementById("editDescription").value,
+    zip_url: document.getElementById("editZipUrl").value, apk_url: document.getElementById("editApkUrl").value,
+    zip_downloads: document.getElementById("editZipDl").value, apk_downloads: document.getElementById("editApkDl").value,
+    is_beta: document.getElementById("editBeta").checked, is_update: document.getElementById("editUpdate").checked, is_maintenance: document.getElementById("editMaint").checked
   };
-
-  const res = await fetch("/api/software/" + id, { 
-    method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)
-  });
-  if(res.ok) { closeModal(); loadItems(); } 
-  else { alert("Update failed."); }
+  const res = await fetch("/api/software/" + id, { method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
+  if(res.ok) { closeModal(); loadItems(); } else { alert("Update failed."); }
 }
 
 async function delItem(id){
@@ -363,7 +339,6 @@ async function delItem(id){
     loadItems();
   }
 }
-
 window.onload = checkAuth;
 </script>
 </body>
