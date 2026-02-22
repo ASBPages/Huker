@@ -40,7 +40,7 @@ app.use(session({
 app.use(express.static("public"));
 app.use("/uploads", express.static(UPLOADS_DIR));
 
-/* --- DB初期化 --- */
+/* --- DB初期化 (ZIPとAPKを両方保存できるように変更) --- */
 try {
   db.prepare(`
     CREATE TABLE IF NOT EXISTS software (
@@ -48,8 +48,10 @@ try {
       name TEXT,
       version TEXT,
       description TEXT,
-      file_path TEXT,
-      downloads INTEGER DEFAULT 0,
+      zip_path TEXT,
+      apk_path TEXT,
+      zip_downloads INTEGER DEFAULT 0,
+      apk_downloads INTEGER DEFAULT 0,
       is_beta INTEGER DEFAULT 0,
       is_update INTEGER DEFAULT 0,
       is_maintenance INTEGER DEFAULT 0,
@@ -121,17 +123,18 @@ app.get("/api/software", (req, res) => {
   res.json(list);
 });
 
-// 新規作成
-app.post("/api/software", auth, upload.single("file"), (req, res) => {
+// 新規作成 (ZIPとAPKを同時に受け取る)
+app.post("/api/software", auth, upload.fields([{name: 'zip_file'}, {name: 'apk_file'}]), (req, res) => {
   try {
     const { name, version, description, is_beta, is_update, is_maintenance } = req.body;
-    const filePath = req.file ? `/uploads/${req.file.filename}` : "";
+    const zipPath = req.files && req.files['zip_file'] ? `/uploads/${req.files['zip_file'][0].filename}` : "";
+    const apkPath = req.files && req.files['apk_file'] ? `/uploads/${req.files['apk_file'][0].filename}` : "";
     
     db.prepare(`
-      INSERT INTO software (name, version, description, file_path, is_beta, is_update, is_maintenance)
-      VALUES (?,?,?,?,?,?,?)
+      INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance)
+      VALUES (?,?,?,?,?,?,?,?)
     `).run(
-      name, version, description, filePath,
+      name, version, description, zipPath, apkPath,
       is_beta === "true" ? 1 : 0,
       is_update === "true" ? 1 : 0,
       is_maintenance === "true" ? 1 : 0
@@ -140,39 +143,45 @@ app.post("/api/software", auth, upload.single("file"), (req, res) => {
   } catch (e) { res.status(500).json({error: e.message}); }
 });
 
-// ★★★ 更新機能 (UPDATE) ★★★
-app.put("/api/software/:id", auth, upload.single("file"), (req, res) => {
+// 更新 (UPDATE)
+app.put("/api/software/:id", auth, upload.fields([{name: 'zip_file'}, {name: 'apk_file'}]), (req, res) => {
   try {
     const id = req.params.id;
     const { name, version, description, is_beta, is_update, is_maintenance } = req.body;
     
-    // 現在のデータを取得
-    const oldItem = db.prepare("SELECT file_path FROM software WHERE id=?").get(id);
+    const oldItem = db.prepare("SELECT zip_path, apk_path FROM software WHERE id=?").get(id);
     if (!oldItem) return res.status(404).json({error: "Not found"});
 
-    let newFilePath = oldItem.file_path;
+    let newZipPath = oldItem.zip_path;
+    let newApkPath = oldItem.apk_path;
 
-    // 新しいファイルがアップロードされた場合のみ、古いファイルを消してパスを更新
-    if (req.file) {
-      if (oldItem.file_path) {
-        const oldFullPath = path.join(UPLOADS_DIR, oldItem.file_path.replace('/uploads/', ''));
-        if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath); // 古いファイルを削除
+    if (req.files && req.files['zip_file']) {
+      if (oldItem.zip_path) {
+        const oldFullPath = path.join(UPLOADS_DIR, oldItem.zip_path.replace('/uploads/', ''));
+        if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath);
       }
-      newFilePath = `/uploads/${req.file.filename}`;
+      newZipPath = `/uploads/${req.files['zip_file'][0].filename}`;
+    }
+
+    if (req.files && req.files['apk_file']) {
+      if (oldItem.apk_path) {
+        const oldFullPath = path.join(UPLOADS_DIR, oldItem.apk_path.replace('/uploads/', ''));
+        if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath);
+      }
+      newApkPath = `/uploads/${req.files['apk_file'][0].filename}`;
     }
 
     db.prepare(`
       UPDATE software 
-      SET name=?, version=?, description=?, file_path=?, is_beta=?, is_update=?, is_maintenance=?
+      SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?
       WHERE id=?
     `).run(
-      name, version, description, newFilePath,
+      name, version, description, newZipPath, newApkPath,
       is_beta === "true" ? 1 : 0,
       is_update === "true" ? 1 : 0,
       is_maintenance === "true" ? 1 : 0,
       id
     );
-
     res.json({ success: true });
   } catch(e) {
     console.error(e);
@@ -183,25 +192,42 @@ app.put("/api/software/:id", auth, upload.single("file"), (req, res) => {
 // 削除
 app.delete("/api/software/:id", auth, (req, res) => {
   try {
-    const item = db.prepare("SELECT file_path FROM software WHERE id=?").get(req.params.id);
-    if (item && item.file_path) {
-      const filename = item.file_path.replace('/uploads/', '');
-      const fullPath = path.join(UPLOADS_DIR, filename);
-      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    const item = db.prepare("SELECT zip_path, apk_path FROM software WHERE id=?").get(req.params.id);
+    if (item) {
+      if (item.zip_path) {
+        const fullPath = path.join(UPLOADS_DIR, item.zip_path.replace('/uploads/', ''));
+        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+      }
+      if (item.apk_path) {
+        const fullPath = path.join(UPLOADS_DIR, item.apk_path.replace('/uploads/', ''));
+        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+      }
     }
     db.prepare("DELETE FROM software WHERE id=?").run(req.params.id);
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-// ダウンロード
-app.post("/api/download/:id", (req, res) => {
-  const item = db.prepare("SELECT file_path, is_maintenance FROM software WHERE id=?").get(req.params.id);
-  if(!item) return res.status(404).json({error:"Not found"});
-  if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
+// ダウンロード (ZIPかAPKか指定してカウントアップ)
+app.post("/api/download/:id/:type", (req, res) => {
+  try {
+    const { id, type } = req.params;
+    const item = db.prepare("SELECT zip_path, apk_path, is_maintenance FROM software WHERE id=?").get(id);
+    if(!item) return res.status(404).json({error:"Not found"});
+    if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
 
-  db.prepare("UPDATE software SET downloads=downloads+1 WHERE id=?").run(req.params.id);
-  res.json({ link: item.file_path });
+    if (type === 'zip' && item.zip_path) {
+      db.prepare("UPDATE software SET zip_downloads=zip_downloads+1 WHERE id=?").run(id);
+      return res.json({ link: item.zip_path });
+    } else if (type === 'apk' && item.apk_path) {
+      db.prepare("UPDATE software SET apk_downloads=apk_downloads+1 WHERE id=?").run(id);
+      return res.json({ link: item.apk_path });
+    } else {
+      return res.status(404).json({error:"File not found"});
+    }
+  } catch(e) {
+    res.status(500).json({error: "Server error"});
+  }
 });
 
 const PORT = process.env.PORT || 3000;
