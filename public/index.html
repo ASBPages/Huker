@@ -34,41 +34,17 @@
   .page-title { font-family: 'Playfair Display', serif; font-size: 40px; text-align: center; margin-bottom: 40px; letter-spacing: 2px; }
 
   .hero { height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; text-align: center; overflow: hidden; background-color: var(--bg); }
-  
-  /* ★ 画像背景の高画質化＆GPU最適化 */
-  .hero-bg { 
-    position: absolute; inset: -5%; z-index: 1; 
-    background-position: center; background-size: cover; background-repeat: no-repeat; 
-    opacity: 0; transition: opacity 1s ease; 
-    animation: slowPan 30s ease-in-out infinite alternate; 
-    display: none;
-    will-change: transform; /* GPUレンダリングの強制 */
-    transform: translateZ(0);
-    image-rendering: high-quality;
-  }
-  @keyframes slowPan { 
-    0% { transform: scale(1) translateZ(0); } 
-    100% { transform: scale(1.1) translateZ(0); } 
-  }
+  .hero-bg { position: absolute; inset: -5%; z-index: 1; background-position: center; background-size: cover; background-repeat: no-repeat; opacity: 0; transition: opacity 1s ease; animation: slowPan 30s ease-in-out infinite alternate; display: none; will-change: transform; transform: translateZ(0); image-rendering: high-quality; }
+  @keyframes slowPan { 0% { transform: scale(1) translateZ(0); } 100% { transform: scale(1.1) translateZ(0); } }
 
-  /* ★ 動画背景の強制フィット＆高画質化 */
-  .hero-video { 
-    position: absolute; inset: 0; width: 100%; height: 100%; 
-    object-fit: cover; /* 画面サイズに合わせて自動フィット */
-    z-index: 1; opacity: 0; transition: opacity 1s ease; display: none; 
-    will-change: opacity;
-    transform: translateZ(0); /* ティアリング防止 */
-  }
-
+  .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; opacity: 0; transition: opacity 1s ease; display: none; will-change: opacity; transform: translateZ(0); }
   .hero-overlay { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,7,12,0.3), var(--bg)); z-index: 2; }
-
   .particles { position: absolute; inset: 0; z-index: 3; pointer-events: none; background-image: radial-gradient(circle, rgba(139,233,255,0.4) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px); background-size: 150px 150px, 300px 300px; animation: particleDrift 60s linear infinite; }
   @keyframes particleDrift { 0% { background-position: 0 0, 0 0; } 100% { background-position: 150px -300px, 300px -600px; } }
 
   .hero-inner { position: relative; z-index: 4; }
   .hero h1 { font-family: 'Playfair Display', serif; font-size: 100px; margin: 0; line-height: 1; background: linear-gradient(135deg, #fff 0%, #a0d8ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(139, 233, 255, 0.3);}
   .hero p { font-size: 20px; letter-spacing: 4px; margin-top: 20px; color: #cbd5e0; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
-  
   .btn-explore { margin-top: 40px; padding: 12px 30px; border: 1px solid var(--primary); background: rgba(139, 233, 255, 0.1); color: var(--primary); font-size: 14px; cursor: pointer; transition: 0.3s; border-radius: 30px; text-decoration: none; display: inline-block; backdrop-filter: blur(5px);}
   .btn-explore:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow); }
 
@@ -93,6 +69,10 @@
   .b-maint { border: 1px solid #95a5a6; color: #95a5a6; background: rgba(149, 165, 166, 0.1); }
   .b-zip { border: 1px solid #3498db; color: #3498db; background: rgba(52, 152, 219, 0.1); }
   .b-apk { border: 1px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+  
+  /* ★ 新タグのデザイン */
+  .b-orig { border: 1px solid #9b59b6; color: #9b59b6; background: rgba(155, 89, 182, 0.1); }
+  .b-third { border: 1px solid #e67e22; color: #e67e22; background: rgba(230, 126, 34, 0.1); }
 
   .desc { margin: 20px 0; font-size: 14px; color: var(--text-sub); line-height: 1.6; flex-grow: 1; white-space: pre-wrap; }
   
@@ -259,9 +239,7 @@ async function loadSiteSettings() {
     if (isVideo) {
       heroVideo.src = bgUrl;
       heroVideo.style.display = 'block';
-      heroVideo.onloadeddata = () => {
-        heroVideo.style.opacity = "1";
-      };
+      heroVideo.onloadeddata = () => { heroVideo.style.opacity = "1"; };
     } else {
       const img = new Image();
       img.src = bgUrl;
@@ -297,9 +275,7 @@ async function loadRealNews() {
       else if (item.is_beta) actionStr = `テスト開始：「${item.name} v${item.version}」のベータ版が公開されました。`;
       dynamicNewsHtml += `<div class="news-item"><span>${timeStr}</span> ${actionStr}</div>`;
     });
-    const staticNewsHtml = `
-      <div class="news-item"><span>2026.02.21 12:00</span> 公式サイト及びデータポータルをローンチ。</div>
-    `;
+    const staticNewsHtml = `<div class="news-item"><span>2026.02.21 12:00</span> 公式サイト及びデータポータルをローンチ。</div>`;
     newsBox.innerHTML = dynamicNewsHtml + staticNewsHtml;
   } catch (e) { newsBox.innerHTML = "<div class='news-item'>ログの取得に失敗しました。</div>"; }
 }
@@ -328,6 +304,10 @@ async function loadSoftware() {
       const isUpdate = item.is_update || 0;
       
       let badgeHtml = "";
+      // ★自作・他作タグ
+      if(item.is_original) badgeHtml += `<span class="badge b-orig">ORIGINAL</span>`;
+      if(item.is_thirdparty) badgeHtml += `<span class="badge b-third">THIRD-PARTY</span>`;
+
       if(item.zip_path) badgeHtml += `<span class="badge b-zip">ZIP</span>`;
       if(item.apk_path) badgeHtml += `<span class="badge b-apk">APK</span>`;
 
@@ -372,9 +352,7 @@ async function downloadSw(id, type) {
     if(data.link) {
       window.open(data.link, '_blank');
       setTimeout(loadSoftware, 1000); 
-    } else {
-      alert("File not found.");
-    }
+    } else { alert("File not found."); }
   } catch(e) { alert("Connection failed."); }
 }
 
