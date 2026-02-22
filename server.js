@@ -40,7 +40,7 @@ app.use(session({
 app.use(express.static("public"));
 app.use("/uploads", express.static(UPLOADS_DIR));
 
-/* --- DB初期化 --- */
+/* --- DB初期化 & ★自動マイグレーション --- */
 try {
   db.prepare(`
     CREATE TABLE IF NOT EXISTS software (
@@ -71,6 +71,11 @@ try {
   insertSetting.run('hero_subtitle', 'Production greatly advances freedom.');
   insertSetting.run('bg_image', 'background.jpg');
   insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD');
+
+  // ★ 既存のDBファイルを消さずに「自作・他作」カラムを自動追加する処理
+  try { db.prepare("ALTER TABLE software ADD COLUMN is_original INTEGER DEFAULT 0").run(); } catch(e){}
+  try { db.prepare("ALTER TABLE software ADD COLUMN is_thirdparty INTEGER DEFAULT 0").run(); } catch(e){}
+
 } catch (err) { console.error("DB Error:", err.message); }
 
 /* --- 認証 --- */
@@ -162,7 +167,7 @@ app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
 });
 
 
-/* ===== ソフトウェア API (外部URL & DL数編集 対応) ===== */
+/* ===== ソフトウェア API ===== */
 app.get("/api/software", (req, res) => {
   const list = db.prepare("SELECT * FROM software ORDER BY created_at DESC").all();
   res.json(list);
@@ -170,33 +175,34 @@ app.get("/api/software", (req, res) => {
 
 app.post("/api/software", auth, (req, res) => {
   try {
-    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance } = req.body;
+    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, is_original, is_thirdparty } = req.body;
     
     db.prepare(`
-      INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance)
-      VALUES (?,?,?,?,?,?,?,?)
+      INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance, is_original, is_thirdparty)
+      VALUES (?,?,?,?,?,?,?,?,?,?)
     `).run(
       name, version, description, zip_url || "", apk_url || "",
-      is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0
+      is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0,
+      is_original ? 1 : 0, is_thirdparty ? 1 : 0
     );
     res.json({ success: true });
   } catch (e) { res.status(500).json({error: e.message}); }
 });
 
-// ダウンロード数の書き換えを受け付けるように修正
 app.put("/api/software/:id", auth, (req, res) => {
   try {
     const id = req.params.id;
-    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, zip_downloads, apk_downloads } = req.body;
+    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, zip_downloads, apk_downloads, is_original, is_thirdparty } = req.body;
     
     db.prepare(`
       UPDATE software 
-      SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?
+      SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?, is_original=?, is_thirdparty=?
       WHERE id=?
     `).run(
       name, version, description, zip_url || "", apk_url || "",
       is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0,
-      parseInt(zip_downloads) || 0, parseInt(apk_downloads) || 0, id
+      parseInt(zip_downloads) || 0, parseInt(apk_downloads) || 0,
+      is_original ? 1 : 0, is_thirdparty ? 1 : 0, id
     );
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
