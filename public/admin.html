@@ -23,7 +23,6 @@
   button.action-btn:hover { opacity:0.9; transform:translateY(-1px); }
   button.discord-btn { background:var(--discord); color:#fff; font-size:16px; display:flex; justify-content:center; align-items:center; gap:10px; }
 
-  /* Tab Menu */
   .admin-tabs { display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;}
   .admin-tab { padding:10px 20px; background:transparent; border:1px solid var(--border); border-radius:6px; cursor:pointer; font-weight:bold; color:var(--text); transition:0.2s; flex:1; text-align:center; }
   .admin-tab:hover { background:var(--border); }
@@ -73,18 +72,18 @@
     <!-- SOFTWARE TAB -->
     <div id="softwareTab">
       <div class="panel">
-        <h2>DEPLOY NEW</h2>
-        <input id="name" placeholder="Name">
+        <h2>DEPLOY NEW (External URL)</h2>
+        <input id="name" placeholder="Software Name">
         <input id="version" placeholder="Version (e.g. v1.0.0)">
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
           <div>
-            <label style="font-size:12px; color:#888;">ZIP File (Windows/PC)</label>
-            <input type="file" id="zipFile" accept=".zip,.rar,.7z" style="margin-bottom:0;">
+            <label style="font-size:12px; color:#888;">ZIP Download URL (Google Drive等)</label>
+            <input type="url" id="zipUrl" placeholder="https://..." style="margin-bottom:0;">
           </div>
           <div>
-            <label style="font-size:12px; color:#888;">APK File (Android)</label>
-            <input type="file" id="apkFile" accept=".apk" style="margin-bottom:0;">
+            <label style="font-size:12px; color:#888;">APK Download URL</label>
+            <input type="url" id="apkUrl" placeholder="https://..." style="margin-bottom:0;">
           </div>
         </div>
         
@@ -108,17 +107,15 @@
     <div id="settingsTab" style="display:none;">
       <div class="panel">
         <h2>GLOBAL SETTINGS</h2>
-        <p style="font-size:13px; color:#888; margin-bottom:20px;">トップページの表示内容を編集します。</p>
-
         <label style="font-size:12px; color:#888;">Hero Title (大見出し)</label>
         <input id="set_hero_title" placeholder="ASB">
 
         <label style="font-size:12px; color:#888;">Hero Subtitle (小見出し)</label>
         <input id="set_hero_subtitle" placeholder="Production greatly advances freedom.">
 
-        <label style="font-size:12px; color:#888;">Background Image (背景画像)</label>
+        <label style="font-size:12px; color:#888;">Background Image (※ここだけアップロード式)</label>
         <input type="file" id="set_bg_image" accept="image/*">
-        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:20px;">※選択しない場合は現在の画像が維持されます。</p>
+        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:20px;">画像は数MBなのでアップロードしても安全です。</p>
 
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
       </div>
@@ -134,14 +131,14 @@
     <input id="editName" placeholder="Name">
     <input id="editVersion" placeholder="Version">
     
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:5px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
       <div>
-        <label style="font-size:12px; color:#888;">Update ZIP File</label>
-        <input type="file" id="editZip" accept=".zip,.rar,.7z">
+        <label style="font-size:12px; color:#888;">ZIP URL</label>
+        <input type="url" id="editZipUrl" placeholder="https://...">
       </div>
       <div>
-        <label style="font-size:12px; color:#888;">Update APK File</label>
-        <input type="file" id="editApk" accept=".apk">
+        <label style="font-size:12px; color:#888;">APK URL</label>
+        <input type="url" id="editApkUrl" placeholder="https://...">
       </div>
     </div>
 
@@ -155,7 +152,7 @@
     
     <div style="display:flex; gap:10px;">
       <button class="action-btn" style="background:#444; color:#fff;" onclick="closeModal()">CANCEL</button>
-      <button class="action-btn" onclick="saveEdit()">SAVE</button>
+      <button class="action-btn" onclick="saveEdit()">SAVE CHANGES</button>
     </div>
   </div>
 </div>
@@ -167,7 +164,6 @@ function switchAdminTab(tabId, element) {
   document.getElementById('softwareTab').style.display = 'none';
   document.getElementById('settingsTab').style.display = 'none';
   document.getElementById(tabId).style.display = 'block';
-  
   document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
   element.classList.add('active');
 }
@@ -181,14 +177,13 @@ async function checkAuth() {
       document.getElementById("dashboard").style.display = "block";
       document.getElementById("adminName").innerText = data.user;
       loadItems();
-      loadSettings(); // 設定も読み込む
+      loadSettings();
     } else {
       document.getElementById("loginPanel").style.display = "block";
     }
   } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
 }
 
-// === Site Settings API ===
 async function loadSettings() {
   const res = await fetch("/api/settings");
   const data = await res.json();
@@ -200,7 +195,6 @@ async function saveSettings() {
   const fd = new FormData();
   fd.append("hero_title", document.getElementById("set_hero_title").value);
   fd.append("hero_subtitle", document.getElementById("set_hero_subtitle").value);
-  
   const bgFile = document.getElementById("set_bg_image").files[0];
   if(bgFile) fd.append("bg_image", bgFile);
 
@@ -209,7 +203,6 @@ async function saveSettings() {
   else alert("Failed to save settings.");
 }
 
-// === Software API ===
 async function loadItems(){
   const res = await fetch("/api/software");
   currentData = await res.json();
@@ -221,7 +214,6 @@ async function loadItems(){
     let tags = "";
     if(item.zip_path) tags += `<span class="tag" style="background:rgba(52,152,219,0.2); color:#3498db; border:1px solid #3498db;">ZIP</span>`;
     if(item.apk_path) tags += `<span class="tag" style="background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid #2ecc71;">APK</span>`;
-
     if(item.is_beta) tags += `<span class="tag" style="background:#f1c40f;">BETA</span>`;
     if(item.is_update) tags += `<span class="tag" style="background:#e74c3c;">UPDATE</span>`;
     if(item.is_maintenance) tags += `<span class="tag" style="background:#95a5a6;">MAINT</span>`;
@@ -246,28 +238,33 @@ async function loadItems(){
 
 async function addItem(){
   const name = document.getElementById("name").value;
-  const zipInput = document.getElementById("zipFile");
-  const apkInput = document.getElementById("apkFile");
+  const zipUrl = document.getElementById("zipUrl").value;
+  const apkUrl = document.getElementById("apkUrl").value;
   
-  if(!name || (!zipInput.files[0] && !apkInput.files[0])) return alert("Name and at least one file required!");
+  if(!name || (!zipUrl && !apkUrl)) return alert("Name and at least one URL required!");
 
-  const fd = new FormData();
-  fd.append("name", name);
-  fd.append("version", document.getElementById("version").value);
-  fd.append("description", document.getElementById("description").value);
-  if(zipInput.files[0]) fd.append("zip_file", zipInput.files[0]);
-  if(apkInput.files[0]) fd.append("apk_file", apkInput.files[0]);
-  fd.append("is_beta", document.getElementById("isBeta").checked);
-  fd.append("is_update", document.getElementById("isUpdate").checked);
-  fd.append("is_maintenance", document.getElementById("isMaint").checked);
+  const data = {
+    name: name,
+    version: document.getElementById("version").value,
+    description: document.getElementById("description").value,
+    zip_url: zipUrl,
+    apk_url: apkUrl,
+    is_beta: document.getElementById("isBeta").checked,
+    is_update: document.getElementById("isUpdate").checked,
+    is_maintenance: document.getElementById("isMaint").checked
+  };
 
-  await fetch("/api/software", { method: "POST", body: fd });
+  await fetch("/api/software", { 
+    method: "POST", 
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(data)
+  });
   
   document.getElementById("name").value = "";
   document.getElementById("version").value = "";
   document.getElementById("description").value = "";
-  document.getElementById("zipFile").value = "";
-  document.getElementById("apkFile").value = "";
+  document.getElementById("zipUrl").value = "";
+  document.getElementById("apkUrl").value = "";
   loadItems();
 }
 
@@ -279,11 +276,11 @@ function openEdit(id) {
   document.getElementById("editName").value = item.name;
   document.getElementById("editVersion").value = item.version;
   document.getElementById("editDescription").value = item.description;
+  document.getElementById("editZipUrl").value = item.zip_path || "";
+  document.getElementById("editApkUrl").value = item.apk_path || "";
   document.getElementById("editBeta").checked = item.is_beta === 1;
   document.getElementById("editUpdate").checked = item.is_update === 1;
   document.getElementById("editMaint").checked = item.is_maintenance === 1;
-  document.getElementById("editZip").value = "";
-  document.getElementById("editApk").value = "";
 
   document.getElementById("editModal").style.display = "flex";
 }
@@ -292,21 +289,22 @@ function closeModal() { document.getElementById("editModal").style.display = "no
 
 async function saveEdit() {
   const id = document.getElementById("editId").value;
-  const fd = new FormData();
-  
-  fd.append("name", document.getElementById("editName").value);
-  fd.append("version", document.getElementById("editVersion").value);
-  fd.append("description", document.getElementById("editDescription").value);
-  fd.append("is_beta", document.getElementById("editBeta").checked);
-  fd.append("is_update", document.getElementById("editUpdate").checked);
-  fd.append("is_maintenance", document.getElementById("editMaint").checked);
+  const data = {
+    name: document.getElementById("editName").value,
+    version: document.getElementById("editVersion").value,
+    description: document.getElementById("editDescription").value,
+    zip_url: document.getElementById("editZipUrl").value,
+    apk_url: document.getElementById("editApkUrl").value,
+    is_beta: document.getElementById("editBeta").checked,
+    is_update: document.getElementById("editUpdate").checked,
+    is_maintenance: document.getElementById("editMaint").checked
+  };
 
-  const zipInput = document.getElementById("editZip");
-  const apkInput = document.getElementById("editApk");
-  if(zipInput.files[0]) fd.append("zip_file", zipInput.files[0]);
-  if(apkInput.files[0]) fd.append("apk_file", apkInput.files[0]);
-
-  const res = await fetch("/api/software/" + id, { method: "PUT", body: fd });
+  const res = await fetch("/api/software/" + id, { 
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(data)
+  });
   if(res.ok) { closeModal(); loadItems(); } 
   else { alert("Update failed."); }
 }
