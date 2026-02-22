@@ -42,6 +42,8 @@
   .page-title { font-family: 'Playfair Display', serif; font-size: 40px; text-align: center; margin-bottom: 40px; letter-spacing: 2px; }
 
   .hero { height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; text-align: center; overflow: hidden; }
+  
+  /* 初期背景、JSで上書きされます */
   .hero-bg { position: absolute; inset: -5%; background: url("background.jpg") center/cover no-repeat; z-index: 1; animation: slowPan 30s ease-in-out infinite alternate; }
   .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,7,12,0.1), var(--bg)); }
   @keyframes slowPan { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
@@ -71,10 +73,12 @@
   .card h3 { margin: 0 0 5px 0; font-size: 22px; }
   .version { font-size: 13px; color: var(--primary); font-family: monospace; }
   
-  .badge { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-top: 10px; }
+  .badge { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-top: 10px; margin-right: 5px; }
   .b-beta { border: 1px solid #f1c40f; color: #f1c40f; background: rgba(241, 196, 15, 0.1); }
   .b-update { border: 1px solid #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
   .b-maint { border: 1px solid #95a5a6; color: #95a5a6; background: rgba(149, 165, 166, 0.1); }
+  .b-zip { border: 1px solid #3498db; color: #3498db; background: rgba(52, 152, 219, 0.1); }
+  .b-apk { border: 1px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
 
   .desc { margin: 20px 0; font-size: 14px; color: var(--text-sub); line-height: 1.6; flex-grow: 1; white-space: pre-wrap; }
   
@@ -106,7 +110,7 @@
 <body>
 
 <header>
-  <div class="logo">ASB.</div>
+  <div class="logo" id="site-logo">ASB.</div>
   <nav>
     <ul>
       <li onclick="switchTab('home', this)" class="active">Home</li>
@@ -126,11 +130,11 @@
 
 <div id="home" class="tab-content active">
   <div class="hero">
-    <div class="hero-bg"></div>
+    <div class="hero-bg" id="hero-bg"></div>
     <div class="particles"></div>
     <div class="hero-inner">
-      <h1>ASB</h1>
-      <p>Production greatly advances freedom.</p>
+      <h1 id="hero-title">ASB</h1>
+      <p id="hero-subtitle">Production greatly advances freedom.</p>
       <button class="btn-explore" onclick="switchTab('software', document.querySelectorAll('nav li')[1])">Explore Software</button>
     </div>
   </div>
@@ -205,11 +209,33 @@
 </div>
 
 <footer>
-  <p>&copy; 2026 ASB Project. All rights reserved.</p>
+  <p>&copy; <span id="year">2026</span> ASB Project. All rights reserved.</p>
   <p style="color:#666;">Design by ASB Team.</p>
 </footer>
 
 <script>
+document.getElementById('year').innerText = new Date().getFullYear();
+
+// ===== サイト設定(文字・背景)の取得 =====
+async function loadSiteSettings() {
+  try {
+    const res = await fetch("/api/settings");
+    const settings = await res.json();
+    
+    if(settings.hero_title) {
+      document.getElementById("hero-title").innerText = settings.hero_title;
+      document.getElementById("site-logo").innerText = settings.hero_title + ".";
+      document.title = settings.hero_title + " Official";
+    }
+    if(settings.hero_subtitle) {
+      document.getElementById("hero-subtitle").innerText = settings.hero_subtitle;
+    }
+    if(settings.bg_image) {
+      document.getElementById("hero-bg").style.backgroundImage = `url('${settings.bg_image}')`;
+    }
+  } catch(e) { console.log("設定の読み込みに失敗しました"); }
+}
+
 function formatDate(utcDateString) {
   if (!utcDateString) return "Unknown Date";
   const d = new Date(utcDateString.replace(' ', 'T') + 'Z');
@@ -235,7 +261,6 @@ async function loadRealNews() {
     });
     const staticNewsHtml = `
       <div class="news-item"><span>2026.02.21 12:00</span> 公式サイト及びデータポータルをローンチ。</div>
-      <div class="news-item"><span>2026.02.20 18:30</span> 「Auto click ASB」初期ベータテスト準備完了。</div>
     `;
     newsBox.innerHTML = dynamicNewsHtml + staticNewsHtml;
   } catch (e) { newsBox.innerHTML = "<div class='news-item'>ログの取得に失敗しました。</div>"; }
@@ -265,14 +290,15 @@ async function loadSoftware() {
       const isUpdate = item.is_update || 0;
       
       let badgeHtml = "";
+      if(item.zip_path) badgeHtml += `<span class="badge b-zip">ZIP</span>`;
+      if(item.apk_path) badgeHtml += `<span class="badge b-apk">APK</span>`;
+
       if(isMaint) badgeHtml += `<span class="badge b-maint">MAINTENANCE</span>`;
       else if(isUpdate) badgeHtml += `<span class="badge b-update">UPDATING</span>`;
       if(isBeta) badgeHtml += ` <span class="badge b-beta">BETA</span>`;
 
-      // 総合DL数
       const totalDl = (item.zip_downloads || 0) + (item.apk_downloads || 0);
 
-      // ボタンの出し分け
       let btnHtml = `<div class="btn-wrapper">`;
       if (isMaint) {
         btnHtml += `<button class="dl-btn" disabled>Unavailable</button>`;
@@ -314,7 +340,10 @@ async function downloadSw(id, type) {
   } catch(e) { alert("Connection failed."); }
 }
 
-window.addEventListener('load', () => { loadRealNews(); });
+window.addEventListener('load', () => { 
+  loadSiteSettings();
+  loadRealNews(); 
+});
 </script>
 
 </body>
