@@ -19,11 +19,12 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const db = new Database(path.join(DATA_DIR, "database.sqlite"));
 
+// ※背景画像アップロード専用の設定
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_DIR),
   filename: (req, file, cb) => {
     const safeName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    cb(null, Date.now() + "_" + safeName);
+    cb(null, "bg_" + Date.now() + "_" + safeName);
   }
 });
 const upload = multer({ storage });
@@ -42,7 +43,6 @@ app.use("/uploads", express.static(UPLOADS_DIR));
 
 /* --- DB初期化 --- */
 try {
-  // ソフトウェア用テーブル
   db.prepare(`
     CREATE TABLE IF NOT EXISTS software (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,7 +60,6 @@ try {
     )
   `).run();
 
-  // ★ サイト設定用テーブル
   db.prepare(`
     CREATE TABLE IF NOT EXISTS site_settings (
       key TEXT PRIMARY KEY,
@@ -68,7 +67,6 @@ try {
     )
   `).run();
 
-  // 初期設定値の挿入
   const insertSetting = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)');
   insertSetting.run('hero_title', 'ASB');
   insertSetting.run('hero_subtitle', 'Production greatly advances freedom.');
@@ -151,7 +149,6 @@ app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
     if (hero_subtitle !== undefined) update.run(hero_subtitle, 'hero_subtitle');
     
     if (req.file) {
-      // 古い背景画像を消す処理(必要に応じて)
       const oldBg = db.prepare("SELECT value FROM site_settings WHERE key = 'bg_image'").get();
       if (oldBg && oldBg.value.startsWith('/uploads/')) {
         const oldFullPath = path.join(UPLOADS_DIR, oldBg.value.replace('/uploads/', ''));
@@ -164,91 +161,55 @@ app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
 });
 
 
-/* ===== ソフトウェア API ===== */
+/* ===== ソフトウェア API (外部URL対応) ===== */
 app.get("/api/software", (req, res) => {
   const list = db.prepare("SELECT * FROM software ORDER BY created_at DESC").all();
   res.json(list);
 });
 
-app.post("/api/software", auth, upload.fields([{name: 'zip_file'}, {name: 'apk_file'}]), (req, res) => {
+// 新規作成
+app.post("/api/software", auth, (req, res) => {
   try {
-    const { name, version, description, is_beta, is_update, is_maintenance } = req.body;
-    const zipPath = req.files && req.files['zip_file'] ? `/uploads/${req.files['zip_file'][0].filename}` : "";
-    const apkPath = req.files && req.files['apk_file'] ? `/uploads/${req.files['apk_file'][0].filename}` : "";
+    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance } = req.body;
     
     db.prepare(`
       INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance)
       VALUES (?,?,?,?,?,?,?,?)
     `).run(
-      name, version, description, zipPath, apkPath,
-      is_beta === "true" ? 1 : 0,
-      is_update === "true" ? 1 : 0,
-      is_maintenance === "true" ? 1 : 0
+      name, version, description, zip_url || "", apk_url || "",
+      is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0
     );
     res.json({ success: true });
   } catch (e) { res.status(500).json({error: e.message}); }
 });
 
-app.put("/api/software/:id", auth, upload.fields([{name: 'zip_file'}, {name: 'apk_file'}]), (req, res) => {
+// 更新
+app.put("/api/software/:id", auth, (req, res) => {
   try {
     const id = req.params.id;
-    const { name, version, description, is_beta, is_update, is_maintenance } = req.body;
+    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance } = req.body;
     
-    const oldItem = db.prepare("SELECT zip_path, apk_path FROM software WHERE id=?").get(id);
-    if (!oldItem) return res.status(404).json({error: "Not found"});
-
-    let newZipPath = oldItem.zip_path;
-    let newApkPath = oldItem.apk_path;
-
-    if (req.files && req.files['zip_file']) {
-      if (oldItem.zip_path) {
-        const oldFullPath = path.join(UPLOADS_DIR, oldItem.zip_path.replace('/uploads/', ''));
-        if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath);
-      }
-      newZipPath = `/uploads/${req.files['zip_file'][0].filename}`;
-    }
-
-    if (req.files && req.files['apk_file']) {
-      if (oldItem.apk_path) {
-        const oldFullPath = path.join(UPLOADS_DIR, oldItem.apk_path.replace('/uploads/', ''));
-        if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath);
-      }
-      newApkPath = `/uploads/${req.files['apk_file'][0].filename}`;
-    }
-
     db.prepare(`
       UPDATE software 
       SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?
       WHERE id=?
     `).run(
-      name, version, description, newZipPath, newApkPath,
-      is_beta === "true" ? 1 : 0,
-      is_update === "true" ? 1 : 0,
-      is_maintenance === "true" ? 1 : 0,
-      id
+      name, version, description, zip_url || "", apk_url || "",
+      is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, id
     );
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
+// 削除 (ローカルファイルの削除処理を撤廃)
 app.delete("/api/software/:id", auth, (req, res) => {
   try {
-    const item = db.prepare("SELECT zip_path, apk_path FROM software WHERE id=?").get(req.params.id);
-    if (item) {
-      if (item.zip_path) {
-        const fullPath = path.join(UPLOADS_DIR, item.zip_path.replace('/uploads/', ''));
-        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-      }
-      if (item.apk_path) {
-        const fullPath = path.join(UPLOADS_DIR, item.apk_path.replace('/uploads/', ''));
-        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-      }
-    }
     db.prepare("DELETE FROM software WHERE id=?").run(req.params.id);
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
+// ダウンロードカウント
 app.post("/api/download/:id/:type", (req, res) => {
   try {
     const { id, type } = req.params;
