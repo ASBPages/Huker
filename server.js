@@ -40,8 +40,9 @@ app.use(session({
 app.use(express.static("public"));
 app.use("/uploads", express.static(UPLOADS_DIR));
 
-/* --- DB初期化 (ZIPとAPKを両方保存できるように変更) --- */
+/* --- DB初期化 --- */
 try {
+  // ソフトウェア用テーブル
   db.prepare(`
     CREATE TABLE IF NOT EXISTS software (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,6 +59,20 @@ try {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
+
+  // ★ サイト設定用テーブル
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS site_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    )
+  `).run();
+
+  // 初期設定値の挿入
+  const insertSetting = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)');
+  insertSetting.run('hero_title', 'ASB');
+  insertSetting.run('hero_subtitle', 'Production greatly advances freedom.');
+  insertSetting.run('bg_image', 'background.jpg');
 } catch (err) { console.error("DB Error:", err.message); }
 
 /* --- 認証 --- */
@@ -116,14 +131,45 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-/* ===== API ===== */
 
+/* ===== サイト設定 API ===== */
+app.get("/api/settings", (req, res) => {
+  try {
+    const rows = db.prepare("SELECT key, value FROM site_settings").all();
+    const settings = {};
+    rows.forEach(r => settings[r.key] = r.value);
+    res.json(settings);
+  } catch(e) { res.status(500).json({error: "Server error"}); }
+});
+
+app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
+  try {
+    const { hero_title, hero_subtitle } = req.body;
+    const update = db.prepare("UPDATE site_settings SET value = ? WHERE key = ?");
+    
+    if (hero_title !== undefined) update.run(hero_title, 'hero_title');
+    if (hero_subtitle !== undefined) update.run(hero_subtitle, 'hero_subtitle');
+    
+    if (req.file) {
+      // 古い背景画像を消す処理(必要に応じて)
+      const oldBg = db.prepare("SELECT value FROM site_settings WHERE key = 'bg_image'").get();
+      if (oldBg && oldBg.value.startsWith('/uploads/')) {
+        const oldFullPath = path.join(UPLOADS_DIR, oldBg.value.replace('/uploads/', ''));
+        if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath);
+      }
+      update.run(`/uploads/${req.file.filename}`, 'bg_image');
+    }
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({error: e.message}); }
+});
+
+
+/* ===== ソフトウェア API ===== */
 app.get("/api/software", (req, res) => {
   const list = db.prepare("SELECT * FROM software ORDER BY created_at DESC").all();
   res.json(list);
 });
 
-// 新規作成 (ZIPとAPKを同時に受け取る)
 app.post("/api/software", auth, upload.fields([{name: 'zip_file'}, {name: 'apk_file'}]), (req, res) => {
   try {
     const { name, version, description, is_beta, is_update, is_maintenance } = req.body;
@@ -143,7 +189,6 @@ app.post("/api/software", auth, upload.fields([{name: 'zip_file'}, {name: 'apk_f
   } catch (e) { res.status(500).json({error: e.message}); }
 });
 
-// 更新 (UPDATE)
 app.put("/api/software/:id", auth, upload.fields([{name: 'zip_file'}, {name: 'apk_file'}]), (req, res) => {
   try {
     const id = req.params.id;
@@ -183,13 +228,9 @@ app.put("/api/software/:id", auth, upload.fields([{name: 'zip_file'}, {name: 'ap
       id
     );
     res.json({ success: true });
-  } catch(e) {
-    console.error(e);
-    res.status(500).json({error: e.message});
-  }
+  } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-// 削除
 app.delete("/api/software/:id", auth, (req, res) => {
   try {
     const item = db.prepare("SELECT zip_path, apk_path FROM software WHERE id=?").get(req.params.id);
@@ -208,7 +249,6 @@ app.delete("/api/software/:id", auth, (req, res) => {
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-// ダウンロード (ZIPかAPKか指定してカウントアップ)
 app.post("/api/download/:id/:type", (req, res) => {
   try {
     const { id, type } = req.params;
@@ -225,9 +265,7 @@ app.post("/api/download/:id/:type", (req, res) => {
     } else {
       return res.status(404).json({error:"File not found"});
     }
-  } catch(e) {
-    res.status(500).json({error: "Server error"});
-  }
+  } catch(e) { res.status(500).json({error: "Server error"}); }
 });
 
 const PORT = process.env.PORT || 3000;
