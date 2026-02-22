@@ -3,374 +3,356 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ASB Official</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>ASB Admin Console</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root { --primary: #8be9ff; --primary-glow: rgba(139, 233, 255, 0.4); --bg: #05070c; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); --text-main: #ffffff; --text-sub: #a0aec0; }
-  * { box-sizing: border-box; scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--text-main); font-family: 'Noto Sans JP', sans-serif; overflow-x: hidden; }
-
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: rgba(139, 233, 255, 0.2); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-  header { position: fixed; top: 0; width: 100%; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(5, 7, 12, 0.6); backdrop-filter: blur(12px); z-index: 1000; border-bottom: 1px solid var(--border); }
-  .logo { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; letter-spacing: 1px; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  :root { --bg:#0a0a0c; --panel:#131316; --border:#2e2e33; --primary:#8be9ff; --discord:#5865F2; --text:#e0e0e0; --error:#ff5555; --warning:#f1c40f; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; display:flex; justify-content:center; padding:40px 20px; min-height:100vh; box-sizing:border-box; }
+  .container { width:100%; max-width:900px; }
+  h1 { font-family:'JetBrains Mono',monospace; color:var(--primary); text-align:center; margin-bottom:30px; letter-spacing:2px; }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:30px; margin-bottom:20px; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: fadeIn 0.3s; }
+  .panel h2 { margin-top:0; font-size:18px; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:20px; color:#fff; }
   
-  nav { overflow-x: auto; }
-  nav ul { display: flex; list-style: none; gap: 30px; margin: 0; padding: 0; white-space: nowrap; }
-  nav li { cursor: pointer; font-size: 14px; color: var(--text-sub); transition: color 0.3s; position: relative; padding: 24px 0; display: flex; align-items: center; }
-  nav li:hover, nav li.active { color: #fff; }
-  nav li.active::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 10px var(--primary); }
-  nav a { color: var(--primary); text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 5px; }
-  nav a:hover { text-shadow: 0 0 10px var(--primary-glow); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-  .tab-content { display: none; padding-top: 70px; min-height: 100vh; animation: fadeIn 0.4s ease; }
-  .tab-content.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  input, textarea { width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:12px; border-radius:6px; margin-bottom:15px; box-sizing:border-box; font-family:'Inter',sans-serif; }
+  input:focus, textarea:focus { outline:none; border-color:var(--primary); }
+  input[type="file"] { padding:10px; background:#1a1a1f; cursor:pointer; }
 
-  .container { padding: 60px 10%; max-width: 1200px; margin: 0 auto; }
-  .page-title { font-family: 'Playfair Display', serif; font-size: 40px; text-align: center; margin-bottom: 40px; letter-spacing: 2px; }
+  button.action-btn { width:100%; padding:14px; background:var(--primary); color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; transition:0.2s; }
+  button.action-btn:hover { opacity:0.9; transform:translateY(-1px); }
+  button.discord-btn { background:var(--discord); color:#fff; font-size:16px; display:flex; justify-content:center; align-items:center; gap:10px; }
 
-  .hero { height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; text-align: center; overflow: hidden; background-color: var(--bg); }
+  .admin-tabs { display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px;}
+  .admin-tab { padding:10px 20px; background:transparent; border:1px solid var(--border); border-radius:6px; cursor:pointer; font-weight:bold; color:var(--text); transition:0.2s; flex:1; text-align:center; }
+  .admin-tab:hover { background:var(--border); }
+  .admin-tab.active { background:var(--primary); color:#000; border-color:var(--primary); }
+
+  .options-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:15px; margin-bottom:20px; }
+  .toggle-wrap { background:#1a1a1f; padding:10px; border-radius:6px; display:flex; align-items:center; gap:10px; cursor:pointer; border:1px solid transparent; transition:0.2s; }
+  .toggle-wrap:has(input:checked) { border-color:var(--primary); background:rgba(139,233,255,0.1); }
   
-  /* 画像用背景 */
-  .hero-bg { position: absolute; inset: -5%; z-index: 1; background-position: center; background-size: cover; background-repeat: no-repeat; opacity: 0; transition: opacity 1s ease; animation: slowPan 30s ease-in-out infinite alternate; display: none; }
-  @keyframes slowPan { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
-
-  /* 動画用背景 */
-  .hero-video { position: absolute; top: 50%; left: 50%; width: 100vw; height: 100vh; object-fit: cover; transform: translate(-50%, -50%); z-index: 1; opacity: 0; transition: opacity 1s ease; display: none; }
-
-  /* 画像と動画に共通の暗転フィルター */
-  .hero-overlay { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,7,12,0.3), var(--bg)); z-index: 2; }
-
-  /* パーティクル（そのまま残す） */
-  .particles { position: absolute; inset: 0; z-index: 3; pointer-events: none; background-image: radial-gradient(circle, rgba(139,233,255,0.4) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px); background-size: 150px 150px, 300px 300px; animation: particleDrift 60s linear infinite; }
-  @keyframes particleDrift { 0% { background-position: 0 0, 0 0; } 100% { background-position: 150px -300px, 300px -600px; } }
-
-  .hero-inner { position: relative; z-index: 4; }
-  .hero h1 { font-family: 'Playfair Display', serif; font-size: 100px; margin: 0; line-height: 1; background: linear-gradient(135deg, #fff 0%, #a0d8ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(139, 233, 255, 0.3);}
-  .hero p { font-size: 20px; letter-spacing: 4px; margin-top: 20px; color: #cbd5e0; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+  .item { background:#000; border:1px solid var(--border); padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  .item-info strong { color:#fff; font-size:16px; display:block; }
+  .tags { margin-top:5px; display:flex; gap:5px; flex-wrap:wrap; }
+  .tag { font-size:10px; padding:3px 6px; border-radius:3px; font-weight:bold; color:#000; }
   
-  .btn-explore { margin-top: 40px; padding: 12px 30px; border: 1px solid var(--primary); background: rgba(139, 233, 255, 0.1); color: var(--primary); font-size: 14px; cursor: pointer; transition: 0.3s; border-radius: 30px; text-decoration: none; display: inline-block; backdrop-filter: blur(5px);}
-  .btn-explore:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow); }
+  .btn-group { display:flex; gap:10px; }
+  .edit-btn { background:transparent; border:1px solid var(--warning); color:var(--warning); padding:6px 12px; border-radius:4px; cursor:pointer; }
+  .edit-btn:hover { background:var(--warning); color:#000; }
+  .del-btn { background:transparent; border:1px solid var(--error); color:var(--error); padding:6px 12px; border-radius:4px; cursor:pointer; }
+  .del-btn:hover { background:var(--error); color:#fff; }
 
-  .info-section { padding: 80px 10%; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; position: relative; z-index: 3;}
-  .panel { background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 16px; backdrop-filter: blur(10px); }
-  .panel h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin-top: 0; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 15px;}
-  
-  #news-box { max-height: 250px; overflow-y: auto; padding-right: 10px; }
-  .news-item { border-bottom: 1px solid var(--border); padding: 15px 0; font-size: 14px; color: var(--text-sub); animation: fadeDown 0.5s ease; }
-  .news-item span { color: var(--primary); font-weight: bold; margin-right: 10px; font-family: monospace; }
-  @keyframes fadeDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(5px); }
+  .modal-content { background:var(--panel); padding:30px; border-radius:12px; border:1px solid var(--border); width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.7); max-height: 90vh; overflow-y: auto;}
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 30px; }
-  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 30px; transition: 0.3s; display: flex; flex-direction: column; backdrop-filter: blur(10px);}
-  .card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-  .card h3 { margin: 0 0 5px 0; font-size: 22px; }
-  .version { font-size: 13px; color: var(--primary); font-family: monospace; }
-  
-  .badge { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-top: 10px; margin-right: 5px; }
-  .b-beta { border: 1px solid #f1c40f; color: #f1c40f; background: rgba(241, 196, 15, 0.1); }
-  .b-update { border: 1px solid #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
-  .b-maint { border: 1px solid #95a5a6; color: #95a5a6; background: rgba(149, 165, 166, 0.1); }
-  .b-zip { border: 1px solid #3498db; color: #3498db; background: rgba(52, 152, 219, 0.1); }
-  .b-apk { border: 1px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
-
-  .desc { margin: 20px 0; font-size: 14px; color: var(--text-sub); line-height: 1.6; flex-grow: 1; white-space: pre-wrap; }
-  
-  .card-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px; flex-wrap: wrap; gap: 15px; }
-  .dl-count { font-size: 12px; color: #666; }
-  
-  .btn-wrapper { display: flex; gap: 10px; }
-  .dl-btn { padding: 8px 16px; background: linear-gradient(135deg, #8be9ff, #3b82f6); color: #000; font-weight: bold; font-size:12px; border: none; border-radius: 20px; cursor: pointer; transition: 0.3s; }
-  .dl-btn:hover { box-shadow: 0 0 15px var(--primary-glow); transform: scale(1.05); }
-  .dl-btn.apk { background: linear-gradient(135deg, #a8ff78, #78ffd6); }
-  .dl-btn.apk:hover { box-shadow: 0 0 15px rgba(120, 255, 214, 0.4); }
-  .dl-btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none;}
-
-  .doc-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 40px; margin-bottom: 40px; line-height: 1.8; }
-  .doc-section h3 { color: var(--primary); font-size: 20px; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
-  .doc-section h4 { color: #fff; margin-top: 25px; margin-bottom: 10px; font-size: 16px;}
-  .doc-section p, .doc-section li { color: var(--text-sub); font-size: 14px; margin-bottom: 15px; }
-
-  footer { text-align: center; padding: 50px; color: #444; font-size: 12px; border-top: 1px solid var(--border); margin-top: 50px;}
-
-  @media (max-width: 768px) {
-    header { padding: 0 20px; }
-    .hero h1 { font-size: 50px; }
-    .info-section { grid-template-columns: 1fr; padding: 40px 5%; }
-    .doc-section { padding: 20px; }
+  /* ★ プレビュー枠の強制フィット＆高画質化 */
+  .preview-box {
+    width: 100%;
+    aspect-ratio: 16 / 9; /* 比率を固定して枠を生成 */
+    object-fit: cover; /* 枠に合わせて自動トリミング */
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: none;
+    margin-top: 5px;
+    background-color: #000;
+    /* 高画質レンダリング指定 */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: high-quality;
   }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo" id="site-logo">ASB.</div>
-  <nav>
-    <ul>
-      <li onclick="switchTab('home', this)" class="active">Home</li>
-      <li onclick="switchTab('software', this)">Software</li>
-      <li onclick="switchTab('security', this)">Security</li>
-      <li onclick="switchTab('legal', this)">Legal</li>
-      <li onclick="switchTab('roadmap', this)">Roadmap</li>
-      <li>
-        <a href="#" target="_blank" id="nav-discord-link">
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.545 2.907a13.227 13.227 0 0 0-3.257-1.011.05.05 0 0 0-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 0 0-3.658 0 8.258 8.258 0 0 0-.412-.833.051.051 0 0 0-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 0 0-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 0 0 3.995 2.02.05.05 0 0 0 .056-.019c.308-.42.582-.863.818-1.329a.05.05 0 0 0-.01-.059.051.051 0 0 0-.018-.011 8.875 8.875 0 0 1-1.248-.595.05.05 0 0 1-.02-.066.051.051 0 0 1 .015-.019c.084-.063.168-.129.248-.195a.05.05 0 0 1 .051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 0 1 .053.007c.08.066.164.132.248.195a.051.051 0 0 1-.004.085 8.254 8.254 0 0 1-1.249.594.05.05 0 0 0-.03.03.052.052 0 0 0 .003.041c.24.465.515.909.817 1.329a.05.05 0 0 0 .056.019 13.235 13.235 0 0 0 4.001-2.02.049.049 0 0 0 .021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 0 0-.02-.019zM5.89 8.631c-.598 0-1.082-.533-1.082-1.183 0-.651.484-1.183 1.082-1.183.608 0 1.092.532 1.082 1.183 0 .65-.484 1.183-1.082 1.183zm4.22 0c-.598 0-1.082-.533-1.082-1.183 0-.651.484-1.183 1.082-1.183.608 0 1.092.532 1.082 1.183 0 .65-.484 1.183-1.082 1.183z"/></svg>
-          Discord
-        </a>
-      </li>
-    </ul>
-  </nav>
-</header>
+<div class="container">
+  <h1>ASB SYSTEM ADMIN</h1>
 
-<div id="home" class="tab-content active">
-  <div class="hero">
-    <!-- ★ 画像と動画の枠を用意し、暗転フィルターを被せる -->
-    <div class="hero-bg" id="hero-bg"></div>
-    <video class="hero-video" id="hero-video" autoplay loop muted playsinline></video>
-    <div class="hero-overlay"></div>
-    <div class="particles"></div>
-    
-    <div class="hero-inner">
-      <h1 id="hero-title">ASB</h1>
-      <p id="hero-subtitle">Production greatly advances freedom.</p>
-      <button class="btn-explore" onclick="switchTab('software', document.querySelectorAll('nav li')[1])">Explore Software</button>
-    </div>
+  <div id="loginPanel" class="panel" style="text-align:center; display:none;">
+    <h2>RESTRICTED ACCESS</h2>
+    <button class="action-btn discord-btn" onclick="location.href='/auth/discord'">Login with Discord</button>
   </div>
-  
-  <div class="info-section">
-    <div class="panel">
-      <h2>System Logs (Latest News)</h2>
-      <div id="news-box"><div style="color:#666; font-size:12px;">Loading logs...</div></div>
+
+  <div id="dashboard" style="display:none;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <p>Logged in as: <strong id="adminName" style="color:var(--primary);"></strong></p>
+      <button onclick="location.href='/logout'" style="padding:8px 16px; background:#333; color:#fff; border:none; border-radius:4px; cursor:pointer;">Logout</button>
     </div>
-    
-    <div class="panel">
-      <h2>Community Access</h2>
-      <p style="color:#aaa;">最新のアップデート情報、バグ報告等はDiscordサーバーにて行っています。利用前に必ずご参加ください。</p>
-      <a href="#" target="_blank" class="btn-explore" id="panel-discord-link" style="margin-top:20px; text-decoration:none;">Join Community</a>
+
+    <!-- TABS -->
+    <div class="admin-tabs">
+      <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">SOFTWARE MANAGER</div>
+      <div class="admin-tab" onclick="switchAdminTab('settingsTab', this)">SITE SETTINGS</div>
     </div>
-  </div>
-</div>
 
-<div id="software" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Downloads</h1>
-    <p style="text-align:center; color:#aaa; margin-bottom:40px;">※ソフトウェアをダウンロードする前に、必ず「Legal（利用規約）」をご確認ください。</p>
-    <div id="software-list" class="grid"><div style="color:#666; width:100%; text-align:center;">Loading software...</div></div>
-  </div>
-</div>
-
-<div id="security" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Security & Authentication</h1>
-    <div class="doc-section">
-      <h3>システムの安全性について (Safety)</h3>
-      <p>ASBが提供するすべてのソフトウェアは、配布前に厳格なマルウェアスキャンを実施しています。</p>
-      <p>ただし、自動化ツール（マクロ等）の性質上、一部のアンチウイルスソフトによって「誤検知」される場合があります。ダウンロード時に警告が出た場合は例外設定への追加をお願いいたします。</p>
-    </div>
-    <div class="doc-section">
-      <h3>認証システム (Authentication)</h3>
-      <p>一部のソフトウェアは、不正利用を防ぐために独自のオンライン認証システムを採用しています。</p>
-      <ul><li>クラック行為やリバースエンジニアリング、認証の迂回を試みる行為は固く禁じられており、発覚次第アクセスブロックを実施します。</li></ul>
-    </div>
-  </div>
-</div>
-
-<div id="legal" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Legal Documents</h1>
-    <div class="doc-section">
-      <h3>利用規約 (Terms of Service)</h3>
-      <p>本ソフトウェアをダウンロード、または利用した時点で以下の規約にすべて同意したものとみなします。</p>
-      <h4>1. 免責事項（重要）</h4>
-      <p>本ソフトウェアを使用したことによって生じた、いかなる損害（ゲームアカウントのBAN等）について、開発者は<strong>一切の責任を負いません。</strong>すべて自己責任において利用してください。</p>
-      <h4>2. 禁止事項</h4>
-      <ul>
-        <li>リバースエンジニアリング、改変行為、再配布、販売。</li>
-        <li>他者への嫌がらせ等、法律・法令に違反する目的での利用。</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<div id="roadmap" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Roadmap</h1>
-    <div class="doc-section" style="border-left: 4px solid var(--primary);">
-      <h3>2026 Q1 - Foundation</h3>
-      <p>・公式サイトローンチ<br>・「Auto click ASB」ベータテスト開始</p>
-    </div>
-    <div class="doc-section" style="border-left: 4px solid #f1c40f;">
-      <h3>2026 Q2 - Expansion</h3>
-      <p>・ソフトウェア安定化<br>・新規ツール発表</p>
-    </div>
-  </div>
-</div>
-
-<footer>
-  <p>&copy; <span id="year">2026</span> ASB Project. All rights reserved.</p>
-  <p style="color:#666;">Design by ASB Team.</p>
-</footer>
-
-<script>
-document.getElementById('year').innerText = new Date().getFullYear();
-
-// ===== ★ 動画・画像の自動判別＆プレロード ★ =====
-async function loadSiteSettings() {
-  try {
-    const res = await fetch("/api/settings");
-    const settings = await res.json();
-    
-    if(settings.hero_title) {
-      document.getElementById("hero-title").innerText = settings.hero_title;
-      document.getElementById("site-logo").innerText = settings.hero_title + ".";
-      document.title = settings.hero_title + " Official";
-    }
-    if(settings.hero_subtitle) {
-      document.getElementById("hero-subtitle").innerText = settings.hero_subtitle;
-    }
-    if(settings.discord_link) {
-      document.getElementById("nav-discord-link").href = settings.discord_link;
-      document.getElementById("panel-discord-link").href = settings.discord_link;
-    }
-
-    const bgUrl = settings.bg_image || 'background.jpg';
-    const isVideo = bgUrl.match(/\.(mp4|webm|ogg)$/i);
-    const heroBg = document.getElementById("hero-bg");
-    const heroVideo = document.getElementById("hero-video");
-
-    if (isVideo) {
-      // 動画の場合
-      heroVideo.src = bgUrl;
-      heroVideo.style.display = 'block';
-      heroVideo.onloadeddata = () => {
-        heroVideo.style.opacity = "1";
-      };
-    } else {
-      // 画像の場合
-      const img = new Image();
-      img.src = bgUrl;
-      img.onload = () => {
-        heroBg.style.backgroundImage = `url('${bgUrl}')`;
-        heroBg.style.display = 'block';
-        setTimeout(() => heroBg.style.opacity = "1", 50);
-      };
-    }
-  } catch(e) { console.log("設定の読み込みに失敗しました"); }
-}
-
-function formatDate(utcDateString) {
-  if (!utcDateString) return "Unknown Date";
-  const d = new Date(utcDateString.replace(' ', 'T') + 'Z');
-  if (isNaN(d)) return utcDateString.substring(0, 16).replace(/-/g, '.');
-  const yyyy = d.getFullYear(); const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0'); const hh = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
-}
-
-async function loadRealNews() {
-  const newsBox = document.getElementById("news-box");
-  try {
-    const res = await fetch("/api/software");
-    const data = await res.json();
-    let dynamicNewsHtml = "";
-    data.forEach(item => {
-      const timeStr = formatDate(item.created_at);
-      let actionStr = `「${item.name} v${item.version}」がデプロイされました。`;
-      if (item.is_update) actionStr = `システム更新：「${item.name}」が v${item.version} にアップデートされました。`;
-      else if (item.is_beta) actionStr = `テスト開始：「${item.name} v${item.version}」のベータ版が公開されました。`;
-      dynamicNewsHtml += `<div class="news-item"><span>${timeStr}</span> ${actionStr}</div>`;
-    });
-    const staticNewsHtml = `
-      <div class="news-item"><span>2026.02.21 12:00</span> 公式サイト及びデータポータルをローンチ。</div>
-    `;
-    newsBox.innerHTML = dynamicNewsHtml + staticNewsHtml;
-  } catch (e) { newsBox.innerHTML = "<div class='news-item'>ログの取得に失敗しました。</div>"; }
-}
-
-function switchTab(tabId, element) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  document.querySelectorAll('nav li').forEach(el => el.classList.remove('active'));
-  if(element) element.classList.add('active');
-  window.scrollTo(0, 0);
-  if(tabId === 'software') loadSoftware();
-}
-
-async function loadSoftware() {
-  const listEl = document.getElementById("software-list");
-  try {
-    const res = await fetch("/api/software");
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    listEl.innerHTML = "";
-    if(data.length === 0) return listEl.innerHTML = "<p style='color:#666; text-align:center; grid-column:1/-1;'>公開中のソフトウェアはありません。</p>";
-
-    data.forEach(item => {
-      const isMaint = item.is_maintenance || 0;
-      const isBeta = item.is_beta || 0;
-      const isUpdate = item.is_update || 0;
-      
-      let badgeHtml = "";
-      if(item.zip_path) badgeHtml += `<span class="badge b-zip">ZIP</span>`;
-      if(item.apk_path) badgeHtml += `<span class="badge b-apk">APK</span>`;
-
-      if(isMaint) badgeHtml += `<span class="badge b-maint">MAINTENANCE</span>`;
-      else if(isUpdate) badgeHtml += `<span class="badge b-update">UPDATING</span>`;
-      if(isBeta) badgeHtml += ` <span class="badge b-beta">BETA</span>`;
-
-      const totalDl = (item.zip_downloads || 0) + (item.apk_downloads || 0);
-
-      let btnHtml = `<div class="btn-wrapper">`;
-      if (isMaint) {
-        btnHtml += `<button class="dl-btn" disabled>Unavailable</button>`;
-      } else {
-        if(item.zip_path) btnHtml += `<button class="dl-btn" onclick="downloadSw(${item.id}, 'zip')">DL (ZIP)</button>`;
-        if(item.apk_path) btnHtml += `<button class="dl-btn apk" onclick="downloadSw(${item.id}, 'apk')">DL (APK)</button>`;
-      }
-      btnHtml += `</div>`;
-
-      listEl.innerHTML += `
-        <div class="card">
-          <h3>${item.name}</h3>
-          <span class="version">v${item.version}</span>
-          <div>${badgeHtml}</div>
-          <div class="desc">${item.description || "No description."}</div>
-          <div class="card-bottom">
-            <span class="dl-count">Total DLs: ${totalDl}</span>
-            ${btnHtml}
+    <!-- SOFTWARE TAB -->
+    <div id="softwareTab">
+      <div class="panel">
+        <h2>DEPLOY NEW (External URL)</h2>
+        <input id="name" placeholder="Software Name">
+        <input id="version" placeholder="Version (e.g. v1.0.0)">
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+          <div>
+            <label style="font-size:12px; color:#888;">ZIP Download URL</label>
+            <input type="url" id="zipUrl" placeholder="https://..." style="margin-bottom:0;">
+          </div>
+          <div>
+            <label style="font-size:12px; color:#888;">APK Download URL</label>
+            <input type="url" id="apkUrl" placeholder="https://..." style="margin-bottom:0;">
           </div>
         </div>
-      `;
-    });
-  } catch (e) {
-    listEl.innerHTML = "<p style='color:red; text-align:center; grid-column:1/-1;'>Failed to load.</p>";
+        
+        <textarea id="description" placeholder="Description"></textarea>
+        
+        <div class="options-grid">
+          <label class="toggle-wrap"><input type="checkbox" id="isBeta"> <span>BETA</span></label>
+          <label class="toggle-wrap"><input type="checkbox" id="isUpdate"> <span>UPDATE</span></label>
+          <label class="toggle-wrap"><input type="checkbox" id="isMaint"> <span>MAINT</span></label>
+        </div>
+        <button class="action-btn" onclick="addItem()">DEPLOY</button>
+      </div>
+
+      <div class="panel">
+        <h2>RELEASES</h2>
+        <div id="list">loading...</div>
+      </div>
+    </div>
+
+    <!-- SITE SETTINGS TAB -->
+    <div id="settingsTab" style="display:none;">
+      <div class="panel">
+        <h2>GLOBAL SETTINGS</h2>
+        <label style="font-size:12px; color:#888;">Hero Title (大見出し)</label>
+        <input id="set_hero_title" placeholder="ASB">
+
+        <label style="font-size:12px; color:#888;">Hero Subtitle (小見出し)</label>
+        <input id="set_hero_subtitle" placeholder="Production greatly advances freedom.">
+
+        <label style="font-size:12px; color:#888;">Discord Community Link (招待URL)</label>
+        <input type="url" id="set_discord_link" placeholder="https://discord.gg/...">
+
+        <label style="font-size:12px; color:#888;">Background Media (画像 or MP4/GIF動画)</label>
+        <input type="file" id="set_bg_image" accept="image/*, video/mp4, video/webm">
+        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:15px;">※動画を上げる場合は数十MB以下に圧縮してください。</p>
+
+        <!-- ★ 新しいプレビュー枠 -->
+        <div style="margin-bottom: 20px;">
+          <label style="font-size:12px; color:#888;">Current Preview</label>
+          <br>
+          <img id="bg_preview_img" class="preview-box" src="" alt="Background Preview">
+          <video id="bg_preview_vid" class="preview-box" src="" autoplay loop muted playsinline></video>
+        </div>
+
+        <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-content">
+    <h2>EDIT SOFTWARE</h2>
+    <input type="hidden" id="editId">
+    
+    <label style="font-size:12px; color:#888;">Software Name</label>
+    <input id="editName" placeholder="Name">
+    <label style="font-size:12px; color:#888;">Version</label>
+    <input id="editVersion" placeholder="Version">
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+      <div><label style="font-size:12px; color:#888;">ZIP URL</label><input type="url" id="editZipUrl" placeholder="https://..."></div>
+      <div><label style="font-size:12px; color:#888;">APK URL</label><input type="url" id="editApkUrl" placeholder="https://..."></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+      <div><label style="font-size:12px; color:var(--primary);">ZIP Downloads (手動)</label><input type="number" id="editZipDl" style="border-color:var(--primary);"></div>
+      <div><label style="font-size:12px; color:var(--primary);">APK Downloads (手動)</label><input type="number" id="editApkDl" style="border-color:var(--primary);"></div>
+    </div>
+
+    <label style="font-size:12px; color:#888;">Description</label>
+    <textarea id="editDescription" placeholder="Description"></textarea>
+    
+    <div class="options-grid">
+      <label class="toggle-wrap"><input type="checkbox" id="editBeta"> <span>BETA</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editUpdate"> <span>UPDATE</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editMaint"> <span>MAINT</span></label>
+    </div>
+    
+    <div style="display:flex; gap:10px;">
+      <button class="action-btn" style="background:#444; color:#fff;" onclick="closeModal()">CANCEL</button>
+      <button class="action-btn" onclick="saveEdit()">SAVE CHANGES</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentData = [];
+
+function switchAdminTab(tabId, element) {
+  document.getElementById('softwareTab').style.display = 'none';
+  document.getElementById('settingsTab').style.display = 'none';
+  document.getElementById(tabId).style.display = 'block';
+  document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+  element.classList.add('active');
+}
+
+async function checkAuth() {
+  try {
+    const res = await fetch("/api/me");
+    const data = await res.json();
+    if(data.loggedIn) {
+      document.getElementById("loginPanel").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      document.getElementById("adminName").innerText = data.user;
+      loadItems();
+      loadSettings();
+    } else { document.getElementById("loginPanel").style.display = "block"; }
+  } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
+}
+
+document.getElementById('set_bg_image').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if(file) {
+    const isVideo = file.type.startsWith('video/');
+    const imgPrev = document.getElementById('bg_preview_img');
+    const vidPrev = document.getElementById('bg_preview_vid');
+    
+    if (isVideo) {
+      imgPrev.style.display = 'none';
+      vidPrev.src = URL.createObjectURL(file);
+      vidPrev.style.display = 'block';
+    } else {
+      vidPrev.style.display = 'none';
+      imgPrev.src = URL.createObjectURL(file);
+      imgPrev.style.display = 'block';
+    }
+  }
+});
+
+async function loadSettings() {
+  const res = await fetch("/api/settings");
+  const data = await res.json();
+  document.getElementById("set_hero_title").value = data.hero_title || "";
+  document.getElementById("set_hero_subtitle").value = data.hero_subtitle || "";
+  document.getElementById("set_discord_link").value = data.discord_link || "";
+  
+  if (data.bg_image) {
+    const isVideo = data.bg_image.match(/\.(mp4|webm|ogg)$/i);
+    const imgPrev = document.getElementById('bg_preview_img');
+    const vidPrev = document.getElementById('bg_preview_vid');
+    if(isVideo) {
+      vidPrev.src = data.bg_image;
+      vidPrev.style.display = 'block';
+      imgPrev.style.display = 'none';
+    } else {
+      imgPrev.src = data.bg_image;
+      imgPrev.style.display = 'block';
+      vidPrev.style.display = 'none';
+    }
   }
 }
 
-async function downloadSw(id, type) {
-  try {
-    const res = await fetch(`/api/download/${id}/${type}`, { method: "POST" });
-    if(res.status === 403) return alert("Currently under maintenance.");
-    const data = await res.json();
-    if(data.link) {
-      window.open(data.link, '_blank');
-      setTimeout(loadSoftware, 1000); 
-    } else {
-      alert("File not found.");
-    }
-  } catch(e) { alert("Connection failed."); }
+async function saveSettings() {
+  const fd = new FormData();
+  fd.append("hero_title", document.getElementById("set_hero_title").value);
+  fd.append("hero_subtitle", document.getElementById("set_hero_subtitle").value);
+  fd.append("discord_link", document.getElementById("set_discord_link").value);
+  const bgFile = document.getElementById("set_bg_image").files[0];
+  if(bgFile) fd.append("bg_image", bgFile);
+
+  const res = await fetch("/api/settings", { method: "POST", body: fd });
+  if(res.ok) alert("Settings saved successfully!");
+  else alert("Failed to save settings.");
 }
 
-window.addEventListener('load', () => { 
-  loadSiteSettings();
-  loadRealNews(); 
-});
-</script>
+async function loadItems(){
+  const res = await fetch("/api/software");
+  currentData = await res.json();
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  if(currentData.length === 0) return list.innerHTML = "<div style='text-align:center; color:#555;'>No software found.</div>";
 
+  currentData.forEach(item => {
+    let tags = "";
+    if(item.zip_path) tags += `<span class="tag" style="background:rgba(52,152,219,0.2); color:#3498db; border:1px solid #3498db;">ZIP</span>`;
+    if(item.apk_path) tags += `<span class="tag" style="background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid #2ecc71;">APK</span>`;
+    if(item.is_beta) tags += `<span class="tag" style="background:#f1c40f;">BETA</span>`;
+    if(item.is_update) tags += `<span class="tag" style="background:#e74c3c;">UPDATE</span>`;
+    if(item.is_maintenance) tags += `<span class="tag" style="background:#95a5a6;">MAINT</span>`;
+
+    const dlZip = item.zip_downloads || 0;
+    const dlApk = item.apk_downloads || 0;
+
+    list.innerHTML += `
+      <div class="item">
+        <div class="item-info">
+          <strong>${item.name}</strong>
+          <span style="font-size:12px; color:#666;">v${item.version} | ZIP DL: ${dlZip} | APK DL: ${dlApk}</span>
+          <div class="tags">${tags}</div>
+        </div>
+        <div class="btn-group">
+          <button class="edit-btn" onclick="openEdit(${item.id})">EDIT</button>
+          <button class="del-btn" onclick="delItem(${item.id})">DEL</button>
+        </div>
+      </div>`;
+  });
+}
+
+async function addItem(){
+  const name = document.getElementById("name").value;
+  const zipUrl = document.getElementById("zipUrl").value;
+  const apkUrl = document.getElementById("apkUrl").value;
+  if(!name || (!zipUrl && !apkUrl)) return alert("Name and at least one URL required!");
+
+  const data = {
+    name: name, version: document.getElementById("version").value, description: document.getElementById("description").value,
+    zip_url: zipUrl, apk_url: apkUrl,
+    is_beta: document.getElementById("isBeta").checked, is_update: document.getElementById("isUpdate").checked, is_maintenance: document.getElementById("isMaint").checked
+  };
+  await fetch("/api/software", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
+  
+  document.getElementById("name").value = ""; document.getElementById("version").value = ""; document.getElementById("description").value = ""; document.getElementById("zipUrl").value = ""; document.getElementById("apkUrl").value = "";
+  loadItems();
+}
+
+function openEdit(id) {
+  const item = currentData.find(d => d.id === id);
+  if(!item) return;
+  document.getElementById("editId").value = item.id;
+  document.getElementById("editName").value = item.name;
+  document.getElementById("editVersion").value = item.version;
+  document.getElementById("editDescription").value = item.description;
+  document.getElementById("editZipUrl").value = item.zip_path || "";
+  document.getElementById("editApkUrl").value = item.apk_path || "";
+  document.getElementById("editZipDl").value = item.zip_downloads || 0;
+  document.getElementById("editApkDl").value = item.apk_downloads || 0;
+  document.getElementById("editBeta").checked = item.is_beta === 1;
+  document.getElementById("editUpdate").checked = item.is_update === 1;
+  document.getElementById("editMaint").checked = item.is_maintenance === 1;
+  document.getElementById("editModal").style.display = "flex";
+}
+function closeModal() { document.getElementById("editModal").style.display = "none"; }
+
+async function saveEdit() {
+  const id = document.getElementById("editId").value;
+  const data = {
+    name: document.getElementById("editName").value, version: document.getElementById("editVersion").value, description: document.getElementById("editDescription").value,
+    zip_url: document.getElementById("editZipUrl").value, apk_url: document.getElementById("editApkUrl").value,
+    zip_downloads: document.getElementById("editZipDl").value, apk_downloads: document.getElementById("editApkDl").value,
+    is_beta: document.getElementById("editBeta").checked, is_update: document.getElementById("editUpdate").checked, is_maintenance: document.getElementById("editMaint").checked
+  };
+  const res = await fetch("/api/software/" + id, { method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
+  if(res.ok) { closeModal(); loadItems(); } else { alert("Update failed."); }
+}
+
+async function delItem(id){
+  if(confirm("Delete this software?")) {
+    await fetch("/api/software/" + id, { method: "DELETE" });
+    loadItems();
+  }
+}
+window.onload = checkAuth;
+</script>
 </body>
 </html>
