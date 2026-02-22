@@ -18,7 +18,6 @@
   * { box-sizing: border-box; scroll-behavior: smooth; }
   body { margin: 0; background: var(--bg); color: var(--text-main); font-family: 'Noto Sans JP', sans-serif; overflow-x: hidden; }
 
-  /* --- スクロールバーのデザイン --- */
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: rgba(139, 233, 255, 0.2); border-radius: 10px; }
@@ -42,57 +41,13 @@
   .container { padding: 60px 10%; max-width: 1200px; margin: 0 auto; }
   .page-title { font-family: 'Playfair Display', serif; font-size: 40px; text-align: center; margin-bottom: 40px; letter-spacing: 2px; }
 
-  /* =========================================
-     ★ ヒーローセクション（背景アニメーション強化）
-     ========================================= */
-  .hero { 
-    height: 90vh; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    position: relative; 
-    text-align: center; 
-    overflow: hidden; 
-  }
-  
-  /* ゆっくりズームして動く背景画像 */
-  .hero-bg {
-    position: absolute;
-    inset: -5%;
-    background: url("background.jpg") center/cover no-repeat;
-    z-index: 1;
-    animation: slowPan 30s ease-in-out infinite alternate;
-  }
-  .hero-bg::after { 
-    content: ""; 
-    position: absolute; 
-    inset: 0; 
-    background: linear-gradient(to bottom, rgba(5,7,12,0.1), var(--bg)); 
-  }
+  .hero { height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; text-align: center; overflow: hidden; }
+  .hero-bg { position: absolute; inset: -5%; background: url("background.jpg") center/cover no-repeat; z-index: 1; animation: slowPan 30s ease-in-out infinite alternate; }
+  .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,7,12,0.1), var(--bg)); }
+  @keyframes slowPan { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
 
-  /* 呼吸するようなズームアニメーション */
-  @keyframes slowPan {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.1); }
-  }
-
-  /* 光るパーティクル（粒子）の演出 */
-  .particles {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    background-image: 
-      radial-gradient(circle, rgba(139,233,255,0.4) 1px, transparent 1px),
-      radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px);
-    background-size: 150px 150px, 300px 300px;
-    animation: particleDrift 60s linear infinite;
-  }
-  @keyframes particleDrift {
-    0% { background-position: 0 0, 0 0; }
-    100% { background-position: 150px -300px, 300px -600px; }
-  }
+  .particles { position: absolute; inset: 0; z-index: 2; pointer-events: none; background-image: radial-gradient(circle, rgba(139,233,255,0.4) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px); background-size: 150px 150px, 300px 300px; animation: particleDrift 60s linear infinite; }
+  @keyframes particleDrift { 0% { background-position: 0 0, 0 0; } 100% { background-position: 150px -300px, 300px -600px; } }
 
   .hero-inner { position: relative; z-index: 3; }
   .hero h1 { font-family: 'Playfair Display', serif; font-size: 100px; margin: 0; line-height: 1; background: linear-gradient(135deg, #fff 0%, #a0d8ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(139, 233, 255, 0.3);}
@@ -101,24 +56,14 @@
   .btn-explore { margin-top: 40px; padding: 12px 30px; border: 1px solid var(--primary); background: rgba(139, 233, 255, 0.1); color: var(--primary); font-size: 14px; cursor: pointer; transition: 0.3s; border-radius: 30px; text-decoration: none; display: inline-block; backdrop-filter: blur(5px);}
   .btn-explore:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow); }
 
-  /* --- ニュースセクション（スクロール対応） --- */
   .info-section { padding: 80px 10%; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; position: relative; z-index: 3;}
   .panel { background: var(--card-bg); border: 1px solid var(--border); padding: 30px; border-radius: 16px; backdrop-filter: blur(10px); }
   .panel h2 { font-family: 'Playfair Display', serif; font-size: 24px; margin-top: 0; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 15px;}
   
-  /* ニュースエリアのスクロール設定 */
-  #news-box {
-    max-height: 250px;
-    overflow-y: auto;
-    padding-right: 10px;
-  }
+  #news-box { max-height: 250px; overflow-y: auto; padding-right: 10px; }
   .news-item { border-bottom: 1px solid var(--border); padding: 15px 0; font-size: 14px; color: var(--text-sub); animation: fadeDown 0.5s ease; }
   .news-item span { color: var(--primary); font-weight: bold; margin-right: 10px; font-family: monospace; }
-  
-  @keyframes fadeDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 30px; }
   .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 30px; transition: 0.3s; display: flex; flex-direction: column; backdrop-filter: blur(10px);}
@@ -132,11 +77,15 @@
   .b-maint { border: 1px solid #95a5a6; color: #95a5a6; background: rgba(149, 165, 166, 0.1); }
 
   .desc { margin: 20px 0; font-size: 14px; color: var(--text-sub); line-height: 1.6; flex-grow: 1; white-space: pre-wrap; }
-  .card-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px; }
+  
+  .card-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px; flex-wrap: wrap; gap: 15px; }
   .dl-count { font-size: 12px; color: #666; }
   
-  .dl-btn { padding: 10px 24px; background: linear-gradient(135deg, #8be9ff, #3b82f6); color: #000; font-weight: bold; border: none; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+  .btn-wrapper { display: flex; gap: 10px; }
+  .dl-btn { padding: 8px 16px; background: linear-gradient(135deg, #8be9ff, #3b82f6); color: #000; font-weight: bold; font-size:12px; border: none; border-radius: 20px; cursor: pointer; transition: 0.3s; }
   .dl-btn:hover { box-shadow: 0 0 15px var(--primary-glow); transform: scale(1.05); }
+  .dl-btn.apk { background: linear-gradient(135deg, #a8ff78, #78ffd6); }
+  .dl-btn.apk:hover { box-shadow: 0 0 15px rgba(120, 255, 214, 0.4); }
   .dl-btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none;}
 
   .doc-section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 40px; margin-bottom: 40px; line-height: 1.8; }
@@ -156,238 +105,4 @@
 </head>
 <body>
 
-<header>
-  <div class="logo">ASB.</div>
-  <nav>
-    <ul>
-      <li onclick="switchTab('home', this)" class="active">Home</li>
-      <li onclick="switchTab('software', this)">Software</li>
-      <li onclick="switchTab('security', this)">Security</li>
-      <li onclick="switchTab('legal', this)">Legal</li>
-      <li onclick="switchTab('roadmap', this)">Roadmap</li>
-      <li>
-        <a href="https://discord.gg/44cQR8BD" target="_blank">
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.545 2.907a13.227 13.227 0 0 0-3.257-1.011.05.05 0 0 0-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 0 0-3.658 0 8.258 8.258 0 0 0-.412-.833.051.051 0 0 0-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 0 0-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 0 0 3.995 2.02.05.05 0 0 0 .056-.019c.308-.42.582-.863.818-1.329a.05.05 0 0 0-.01-.059.051.051 0 0 0-.018-.011 8.875 8.875 0 0 1-1.248-.595.05.05 0 0 1-.02-.066.051.051 0 0 1 .015-.019c.084-.063.168-.129.248-.195a.05.05 0 0 1 .051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 0 1 .053.007c.08.066.164.132.248.195a.051.051 0 0 1-.004.085 8.254 8.254 0 0 1-1.249.594.05.05 0 0 0-.03.03.052.052 0 0 0 .003.041c.24.465.515.909.817 1.329a.05.05 0 0 0 .056.019 13.235 13.235 0 0 0 4.001-2.02.049.049 0 0 0 .021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 0 0-.02-.019zM5.89 8.631c-.598 0-1.082-.533-1.082-1.183 0-.651.484-1.183 1.082-1.183.608 0 1.092.532 1.082 1.183 0 .65-.484 1.183-1.082 1.183zm4.22 0c-.598 0-1.082-.533-1.082-1.183 0-.651.484-1.183 1.082-1.183.608 0 1.092.532 1.082 1.183 0 .65-.484 1.183-1.082 1.183z"/></svg>
-          Discord
-        </a>
-      </li>
-    </ul>
-  </nav>
-</header>
-
-<div id="home" class="tab-content active">
-  <div class="hero">
-    <!-- 背景と光のパーティクル -->
-    <div class="hero-bg"></div>
-    <div class="particles"></div>
-    
-    <div class="hero-inner">
-      <h1>ASB</h1>
-      <p>Production greatly advances freedom.</p>
-      <button class="btn-explore" onclick="switchTab('software', document.querySelectorAll('nav li')[1])">Explore Software</button>
-    </div>
-  </div>
-  
-  <div class="info-section">
-    <div class="panel">
-      <h2>System Logs (Latest News)</h2>
-      <!-- ★ここにデータベースの履歴が自動挿入されます★ -->
-      <div id="news-box">
-        <div style="color:#666; font-size:12px;">Loading logs...</div>
-      </div>
-    </div>
-    
-    <div class="panel">
-      <h2>Community Access</h2>
-      <p style="color:#aaa;">最新のアップデート情報、バグ報告等はDiscordサーバーにて行っています。利用前に必ずご参加ください。</p>
-      <a href="https://discord.gg/44cQR8BD" target="_blank" class="btn-explore" style="margin-top:20px; text-decoration:none;">Join Community</a>
-    </div>
-  </div>
-</div>
-
-<div id="software" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Downloads</h1>
-    <p style="text-align:center; color:#aaa; margin-bottom:40px;">※ソフトウェアをダウンロードする前に、必ず「Legal（利用規約）」をご確認ください。</p>
-    <div id="software-list" class="grid"><div style="color:#666; width:100%; text-align:center;">Loading software...</div></div>
-  </div>
-</div>
-
-<div id="security" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Security & Authentication</h1>
-    <div class="doc-section">
-      <h3>システムの安全性について (Safety)</h3>
-      <p>ASBが提供するすべてのソフトウェアは、配布前に厳格なマルウェアスキャンを実施しています。</p>
-      <p>ただし、自動化ツール（マクロ等）の性質上、一部のアンチウイルスソフトによって「誤検知」される場合があります。ダウンロード時に警告が出た場合は例外設定への追加をお願いいたします。</p>
-    </div>
-    <div class="doc-section">
-      <h3>認証システム (Authentication)</h3>
-      <p>一部のソフトウェアは、不正利用を防ぐために独自のオンライン認証システムを採用しています。</p>
-      <ul><li>クラック行為やリバースエンジニアリング、認証の迂回を試みる行為は固く禁じられており、発覚次第アクセスブロックを実施します。</li></ul>
-    </div>
-  </div>
-</div>
-
-<div id="legal" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Legal Documents</h1>
-    <div class="doc-section">
-      <h3>利用規約 (Terms of Service)</h3>
-      <p>本ソフトウェアをダウンロード、または利用した時点で以下の規約にすべて同意したものとみなします。</p>
-      <h4>1. 免責事項（重要）</h4>
-      <p>本ソフトウェアを使用したことによって生じた、いかなる損害（ゲームアカウントのBAN等）について、開発者は<strong>一切の責任を負いません。</strong>すべて自己責任において利用してください。</p>
-      <h4>2. 禁止事項</h4>
-      <ul>
-        <li>リバースエンジニアリング、改変行為、再配布、販売。</li>
-        <li>他者への嫌がらせ等、法律・法令に違反する目的での利用。</li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<div id="roadmap" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Roadmap</h1>
-    <div class="doc-section" style="border-left: 4px solid var(--primary);">
-      <h3>2026 Q1 - Foundation</h3>
-      <p>・公式サイトローンチ<br>・「Auto click ASB」ベータテスト開始</p>
-    </div>
-    <div class="doc-section" style="border-left: 4px solid #f1c40f;">
-      <h3>2026 Q2 - Expansion</h3>
-      <p>・ソフトウェア安定化<br>・新規ツール発表</p>
-    </div>
-  </div>
-</div>
-
-<footer>
-  <p>&copy; 2026 ASB Project. All rights reserved.</p>
-  <p style="color:#666;">Design by ASB Team.</p>
-</footer>
-
-<script>
-// ===== 日付を綺麗にフォーマットする関数 =====
-function formatDate(utcDateString) {
-  if (!utcDateString) return "Unknown Date";
-  const d = new Date(utcDateString.replace(' ', 'T') + 'Z');
-  if (isNaN(d)) return utcDateString.substring(0, 16).replace(/-/g, '.');
-  
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const hh = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  
-  return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
-}
-
-// ===== 実際のデータからニュース(System Logs)を生成する =====
-async function loadRealNews() {
-  const newsBox = document.getElementById("news-box");
-  try {
-    const res = await fetch("/api/software");
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    
-    let dynamicNewsHtml = "";
-    
-    // APIから取得したソフトウェアリストからニュース文言を生成
-    data.forEach(item => {
-      const timeStr = formatDate(item.created_at);
-      let actionStr = `「${item.name} v${item.version}」がデプロイされました。`;
-      
-      if (item.is_update) actionStr = `システム更新：「${item.name}」が v${item.version} にアップデートされました。`;
-      else if (item.is_beta) actionStr = `テスト開始：「${item.name} v${item.version}」のベータ版が公開されました。`;
-
-      dynamicNewsHtml += `<div class="news-item"><span>${timeStr}</span> ${actionStr}</div>`;
-    });
-
-    // 過去の固定履歴
-    const staticNewsHtml = `
-      <div class="news-item"><span>2026.02.21 12:00</span> 公式サイト及びデータポータルをローンチ。</div>
-      <div class="news-item"><span>2026.02.20 18:30</span> 「Auto click ASB」初期ベータテスト準備完了。</div>
-      <div class="news-item"><span>2026.01.15 09:00</span> ASB Project 始動。Discordサーバー開設。</div>
-    `;
-
-    // 動的ニュース＋固定ニュースを表示
-    newsBox.innerHTML = dynamicNewsHtml + staticNewsHtml;
-
-  } catch (e) {
-    newsBox.innerHTML = "<div class='news-item'>ログの取得に失敗しました。</div>";
-  }
-}
-
-// ===== タブ切り替え =====
-function switchTab(tabId, element) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  document.querySelectorAll('nav li').forEach(el => el.classList.remove('active'));
-  if(element) element.classList.add('active');
-  window.scrollTo(0, 0);
-  if(tabId === 'software') loadSoftware();
-}
-
-// ===== ソフトウェア読み込み =====
-async function loadSoftware() {
-  const listEl = document.getElementById("software-list");
-  try {
-    const res = await fetch("/api/software");
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    listEl.innerHTML = "";
-    if(data.length === 0) return listEl.innerHTML = "<p style='color:#666; text-align:center; grid-column:1/-1;'>公開中のソフトウェアはありません。</p>";
-
-    data.forEach(item => {
-      const isMaint = item.is_maintenance || 0;
-      const isBeta = item.is_beta || 0;
-      const isUpdate = item.is_update || 0;
-      
-      let badgeHtml = "";
-      if(isMaint) badgeHtml += `<span class="badge b-maint">MAINTENANCE</span>`;
-      else if(isUpdate) badgeHtml += `<span class="badge b-update">UPDATING</span>`;
-      if(isBeta) badgeHtml += ` <span class="badge b-beta">BETA</span>`;
-
-      let btnHtml = isMaint 
-        ? `<button class="dl-btn" disabled>Unavailable</button>` 
-        : `<button class="dl-btn" onclick="downloadSw(${item.id})">Download</button>`;
-
-      listEl.innerHTML += `
-        <div class="card">
-          <h3>${item.name}</h3>
-          <span class="version">v${item.version}</span>
-          <div>${badgeHtml}</div>
-          <div class="desc">${item.description || "No description."}</div>
-          <div class="card-bottom">
-            <span class="dl-count">Downloads: ${item.downloads || 0}</span>
-            ${btnHtml}
-          </div>
-        </div>
-      `;
-    });
-  } catch (e) {
-    listEl.innerHTML = "<p style='color:red; text-align:center; grid-column:1/-1;'>Failed to load.</p>";
-  }
-}
-
-async function downloadSw(id) {
-  try {
-    const res = await fetch("/api/download/" + id, { method: "POST" });
-    if(res.status === 403) return alert("Currently under maintenance.");
-    const data = await res.json();
-    if(data.link) {
-      window.open(data.link, '_blank');
-      setTimeout(loadSoftware, 1000); 
-    } else {
-      alert("Link not found.");
-    }
-  } catch(e) { alert("Connection failed."); }
-}
-
-// ページ読み込み時にニュース(ログ)を取得
-window.addEventListener('load', () => {
-  loadRealNews();
-});
-</script>
-
-</body>
-</html>
+<header
