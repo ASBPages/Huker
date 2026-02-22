@@ -33,17 +33,23 @@
   .container { padding: 60px 10%; max-width: 1200px; margin: 0 auto; }
   .page-title { font-family: 'Playfair Display', serif; font-size: 40px; text-align: center; margin-bottom: 40px; letter-spacing: 2px; }
 
-  .hero { height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; text-align: center; overflow: hidden; }
+  .hero { height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; text-align: center; overflow: hidden; background-color: var(--bg); }
   
-  /* ★ チラつき防止：初期画像は設定せず透明にしておく */
-  .hero-bg { position: absolute; inset: -5%; z-index: 1; background-color: var(--bg); background-position: center; background-size: cover; background-repeat: no-repeat; opacity: 0; transition: opacity 0.8s ease; animation: slowPan 30s ease-in-out infinite alternate; }
-  .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,7,12,0.1), var(--bg)); }
+  /* 画像用背景 */
+  .hero-bg { position: absolute; inset: -5%; z-index: 1; background-position: center; background-size: cover; background-repeat: no-repeat; opacity: 0; transition: opacity 1s ease; animation: slowPan 30s ease-in-out infinite alternate; display: none; }
   @keyframes slowPan { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
 
-  .particles { position: absolute; inset: 0; z-index: 2; pointer-events: none; background-image: radial-gradient(circle, rgba(139,233,255,0.4) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px); background-size: 150px 150px, 300px 300px; animation: particleDrift 60s linear infinite; }
+  /* 動画用背景 */
+  .hero-video { position: absolute; top: 50%; left: 50%; width: 100vw; height: 100vh; object-fit: cover; transform: translate(-50%, -50%); z-index: 1; opacity: 0; transition: opacity 1s ease; display: none; }
+
+  /* 画像と動画に共通の暗転フィルター */
+  .hero-overlay { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,7,12,0.3), var(--bg)); z-index: 2; }
+
+  /* パーティクル（そのまま残す） */
+  .particles { position: absolute; inset: 0; z-index: 3; pointer-events: none; background-image: radial-gradient(circle, rgba(139,233,255,0.4) 1px, transparent 1px), radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px); background-size: 150px 150px, 300px 300px; animation: particleDrift 60s linear infinite; }
   @keyframes particleDrift { 0% { background-position: 0 0, 0 0; } 100% { background-position: 150px -300px, 300px -600px; } }
 
-  .hero-inner { position: relative; z-index: 3; }
+  .hero-inner { position: relative; z-index: 4; }
   .hero h1 { font-family: 'Playfair Display', serif; font-size: 100px; margin: 0; line-height: 1; background: linear-gradient(135deg, #fff 0%, #a0d8ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(139, 233, 255, 0.3);}
   .hero p { font-size: 20px; letter-spacing: 4px; margin-top: 20px; color: #cbd5e0; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
   
@@ -122,8 +128,12 @@
 
 <div id="home" class="tab-content active">
   <div class="hero">
+    <!-- ★ 画像と動画の枠を用意し、暗転フィルターを被せる -->
     <div class="hero-bg" id="hero-bg"></div>
+    <video class="hero-video" id="hero-video" autoplay loop muted playsinline></video>
+    <div class="hero-overlay"></div>
     <div class="particles"></div>
+    
     <div class="hero-inner">
       <h1 id="hero-title">ASB</h1>
       <p id="hero-subtitle">Production greatly advances freedom.</p>
@@ -208,7 +218,7 @@
 <script>
 document.getElementById('year').innerText = new Date().getFullYear();
 
-// ===== ★ 画像のチラつき防止・プレロード処理 ★ =====
+// ===== ★ 動画・画像の自動判別＆プレロード ★ =====
 async function loadSiteSettings() {
   try {
     const res = await fetch("/api/settings");
@@ -227,15 +237,28 @@ async function loadSiteSettings() {
       document.getElementById("panel-discord-link").href = settings.discord_link;
     }
 
-    // 背景画像を裏側で読み込んでからフワッと表示する
-    const bgUrl = settings.bg_image || 'background.jpg'; // 設定がない場合はデフォルト
-    const img = new Image();
-    img.src = bgUrl;
-    img.onload = () => {
-      const heroBg = document.getElementById("hero-bg");
-      heroBg.style.backgroundImage = `url('${bgUrl}')`;
-      heroBg.style.opacity = "1"; // ここで透明度を1にして表示！
-    };
+    const bgUrl = settings.bg_image || 'background.jpg';
+    const isVideo = bgUrl.match(/\.(mp4|webm|ogg)$/i);
+    const heroBg = document.getElementById("hero-bg");
+    const heroVideo = document.getElementById("hero-video");
+
+    if (isVideo) {
+      // 動画の場合
+      heroVideo.src = bgUrl;
+      heroVideo.style.display = 'block';
+      heroVideo.onloadeddata = () => {
+        heroVideo.style.opacity = "1";
+      };
+    } else {
+      // 画像の場合
+      const img = new Image();
+      img.src = bgUrl;
+      img.onload = () => {
+        heroBg.style.backgroundImage = `url('${bgUrl}')`;
+        heroBg.style.display = 'block';
+        setTimeout(() => heroBg.style.opacity = "1", 50);
+      };
+    }
   } catch(e) { console.log("設定の読み込みに失敗しました"); }
 }
 
