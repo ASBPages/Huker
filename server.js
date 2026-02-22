@@ -40,7 +40,7 @@ app.use(session({
 app.use(express.static("public"));
 app.use("/uploads", express.static(UPLOADS_DIR));
 
-/* --- DB初期化 & ★自動マイグレーション --- */
+/* --- DB初期化 & 自動マイグレーション --- */
 try {
   db.prepare(`
     CREATE TABLE IF NOT EXISTS software (
@@ -71,8 +71,9 @@ try {
   insertSetting.run('hero_subtitle', 'Production greatly advances freedom.');
   insertSetting.run('bg_image', 'background.jpg');
   insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD');
+  insertSetting.run('x_link', '');
+  insertSetting.run('youtube_link', '');
 
-  // ★ 既存のDBファイルを消さずに「自作・他作」カラムを自動追加する処理
   try { db.prepare("ALTER TABLE software ADD COLUMN is_original INTEGER DEFAULT 0").run(); } catch(e){}
   try { db.prepare("ALTER TABLE software ADD COLUMN is_thirdparty INTEGER DEFAULT 0").run(); } catch(e){}
 
@@ -134,7 +135,6 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-
 /* ===== サイト設定 API ===== */
 app.get("/api/settings", (req, res) => {
   try {
@@ -147,12 +147,14 @@ app.get("/api/settings", (req, res) => {
 
 app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
   try {
-    const { hero_title, hero_subtitle, discord_link } = req.body;
+    const { hero_title, hero_subtitle, discord_link, x_link, youtube_link } = req.body;
     const update = db.prepare("UPDATE site_settings SET value = ? WHERE key = ?");
     
     if (hero_title !== undefined) update.run(hero_title, 'hero_title');
     if (hero_subtitle !== undefined) update.run(hero_subtitle, 'hero_subtitle');
     if (discord_link !== undefined) update.run(discord_link, 'discord_link');
+    if (x_link !== undefined) update.run(x_link, 'x_link');
+    if (youtube_link !== undefined) update.run(youtube_link, 'youtube_link');
     
     if (req.file) {
       const oldBg = db.prepare("SELECT value FROM site_settings WHERE key = 'bg_image'").get();
@@ -166,7 +168,6 @@ app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-
 /* ===== ソフトウェア API ===== */
 app.get("/api/software", (req, res) => {
   const list = db.prepare("SELECT * FROM software ORDER BY created_at DESC").all();
@@ -176,7 +177,6 @@ app.get("/api/software", (req, res) => {
 app.post("/api/software", auth, (req, res) => {
   try {
     const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, is_original, is_thirdparty } = req.body;
-    
     db.prepare(`
       INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance, is_original, is_thirdparty)
       VALUES (?,?,?,?,?,?,?,?,?,?)
@@ -193,7 +193,6 @@ app.put("/api/software/:id", auth, (req, res) => {
   try {
     const id = req.params.id;
     const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, zip_downloads, apk_downloads, is_original, is_thirdparty } = req.body;
-    
     db.prepare(`
       UPDATE software 
       SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?, is_original=?, is_thirdparty=?
