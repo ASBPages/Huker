@@ -44,7 +44,7 @@
   .del-btn:hover { background:var(--error); color:#fff; }
 
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(5px); }
-  .modal-content { background:var(--panel); padding:30px; border-radius:12px; border:1px solid var(--border); width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.7); }
+  .modal-content { background:var(--panel); padding:30px; border-radius:12px; border:1px solid var(--border); width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.7); max-height: 90vh; overflow-y: auto;}
 </style>
 </head>
 <body>
@@ -113,9 +113,11 @@
         <label style="font-size:12px; color:#888;">Hero Subtitle (小見出し)</label>
         <input id="set_hero_subtitle" placeholder="Production greatly advances freedom.">
 
-        <label style="font-size:12px; color:#888;">Background Image (※ここだけアップロード式)</label>
+        <label style="font-size:12px; color:#888;">Discord Community Link (招待URL)</label>
+        <input type="url" id="set_discord_link" placeholder="https://discord.gg/...">
+
+        <label style="font-size:12px; color:#888;">Background Image (背景画像 ※アップロード)</label>
         <input type="file" id="set_bg_image" accept="image/*">
-        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:20px;">画像は数MBなのでアップロードしても安全です。</p>
 
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
       </div>
@@ -123,12 +125,16 @@
   </div>
 </div>
 
-<!-- EDIT MODAL -->
+<!-- EDIT MODAL (ダウンロード数編集機能付き) -->
 <div id="editModal" class="modal-overlay">
   <div class="modal-content">
     <h2>EDIT SOFTWARE</h2>
     <input type="hidden" id="editId">
+    
+    <label style="font-size:12px; color:#888;">Software Name</label>
     <input id="editName" placeholder="Name">
+    
+    <label style="font-size:12px; color:#888;">Version</label>
     <input id="editVersion" placeholder="Version">
     
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
@@ -142,6 +148,19 @@
       </div>
     </div>
 
+    <!-- ★ダウンロード数手動変更エリア -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+      <div>
+        <label style="font-size:12px; color:var(--primary);">ZIP Downloads (DL数変更)</label>
+        <input type="number" id="editZipDl" style="border-color:var(--primary);">
+      </div>
+      <div>
+        <label style="font-size:12px; color:var(--primary);">APK Downloads (DL数変更)</label>
+        <input type="number" id="editApkDl" style="border-color:var(--primary);">
+      </div>
+    </div>
+
+    <label style="font-size:12px; color:#888;">Description</label>
     <textarea id="editDescription" placeholder="Description"></textarea>
     
     <div class="options-grid">
@@ -189,12 +208,15 @@ async function loadSettings() {
   const data = await res.json();
   document.getElementById("set_hero_title").value = data.hero_title || "";
   document.getElementById("set_hero_subtitle").value = data.hero_subtitle || "";
+  document.getElementById("set_discord_link").value = data.discord_link || "";
 }
 
 async function saveSettings() {
   const fd = new FormData();
   fd.append("hero_title", document.getElementById("set_hero_title").value);
   fd.append("hero_subtitle", document.getElementById("set_hero_subtitle").value);
+  fd.append("discord_link", document.getElementById("set_discord_link").value);
+  
   const bgFile = document.getElementById("set_bg_image").files[0];
   if(bgFile) fd.append("bg_image", bgFile);
 
@@ -255,9 +277,7 @@ async function addItem(){
   };
 
   await fetch("/api/software", { 
-    method: "POST", 
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(data)
+    method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)
   });
   
   document.getElementById("name").value = "";
@@ -278,6 +298,11 @@ function openEdit(id) {
   document.getElementById("editDescription").value = item.description;
   document.getElementById("editZipUrl").value = item.zip_path || "";
   document.getElementById("editApkUrl").value = item.apk_path || "";
+  
+  // ダウンロード数の代入
+  document.getElementById("editZipDl").value = item.zip_downloads || 0;
+  document.getElementById("editApkDl").value = item.apk_downloads || 0;
+
   document.getElementById("editBeta").checked = item.is_beta === 1;
   document.getElementById("editUpdate").checked = item.is_update === 1;
   document.getElementById("editMaint").checked = item.is_maintenance === 1;
@@ -295,15 +320,15 @@ async function saveEdit() {
     description: document.getElementById("editDescription").value,
     zip_url: document.getElementById("editZipUrl").value,
     apk_url: document.getElementById("editApkUrl").value,
+    zip_downloads: document.getElementById("editZipDl").value, // 手動DL数
+    apk_downloads: document.getElementById("editApkDl").value, // 手動DL数
     is_beta: document.getElementById("editBeta").checked,
     is_update: document.getElementById("editUpdate").checked,
     is_maintenance: document.getElementById("editMaint").checked
   };
 
   const res = await fetch("/api/software/" + id, { 
-    method: "PUT",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(data)
+    method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)
   });
   if(res.ok) { closeModal(); loadItems(); } 
   else { alert("Update failed."); }
