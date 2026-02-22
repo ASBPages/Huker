@@ -78,7 +78,7 @@
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
           <div>
-            <label style="font-size:12px; color:#888;">ZIP Download URL (Google Drive等)</label>
+            <label style="font-size:12px; color:#888;">ZIP Download URL</label>
             <input type="url" id="zipUrl" placeholder="https://..." style="margin-bottom:0;">
           </div>
           <div>
@@ -116,8 +116,16 @@
         <label style="font-size:12px; color:#888;">Discord Community Link (招待URL)</label>
         <input type="url" id="set_discord_link" placeholder="https://discord.gg/...">
 
-        <label style="font-size:12px; color:#888;">Background Image (背景画像 ※アップロード)</label>
+        <label style="font-size:12px; color:#888;">Background Image (背景画像)</label>
         <input type="file" id="set_bg_image" accept="image/*">
+        <p style="font-size:11px; color:#666; margin-top:-10px; margin-bottom:15px;">画像は数MBなのでアップロードしても安全です。</p>
+
+        <!-- ★ 画像プレビュー枠 -->
+        <div style="margin-bottom: 20px;">
+          <label style="font-size:12px; color:#888;">Current Preview</label>
+          <br>
+          <img id="bg_preview" src="" alt="Background Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border); display: none; object-fit: cover; margin-top:5px;">
+        </div>
 
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
       </div>
@@ -125,7 +133,7 @@
   </div>
 </div>
 
-<!-- EDIT MODAL (ダウンロード数編集機能付き) -->
+<!-- EDIT MODAL -->
 <div id="editModal" class="modal-overlay">
   <div class="modal-content">
     <h2>EDIT SOFTWARE</h2>
@@ -148,7 +156,6 @@
       </div>
     </div>
 
-    <!-- ★ダウンロード数手動変更エリア -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
       <div>
         <label style="font-size:12px; color:var(--primary);">ZIP Downloads (DL数変更)</label>
@@ -203,12 +210,29 @@ async function checkAuth() {
   } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
 }
 
+// ★プレビュー機能のイベントリスナー
+document.getElementById('set_bg_image').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if(file) {
+    const preview = document.getElementById('bg_preview');
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+  }
+});
+
 async function loadSettings() {
   const res = await fetch("/api/settings");
   const data = await res.json();
   document.getElementById("set_hero_title").value = data.hero_title || "";
   document.getElementById("set_hero_subtitle").value = data.hero_subtitle || "";
   document.getElementById("set_discord_link").value = data.discord_link || "";
+  
+  // 既存の画像があればプレビュー枠に表示
+  if (data.bg_image) {
+    const preview = document.getElementById('bg_preview');
+    preview.src = data.bg_image;
+    preview.style.display = 'block';
+  }
 }
 
 async function saveSettings() {
@@ -299,7 +323,6 @@ function openEdit(id) {
   document.getElementById("editZipUrl").value = item.zip_path || "";
   document.getElementById("editApkUrl").value = item.apk_path || "";
   
-  // ダウンロード数の代入
   document.getElementById("editZipDl").value = item.zip_downloads || 0;
   document.getElementById("editApkDl").value = item.apk_downloads || 0;
 
@@ -320,8 +343,8 @@ async function saveEdit() {
     description: document.getElementById("editDescription").value,
     zip_url: document.getElementById("editZipUrl").value,
     apk_url: document.getElementById("editApkUrl").value,
-    zip_downloads: document.getElementById("editZipDl").value, // 手動DL数
-    apk_downloads: document.getElementById("editApkDl").value, // 手動DL数
+    zip_downloads: document.getElementById("editZipDl").value,
+    apk_downloads: document.getElementById("editApkDl").value,
     is_beta: document.getElementById("editBeta").checked,
     is_update: document.getElementById("editUpdate").checked,
     is_maintenance: document.getElementById("editMaint").checked
