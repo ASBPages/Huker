@@ -19,7 +19,6 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const db = new Database(path.join(DATA_DIR, "database.sqlite"));
 
-// ※背景画像アップロード専用の設定
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_DIR),
   filename: (req, file, cb) => {
@@ -71,6 +70,7 @@ try {
   insertSetting.run('hero_title', 'ASB');
   insertSetting.run('hero_subtitle', 'Production greatly advances freedom.');
   insertSetting.run('bg_image', 'background.jpg');
+  insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD');
 } catch (err) { console.error("DB Error:", err.message); }
 
 /* --- 認証 --- */
@@ -142,11 +142,12 @@ app.get("/api/settings", (req, res) => {
 
 app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
   try {
-    const { hero_title, hero_subtitle } = req.body;
+    const { hero_title, hero_subtitle, discord_link } = req.body;
     const update = db.prepare("UPDATE site_settings SET value = ? WHERE key = ?");
     
     if (hero_title !== undefined) update.run(hero_title, 'hero_title');
     if (hero_subtitle !== undefined) update.run(hero_subtitle, 'hero_subtitle');
+    if (discord_link !== undefined) update.run(discord_link, 'discord_link');
     
     if (req.file) {
       const oldBg = db.prepare("SELECT value FROM site_settings WHERE key = 'bg_image'").get();
@@ -161,13 +162,12 @@ app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
 });
 
 
-/* ===== ソフトウェア API (外部URL対応) ===== */
+/* ===== ソフトウェア API (外部URL & DL数編集 対応) ===== */
 app.get("/api/software", (req, res) => {
   const list = db.prepare("SELECT * FROM software ORDER BY created_at DESC").all();
   res.json(list);
 });
 
-// 新規作成
 app.post("/api/software", auth, (req, res) => {
   try {
     const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance } = req.body;
@@ -183,25 +183,25 @@ app.post("/api/software", auth, (req, res) => {
   } catch (e) { res.status(500).json({error: e.message}); }
 });
 
-// 更新
+// ダウンロード数の書き換えを受け付けるように修正
 app.put("/api/software/:id", auth, (req, res) => {
   try {
     const id = req.params.id;
-    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance } = req.body;
+    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, zip_downloads, apk_downloads } = req.body;
     
     db.prepare(`
       UPDATE software 
-      SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?
+      SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?
       WHERE id=?
     `).run(
       name, version, description, zip_url || "", apk_url || "",
-      is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, id
+      is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0,
+      parseInt(zip_downloads) || 0, parseInt(apk_downloads) || 0, id
     );
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-// 削除 (ローカルファイルの削除処理を撤廃)
 app.delete("/api/software/:id", auth, (req, res) => {
   try {
     db.prepare("DELETE FROM software WHERE id=?").run(req.params.id);
@@ -209,7 +209,6 @@ app.delete("/api/software/:id", auth, (req, res) => {
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-// ダウンロードカウント
 app.post("/api/download/:id/:type", (req, res) => {
   try {
     const { id, type } = req.params;
