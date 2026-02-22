@@ -35,7 +35,8 @@
 
   .hero { height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; text-align: center; overflow: hidden; }
   
-  .hero-bg { position: absolute; inset: -5%; background: url("background.jpg") center/cover no-repeat; z-index: 1; animation: slowPan 30s ease-in-out infinite alternate; }
+  /* ★ チラつき防止：初期画像は設定せず透明にしておく */
+  .hero-bg { position: absolute; inset: -5%; z-index: 1; background-color: var(--bg); background-position: center; background-size: cover; background-repeat: no-repeat; opacity: 0; transition: opacity 0.8s ease; animation: slowPan 30s ease-in-out infinite alternate; }
   .hero-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,7,12,0.1), var(--bg)); }
   @keyframes slowPan { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
 
@@ -207,7 +208,7 @@
 <script>
 document.getElementById('year').innerText = new Date().getFullYear();
 
-// ===== サイト設定(文字・背景・Discordリンク)の取得 =====
+// ===== ★ 画像のチラつき防止・プレロード処理 ★ =====
 async function loadSiteSettings() {
   try {
     const res = await fetch("/api/settings");
@@ -221,13 +222,20 @@ async function loadSiteSettings() {
     if(settings.hero_subtitle) {
       document.getElementById("hero-subtitle").innerText = settings.hero_subtitle;
     }
-    if(settings.bg_image) {
-      document.getElementById("hero-bg").style.backgroundImage = `url('${settings.bg_image}')`;
-    }
     if(settings.discord_link) {
       document.getElementById("nav-discord-link").href = settings.discord_link;
       document.getElementById("panel-discord-link").href = settings.discord_link;
     }
+
+    // 背景画像を裏側で読み込んでからフワッと表示する
+    const bgUrl = settings.bg_image || 'background.jpg'; // 設定がない場合はデフォルト
+    const img = new Image();
+    img.src = bgUrl;
+    img.onload = () => {
+      const heroBg = document.getElementById("hero-bg");
+      heroBg.style.backgroundImage = `url('${bgUrl}')`;
+      heroBg.style.opacity = "1"; // ここで透明度を1にして表示！
+    };
   } catch(e) { console.log("設定の読み込みに失敗しました"); }
 }
 
