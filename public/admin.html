@@ -70,6 +70,7 @@
       <button onclick="location.href='/logout'" style="padding:8px 16px; background:#333; color:#fff; border:none; border-radius:4px; cursor:pointer;">Logout</button>
     </div>
 
+    <!-- TABS -->
     <div class="admin-tabs">
       <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">SOFTWARE MANAGER</div>
       <div class="admin-tab" onclick="switchAdminTab('settingsTab', this)">SITE SETTINGS</div>
@@ -78,18 +79,9 @@
     <!-- SOFTWARE TAB -->
     <div id="softwareTab">
       <div class="stats-container">
-        <div class="stat-box">
-          <div class="stat-title">Total Softwares</div>
-          <div class="stat-value" id="statTotal" style="color:var(--primary);">0</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-title">Total ZIP DLs</div>
-          <div class="stat-value" id="statZipDl" style="color:#3498db;">0</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-title">Total APK DLs</div>
-          <div class="stat-value" id="statApkDl" style="color:#2ecc71;">0</div>
-        </div>
+        <div class="stat-box"><div class="stat-title">Total Softwares</div><div class="stat-value" id="statTotal" style="color:var(--primary);">0</div></div>
+        <div class="stat-box"><div class="stat-title">Total ZIP DLs</div><div class="stat-value" id="statZipDl" style="color:#3498db;">0</div></div>
+        <div class="stat-box"><div class="stat-title">Total APK DLs</div><div class="stat-value" id="statApkDl" style="color:#2ecc71;">0</div></div>
       </div>
 
       <div class="panel">
@@ -128,27 +120,25 @@
         <h2>GLOBAL SETTINGS</h2>
         <label style="font-size:12px; color:#888;">Hero Title (大見出し)</label>
         <input id="set_hero_title" placeholder="ASB">
-        
         <label style="font-size:12px; color:#888;">Hero Subtitle (小見出し)</label>
         <input id="set_hero_subtitle" placeholder="Production greatly advances freedom.">
         
-        <!-- ★ SNS Links -->
         <h3 style="color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Social Links</h3>
-        <p style="font-size:12px; color:#888; margin-bottom:15px;">※空欄にするとサイトからボタンが非表示になります。</p>
-        
         <label style="font-size:12px; color:#888;">Discord Community Link</label>
         <input type="url" id="set_discord_link" placeholder="https://discord.gg/...">
-        
         <label style="font-size:12px; color:#888;">X (Twitter) Link</label>
         <input type="url" id="set_x_link" placeholder="https://x.com/...">
-        
         <label style="font-size:12px; color:#888;">YouTube Link</label>
         <input type="url" id="set_youtube_link" placeholder="https://youtube.com/...">
+
+        <!-- ★ 広告コード設定 -->
+        <h3 style="color:var(--warning); border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Monetization (広告設定)</h3>
+        <label style="font-size:12px; color:#888;">Ad Code (Google AdSense などのHTMLタグを貼り付けてください)</label>
+        <textarea id="set_ad_code" placeholder="<script>...</script>" rows="6" style="font-family:monospace; font-size:11px;"></textarea>
 
         <h3 style="color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Background</h3>
         <label style="font-size:12px; color:#888;">Background Media (画像 or MP4/GIF動画)</label>
         <input type="file" id="set_bg_image" accept="image/*, video/mp4, video/webm">
-        
         <div style="margin-bottom: 20px;">
           <label style="font-size:12px; color:#888;">Current Preview</label><br>
           <img id="bg_preview_img" class="preview-box" src="" alt="Preview">
@@ -241,6 +231,7 @@ async function loadSettings() {
   document.getElementById("set_discord_link").value = data.discord_link || "";
   document.getElementById("set_x_link").value = data.x_link || "";
   document.getElementById("set_youtube_link").value = data.youtube_link || "";
+  document.getElementById("set_ad_code").value = data.ad_code || ""; // 広告コード
   
   if (data.bg_image) {
     const isVideo = data.bg_image.match(/\.(mp4|webm|ogg)$/i);
@@ -258,6 +249,8 @@ async function saveSettings() {
   fd.append("discord_link", document.getElementById("set_discord_link").value);
   fd.append("x_link", document.getElementById("set_x_link").value);
   fd.append("youtube_link", document.getElementById("set_youtube_link").value);
+  fd.append("ad_code", document.getElementById("set_ad_code").value); // 広告コード保存
+  
   const bgFile = document.getElementById("set_bg_image").files[0];
   if(bgFile) fd.append("bg_image", bgFile);
 
