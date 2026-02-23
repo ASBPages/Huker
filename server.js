@@ -8,6 +8,7 @@ const path = require("path");
 
 const app = express();
 
+/* ===== Railway対応: Volume設定 ===== */
 const STORAGE_DIR = process.env.STORAGE_DIR || path.join(__dirname, "storage");
 const DATA_DIR = path.join(STORAGE_DIR, "data");
 const UPLOADS_DIR = path.join(STORAGE_DIR, "uploads");
@@ -42,26 +43,60 @@ app.use("/uploads", express.static(UPLOADS_DIR));
 /* --- DB初期化 & 自動マイグレーション --- */
 try {
   // 公式ソフト
-  db.prepare(`CREATE TABLE IF NOT EXISTS software (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, version TEXT, description TEXT, zip_path TEXT, apk_path TEXT, zip_downloads INTEGER DEFAULT 0, apk_downloads INTEGER DEFAULT 0, is_beta INTEGER DEFAULT 0, is_update INTEGER DEFAULT 0, is_maintenance INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
-  try { db.prepare("ALTER TABLE software ADD COLUMN is_original INTEGER DEFAULT 0").run(); } catch(e){}
-  try { db.prepare("ALTER TABLE software ADD COLUMN is_thirdparty INTEGER DEFAULT 0").run(); } catch(e){}
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS software (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      version TEXT,
+      description TEXT,
+      zip_path TEXT,
+      apk_path TEXT,
+      zip_downloads INTEGER DEFAULT 0,
+      apk_downloads INTEGER DEFAULT 0,
+      is_beta INTEGER DEFAULT 0,
+      is_update INTEGER DEFAULT 0,
+      is_maintenance INTEGER DEFAULT 0,
+      is_original INTEGER DEFAULT 0,
+      is_thirdparty INTEGER DEFAULT 0,
+      tags TEXT DEFAULT '[]',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
+  // ★ 新機能: カスタムタグテーブル
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      color TEXT
+    )
+  `).run();
 
   // サイト設定
   db.prepare(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT)`).run();
   const insertSetting = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)');
-  insertSetting.run('hero_title', 'ASB'); insertSetting.run('hero_subtitle', 'Production greatly advances freedom.'); insertSetting.run('bg_image', 'background.jpg'); insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD'); insertSetting.run('x_link', ''); insertSetting.run('youtube_link', ''); insertSetting.run('ad_code', '');
+  insertSetting.run('hero_title', 'ASB');
+  insertSetting.run('hero_subtitle', 'Production greatly advances freedom.');
+  insertSetting.run('bg_image', 'background.jpg');
+  insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD');
+  insertSetting.run('x_link', '');
+  insertSetting.run('youtube_link', '');
+  insertSetting.run('ad_code', '');
 
-  // ★ 一般ユーザー投稿ソフト
+  // 一般ユーザー投稿
   db.prepare(`CREATE TABLE IF NOT EXISTS user_software (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, version TEXT, description TEXT, zip_url TEXT, apk_url TEXT, author_name TEXT, is_original INTEGER DEFAULT 0, is_thirdparty INTEGER DEFAULT 0, downloads INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
 
-  // ★ SNS宣伝
+  // SNS宣伝
   db.prepare(`CREATE TABLE IF NOT EXISTS sns_promotions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_name TEXT, sns_type TEXT, url TEXT, description TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+
+  // ★ カラム追加のマイグレーション
+  try { db.prepare("ALTER TABLE software ADD COLUMN tags TEXT DEFAULT '[]'").run(); } catch(e){}
 
 } catch (err) { console.error("DB Error:", err.message); }
 
 function auth(req, res, next){ if(!req.session.admin) return res.status(401).json({error:"Unauthorized"}); next(); }
 
-/* ===== Discord Auth ===== */
+/* ===== Auth ===== */
 app.get("/auth/discord", (req, res) => { res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`); });
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code; if (!code) return res.send("Error: No code provided.");
@@ -88,19 +123,28 @@ app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-/* ===== 公式ソフトウェア API ===== */
+/* ===== ★ カスタムタグ API ===== */
+app.get("/api/tags", (req, res) => { res.json(db.prepare("SELECT * FROM tags").all()); });
+app.post("/api/tags", auth, (req, res) => {
+  try { db.prepare("INSERT INTO tags (name, color) VALUES (?, ?)").run(req.body.name, req.body.color); res.json({success:true}); } catch(e){ res.status(500).json({error:e.message}); }
+});
+app.delete("/api/tags/:id", auth, (req, res) => {
+  try { db.prepare("DELETE FROM tags WHERE id=?").run(req.params.id); res.json({success:true}); } catch(e){ res.status(500).json({error:e.message}); }
+});
+
+/* ===== 公式ソフトウェア API (タグ対応) ===== */
 app.get("/api/software", (req, res) => { res.json(db.prepare("SELECT * FROM software ORDER BY created_at DESC").all()); });
 app.post("/api/software", auth, (req, res) => {
   try {
-    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, is_original, is_thirdparty } = req.body;
-    db.prepare(`INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance, is_original, is_thirdparty) VALUES (?,?,?,?,?,?,?,?,?,?)`).run(name, version, description, zip_url || "", apk_url || "", is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, is_original ? 1 : 0, is_thirdparty ? 1 : 0);
+    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, is_original, is_thirdparty, tags } = req.body;
+    db.prepare(`INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance, is_original, is_thirdparty, tags) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(name, version, description, zip_url || "", apk_url || "", is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, is_original ? 1 : 0, is_thirdparty ? 1 : 0, JSON.stringify(tags || []));
     res.json({ success: true });
   } catch (e) { res.status(500).json({error: e.message}); }
 });
 app.put("/api/software/:id", auth, (req, res) => {
   try {
-    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, zip_downloads, apk_downloads, is_original, is_thirdparty } = req.body;
-    db.prepare(`UPDATE software SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?, is_original=?, is_thirdparty=? WHERE id=?`).run(name, version, description, zip_url || "", apk_url || "", is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, parseInt(zip_downloads) || 0, parseInt(apk_downloads) || 0, is_original ? 1 : 0, is_thirdparty ? 1 : 0, req.params.id);
+    const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, zip_downloads, apk_downloads, is_original, is_thirdparty, tags } = req.body;
+    db.prepare(`UPDATE software SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?, is_original=?, is_thirdparty=?, tags=? WHERE id=?`).run(name, version, description, zip_url || "", apk_url || "", is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, parseInt(zip_downloads) || 0, parseInt(apk_downloads) || 0, is_original ? 1 : 0, is_thirdparty ? 1 : 0, JSON.stringify(tags || []), req.params.id);
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
@@ -115,9 +159,8 @@ app.post("/api/download/:id/:type", (req, res) => {
   } catch(e) { res.status(500).json({error: "Server error"}); }
 });
 
-/* ===== ★ 一般ユーザー投稿ソフト API ===== */
+/* ===== 一般ユーザー投稿ソフト API ===== */
 app.get("/api/user_software", (req, res) => { res.json(db.prepare("SELECT * FROM user_software ORDER BY created_at DESC").all()); });
-// 誰でも投稿可能 (authなし)
 app.post("/api/user_software", (req, res) => {
   try {
     const { name, version, description, zip_url, apk_url, is_original, is_thirdparty, author_name } = req.body;
@@ -125,16 +168,11 @@ app.post("/api/user_software", (req, res) => {
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-// 削除は管理者のみ (authあり)
 app.delete("/api/user_software/:id", auth, (req, res) => { try { db.prepare("DELETE FROM user_software WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
-// DLカウント用
-app.post("/api/download_user/:id", (req, res) => {
-  try { db.prepare("UPDATE user_software SET downloads=downloads+1 WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: "Server error"}); }
-});
+app.post("/api/download_user/:id", (req, res) => { try { db.prepare("UPDATE user_software SET downloads=downloads+1 WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: "Server error"}); } });
 
-/* ===== ★ SNS宣伝 API ===== */
+/* ===== SNS宣伝 API ===== */
 app.get("/api/sns", (req, res) => { res.json(db.prepare("SELECT * FROM sns_promotions ORDER BY created_at DESC").all()); });
-// 誰でも投稿可能
 app.post("/api/sns", (req, res) => {
   try {
     const { user_name, sns_type, url, description } = req.body;
@@ -142,7 +180,6 @@ app.post("/api/sns", (req, res) => {
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-// 削除は管理者のみ
 app.delete("/api/sns/:id", auth, (req, res) => { try { db.prepare("DELETE FROM sns_promotions WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
 
 const PORT = process.env.PORT || 3000;
