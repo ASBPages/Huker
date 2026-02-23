@@ -101,12 +101,16 @@
   .doc-section h4 { color: #fff; margin-top: 25px; margin-bottom: 10px; font-size: 16px;}
   .doc-section p, .doc-section li { color: var(--text-sub); font-size: 14px; margin-bottom: 15px; }
 
-  /* ★ 広告枠のデザイン */
   #global-ad-container { max-width: 900px; margin: 0 auto 40px auto; padding: 15px; text-align: center; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.05); display: none; }
 
   footer { text-align: center; padding: 50px; color: #444; font-size: 12px; border-top: 1px solid var(--border); }
 
   @media (max-width: 768px) { header { padding: 0 20px; } .hero h1 { font-size: 50px; } .info-section { grid-template-columns: 1fr; padding: 40px 5%; } .doc-section { padding: 20px; } }
+
+  /* ★ ダウンロード待機モーダル用スタイル */
+  .dl-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
+  .dl-modal-content { background: #131316; padding: 30px; border-radius: 16px; border: 1px solid var(--border); width: 90%; max-width: 500px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+  .dl-ad-box { margin: 20px auto; min-height: 150px; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; }
 </style>
 </head>
 <body>
@@ -226,7 +230,6 @@
   </div>
 </div>
 
-<!-- ★ 共通広告コンテナ (フッターの上に常時表示) -->
 <div id="global-ad-container"></div>
 
 <footer>
@@ -234,8 +237,32 @@
   <p style="color:#666;">Design by ASB Team.</p>
 </footer>
 
+<!-- ★ ダウンロード待機用モーダル -->
+<div id="dlModal" class="dl-modal-overlay">
+  <div class="dl-modal-content">
+    <h2 style="margin-top:0; color:var(--primary); font-family:'Playfair Display', serif;">Preparing Download</h2>
+    <p style="color:#aaa; font-size:14px; margin-bottom: 20px;">ダウンロードリンクを準備しています。しばらくお待ちください。</p>
+    
+    <!-- モーダル内 広告枠 -->
+    <div id="dl-ad-container" class="dl-ad-box">
+      <span style="color:#555; font-size:12px;">Advertisement</span>
+    </div>
+
+    <!-- カウントダウン -->
+    <div id="dl-countdown" style="font-size:36px; font-weight:bold; font-family:'JetBrains Mono', monospace; margin:20px 0; color:#fff;">5</div>
+    
+    <!-- DL実行ボタン -->
+    <button id="dl-execute-btn" class="dl-btn" style="width:100%; padding:14px; font-size:16px; opacity:0.5; cursor:not-allowed;" disabled>Please Wait...</button>
+    
+    <button onclick="closeDlModal()" style="background:transparent; border:none; color:#666; margin-top:15px; cursor:pointer; font-size:12px; text-decoration:underline;">Cancel (閉じる)</button>
+  </div>
+</div>
+
 <script>
 document.getElementById('year').innerText = new Date().getFullYear();
+
+// グローバル変数として広告コードを保持（モーダル内で使い回すため）
+window.siteAdCode = "";
 
 async function loadSiteSettings() {
   try {
@@ -268,12 +295,11 @@ async function loadSiteSettings() {
       document.getElementById("panel-youtube-link").style.display = "inline-block";
     }
 
-    // ★ 広告コードを動的に挿入し、JavaScriptを実行させる
     if(settings.ad_code && settings.ad_code.trim() !== "") {
+      window.siteAdCode = settings.ad_code; // 待機画面用に保存
       const adContainer = document.getElementById("global-ad-container");
       adContainer.style.display = "block";
       adContainer.innerHTML = settings.ad_code;
-      
       Array.from(adContainer.querySelectorAll("script")).forEach(oldScript => {
         const newScript = document.createElement("script");
         Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
@@ -383,16 +409,74 @@ async function loadSoftware() {
   } catch (e) { listEl.innerHTML = "<p style='color:red; text-align:center; grid-column:1/-1;'>Failed to load.</p>"; }
 }
 
+// ===== ★ ダウンロード待機モーダル機能 =====
+let dlTimer;
+
 async function downloadSw(id, type) {
   try {
     const res = await fetch(`/api/download/${id}/${type}`, { method: "POST" });
     if(res.status === 403) return alert("Currently under maintenance.");
     const data = await res.json();
     if(data.link) {
-      window.open(data.link, '_blank');
+      // リンクを直接開かず、待機モーダルを表示
+      openDlModal(data.link);
       setTimeout(loadSoftware, 1000); 
     } else { alert("File not found."); }
   } catch(e) { alert("Connection failed."); }
+}
+
+function openDlModal(downloadLink) {
+  const modal = document.getElementById("dlModal");
+  const countEl = document.getElementById("dl-countdown");
+  const btn = document.getElementById("dl-execute-btn");
+  const adContainer = document.getElementById("dl-ad-container");
+
+  // 管理画面で設定した広告コードをモーダル内にも適用
+  if(window.siteAdCode) {
+    adContainer.innerHTML = window.siteAdCode;
+    Array.from(adContainer.querySelectorAll("script")).forEach(oldScript => {
+      const newScript = document.createElement("script");
+      Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+      newScript.text = oldScript.innerHTML;
+      oldScript.parentNode.replaceChild(newScript, oldScript);
+    });
+  } else {
+    adContainer.style.display = "none"; // 広告が無い場合は枠ごと隠す
+  }
+
+  modal.style.display = "flex";
+  
+  let count = 5; // 5秒待機
+  countEl.innerText = count;
+  btn.innerText = "Please Wait...";
+  btn.disabled = true;
+  btn.style.opacity = "0.5";
+  btn.style.cursor = "not-allowed";
+  btn.onclick = null;
+
+  clearInterval(dlTimer);
+  dlTimer = setInterval(() => {
+    count--;
+    countEl.innerText = count;
+    if(count <= 0) {
+      clearInterval(dlTimer);
+      countEl.innerText = "Ready!";
+      btn.innerText = "Click Here to Download";
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
+      btn.onclick = () => {
+        window.open(downloadLink, '_blank');
+        closeDlModal();
+      };
+    }
+  }, 1000);
+}
+
+function closeDlModal() {
+  clearInterval(dlTimer);
+  document.getElementById("dlModal").style.display = "none";
+  document.getElementById("dl-ad-container").innerHTML = ""; // 広告リセット
 }
 
 window.addEventListener('load', () => { loadSiteSettings(); loadRealNews(); });
