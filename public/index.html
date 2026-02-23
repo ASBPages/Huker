@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- ★ SEO & SNS拡散対策 メタタグ -->
 <title>ASB Official</title>
 <meta name="description" content="ASB Official - 高機能な自動化ツールやソフトウェアを無料で配布しています。">
 <meta name="keywords" content="ASB, Auto click, オートクリッカー, 自動化ツール, ソフトウェア配布, APK, ZIP">
@@ -36,7 +35,7 @@
   nav a { color: var(--primary); text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 5px; }
   nav a:hover { text-shadow: 0 0 10px var(--primary-glow); }
 
-  .tab-content { display: none; padding-top: 70px; min-height: 100vh; animation: fadeIn 0.4s ease; }
+  .tab-content { display: none; padding-top: 70px; min-height: 100vh; animation: fadeIn 0.4s ease; padding-bottom: 40px; }
   .tab-content.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -98,7 +97,10 @@
   .doc-section h4 { color: #fff; margin-top: 25px; margin-bottom: 10px; font-size: 16px;}
   .doc-section p, .doc-section li { color: var(--text-sub); font-size: 14px; margin-bottom: 15px; }
 
-  footer { text-align: center; padding: 50px; color: #444; font-size: 12px; border-top: 1px solid var(--border); margin-top: 50px;}
+  /* ★ 広告枠のデザイン */
+  #global-ad-container { max-width: 900px; margin: 0 auto 40px auto; padding: 15px; text-align: center; border-radius: 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.05); display: none; }
+
+  footer { text-align: center; padding: 50px; color: #444; font-size: 12px; border-top: 1px solid var(--border); }
 
   @media (max-width: 768px) { header { padding: 0 20px; } .hero h1 { font-size: 50px; } .info-section { grid-template-columns: 1fr; padding: 40px 5%; } .doc-section { padding: 20px; } }
 </style>
@@ -114,8 +116,6 @@
       <li onclick="switchTab('security', this)">Security</li>
       <li onclick="switchTab('legal', this)">Legal</li>
       <li onclick="switchTab('roadmap', this)">Roadmap</li>
-      
-      <!-- ★ SNSアイコン群（設定がない場合は非表示） -->
       <li id="li-youtube" style="display:none;">
         <a href="#" target="_blank" id="nav-youtube-link" style="color:#ff0000;">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.052-.074 1.972l-.008.106-.022.26-.01.104c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z"/></svg>
@@ -155,7 +155,6 @@
       <div id="news-box"><div style="color:#666; font-size:12px;">Loading logs...</div></div>
     </div>
     
-    <!-- ★ パネル内リンク -->
     <div class="panel">
       <h2>Community & Socials</h2>
       <p style="color:#aaa;">アップデート情報やバグ報告はDiscordにて。SNSでの情報発信も行っています。</p>
@@ -223,6 +222,9 @@
   </div>
 </div>
 
+<!-- ★ 共通広告コンテナ (フッターの上に常時表示) -->
+<div id="global-ad-container"></div>
+
 <footer>
   <p>&copy; <span id="year">2026</span> ASB Project. All rights reserved.</p>
   <p style="color:#666;">Design by ASB Team.</p>
@@ -243,7 +245,6 @@ async function loadSiteSettings() {
     }
     if(settings.hero_subtitle) document.getElementById("hero-subtitle").innerText = settings.hero_subtitle;
     
-    // ★ SNSリンクの表示制御
     if(settings.discord_link) {
       document.getElementById("nav-discord-link").href = settings.discord_link;
       document.getElementById("panel-discord-link").href = settings.discord_link;
@@ -261,6 +262,21 @@ async function loadSiteSettings() {
       document.getElementById("panel-youtube-link").href = settings.youtube_link;
       document.getElementById("li-youtube").style.display = "flex";
       document.getElementById("panel-youtube-link").style.display = "inline-block";
+    }
+
+    // ★ 広告コードを動的に挿入し、JavaScriptを実行させる
+    if(settings.ad_code && settings.ad_code.trim() !== "") {
+      const adContainer = document.getElementById("global-ad-container");
+      adContainer.style.display = "block";
+      adContainer.innerHTML = settings.ad_code;
+      
+      // innerHTMLで入れたscriptタグは動かないため、新しく作り直して置換する
+      Array.from(adContainer.querySelectorAll("script")).forEach(oldScript => {
+        const newScript = document.createElement("script");
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        newScript.text = oldScript.innerHTML;
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
     }
 
     const bgUrl = settings.bg_image || 'background.jpg';
@@ -322,6 +338,7 @@ async function loadSoftware() {
   const listEl = document.getElementById("software-list");
   try {
     const res = await fetch("/api/software");
+    if (!res.ok) throw new Error();
     const data = await res.json();
     listEl.innerHTML = "";
     if(data.length === 0) return listEl.innerHTML = "<p style='color:#666; text-align:center; grid-column:1/-1;'>公開中のソフトウェアはありません。</p>";
