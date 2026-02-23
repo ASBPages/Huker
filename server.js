@@ -73,6 +73,8 @@ try {
   insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD');
   insertSetting.run('x_link', '');
   insertSetting.run('youtube_link', '');
+  // ★ 広告コード用の初期枠を追加
+  insertSetting.run('ad_code', '');
 
   try { db.prepare("ALTER TABLE software ADD COLUMN is_original INTEGER DEFAULT 0").run(); } catch(e){}
   try { db.prepare("ALTER TABLE software ADD COLUMN is_thirdparty INTEGER DEFAULT 0").run(); } catch(e){}
@@ -147,7 +149,7 @@ app.get("/api/settings", (req, res) => {
 
 app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
   try {
-    const { hero_title, hero_subtitle, discord_link, x_link, youtube_link } = req.body;
+    const { hero_title, hero_subtitle, discord_link, x_link, youtube_link, ad_code } = req.body;
     const update = db.prepare("UPDATE site_settings SET value = ? WHERE key = ?");
     
     if (hero_title !== undefined) update.run(hero_title, 'hero_title');
@@ -155,6 +157,7 @@ app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
     if (discord_link !== undefined) update.run(discord_link, 'discord_link');
     if (x_link !== undefined) update.run(x_link, 'x_link');
     if (youtube_link !== undefined) update.run(youtube_link, 'youtube_link');
+    if (ad_code !== undefined) update.run(ad_code, 'ad_code'); // 広告コード保存
     
     if (req.file) {
       const oldBg = db.prepare("SELECT value FROM site_settings WHERE key = 'bg_image'").get();
