@@ -8,7 +8,6 @@ const path = require("path");
 
 const app = express();
 
-/* ===== Railway対応: Volume設定 ===== */
 const STORAGE_DIR = process.env.STORAGE_DIR || path.join(__dirname, "storage");
 const DATA_DIR = path.join(STORAGE_DIR, "data");
 const UPLOADS_DIR = path.join(STORAGE_DIR, "uploads");
@@ -42,199 +41,109 @@ app.use("/uploads", express.static(UPLOADS_DIR));
 
 /* --- DB初期化 & 自動マイグレーション --- */
 try {
-  db.prepare(`
-    CREATE TABLE IF NOT EXISTS software (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      version TEXT,
-      description TEXT,
-      zip_path TEXT,
-      apk_path TEXT,
-      zip_downloads INTEGER DEFAULT 0,
-      apk_downloads INTEGER DEFAULT 0,
-      is_beta INTEGER DEFAULT 0,
-      is_update INTEGER DEFAULT 0,
-      is_maintenance INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `).run();
-
-  db.prepare(`
-    CREATE TABLE IF NOT EXISTS site_settings (
-      key TEXT PRIMARY KEY,
-      value TEXT
-    )
-  `).run();
-
-  const insertSetting = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)');
-  insertSetting.run('hero_title', 'ASB');
-  insertSetting.run('hero_subtitle', 'Production greatly advances freedom.');
-  insertSetting.run('bg_image', 'background.jpg');
-  insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD');
-  insertSetting.run('x_link', '');
-  insertSetting.run('youtube_link', '');
-  // ★ 広告コード用の初期枠を追加
-  insertSetting.run('ad_code', '');
-
+  // 公式ソフト
+  db.prepare(`CREATE TABLE IF NOT EXISTS software (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, version TEXT, description TEXT, zip_path TEXT, apk_path TEXT, zip_downloads INTEGER DEFAULT 0, apk_downloads INTEGER DEFAULT 0, is_beta INTEGER DEFAULT 0, is_update INTEGER DEFAULT 0, is_maintenance INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
   try { db.prepare("ALTER TABLE software ADD COLUMN is_original INTEGER DEFAULT 0").run(); } catch(e){}
   try { db.prepare("ALTER TABLE software ADD COLUMN is_thirdparty INTEGER DEFAULT 0").run(); } catch(e){}
 
+  // サイト設定
+  db.prepare(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT)`).run();
+  const insertSetting = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)');
+  insertSetting.run('hero_title', 'ASB'); insertSetting.run('hero_subtitle', 'Production greatly advances freedom.'); insertSetting.run('bg_image', 'background.jpg'); insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD'); insertSetting.run('x_link', ''); insertSetting.run('youtube_link', ''); insertSetting.run('ad_code', '');
+
+  // ★ 一般ユーザー投稿ソフト
+  db.prepare(`CREATE TABLE IF NOT EXISTS user_software (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, version TEXT, description TEXT, zip_url TEXT, apk_url TEXT, author_name TEXT, is_original INTEGER DEFAULT 0, is_thirdparty INTEGER DEFAULT 0, downloads INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+
+  // ★ SNS宣伝
+  db.prepare(`CREATE TABLE IF NOT EXISTS sns_promotions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_name TEXT, sns_type TEXT, url TEXT, description TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
+
 } catch (err) { console.error("DB Error:", err.message); }
 
-/* --- 認証 --- */
-function auth(req, res, next){
-  if(!req.session.admin) return res.status(401).json({error:"Unauthorized"});
-  next();
-}
+function auth(req, res, next){ if(!req.session.admin) return res.status(401).json({error:"Unauthorized"}); next(); }
 
 /* ===== Discord Auth ===== */
-app.get("/auth/discord", (req, res) => {
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`;
-  res.redirect(url);
-});
-
+app.get("/auth/discord", (req, res) => { res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`); });
 app.get("/auth/discord/callback", async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.send("Error: No code provided.");
+  const code = req.query.code; if (!code) return res.send("Error: No code provided.");
   try {
-    const tokenParams = new URLSearchParams({
-      client_id: process.env.DISCORD_CLIENT_ID,
-      client_secret: process.env.DISCORD_CLIENT_SECRET,
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: process.env.DISCORD_REDIRECT_URI
-    });
-    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-      method: "POST",
-      body: tokenParams,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" }
-    });
-    const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return res.send("Auth Failed.");
-
-    const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` }
-    });
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", { method: "POST", body: new URLSearchParams({ client_id: process.env.DISCORD_CLIENT_ID, client_secret: process.env.DISCORD_CLIENT_SECRET, grant_type: "authorization_code", code, redirect_uri: process.env.DISCORD_REDIRECT_URI }), headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+    const tokenData = await tokenRes.json(); if (!tokenData.access_token) return res.send("Auth Failed.");
+    const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
     const memberData = await memberRes.json();
-
-    if (memberData.roles && memberData.roles.includes(process.env.ALLOWED_ROLE_ID)) {
-      req.session.admin = true;
-      req.session.username = memberData.user ? memberData.user.username : "Admin";
-      res.redirect("/admin.html");
-    } else {
-      res.status(403).send("Admin role required.");
-    }
+    if (memberData.roles && memberData.roles.includes(process.env.ALLOWED_ROLE_ID)) { req.session.admin = true; req.session.username = memberData.user ? memberData.user.username : "Admin"; res.redirect("/admin.html"); } else { res.status(403).send("Admin role required."); }
   } catch (err) { res.status(500).send("Server Error."); }
 });
-
-app.get("/api/me", (req, res) => {
-  if (req.session.admin) res.json({ loggedIn: true, user: req.session.username });
-  else res.json({ loggedIn: false });
-});
-
-app.get("/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("/");
-});
+app.get("/api/me", (req, res) => { if (req.session.admin) res.json({ loggedIn: true, user: req.session.username }); else res.json({ loggedIn: false }); });
+app.get("/logout", (req, res) => { req.session.destroy(); res.redirect("/"); });
 
 /* ===== サイト設定 API ===== */
-app.get("/api/settings", (req, res) => {
-  try {
-    const rows = db.prepare("SELECT key, value FROM site_settings").all();
-    const settings = {};
-    rows.forEach(r => settings[r.key] = r.value);
-    res.json(settings);
-  } catch(e) { res.status(500).json({error: "Server error"}); }
-});
-
+app.get("/api/settings", (req, res) => { try { const rows = db.prepare("SELECT key, value FROM site_settings").all(); const settings = {}; rows.forEach(r => settings[r.key] = r.value); res.json(settings); } catch(e) { res.status(500).json({error: "Server error"}); } });
 app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
   try {
     const { hero_title, hero_subtitle, discord_link, x_link, youtube_link, ad_code } = req.body;
     const update = db.prepare("UPDATE site_settings SET value = ? WHERE key = ?");
-    
-    if (hero_title !== undefined) update.run(hero_title, 'hero_title');
-    if (hero_subtitle !== undefined) update.run(hero_subtitle, 'hero_subtitle');
-    if (discord_link !== undefined) update.run(discord_link, 'discord_link');
-    if (x_link !== undefined) update.run(x_link, 'x_link');
-    if (youtube_link !== undefined) update.run(youtube_link, 'youtube_link');
-    if (ad_code !== undefined) update.run(ad_code, 'ad_code'); // 広告コード保存
-    
-    if (req.file) {
-      const oldBg = db.prepare("SELECT value FROM site_settings WHERE key = 'bg_image'").get();
-      if (oldBg && oldBg.value.startsWith('/uploads/')) {
-        const oldFullPath = path.join(UPLOADS_DIR, oldBg.value.replace('/uploads/', ''));
-        if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath);
-      }
-      update.run(`/uploads/${req.file.filename}`, 'bg_image');
-    }
+    if (hero_title !== undefined) update.run(hero_title, 'hero_title'); if (hero_subtitle !== undefined) update.run(hero_subtitle, 'hero_subtitle'); if (discord_link !== undefined) update.run(discord_link, 'discord_link'); if (x_link !== undefined) update.run(x_link, 'x_link'); if (youtube_link !== undefined) update.run(youtube_link, 'youtube_link'); if (ad_code !== undefined) update.run(ad_code, 'ad_code');
+    if (req.file) { const oldBg = db.prepare("SELECT value FROM site_settings WHERE key = 'bg_image'").get(); if (oldBg && oldBg.value.startsWith('/uploads/')) { const oldFullPath = path.join(UPLOADS_DIR, oldBg.value.replace('/uploads/', '')); if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath); } update.run(`/uploads/${req.file.filename}`, 'bg_image'); }
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-/* ===== ソフトウェア API ===== */
-app.get("/api/software", (req, res) => {
-  const list = db.prepare("SELECT * FROM software ORDER BY created_at DESC").all();
-  res.json(list);
-});
-
+/* ===== 公式ソフトウェア API ===== */
+app.get("/api/software", (req, res) => { res.json(db.prepare("SELECT * FROM software ORDER BY created_at DESC").all()); });
 app.post("/api/software", auth, (req, res) => {
   try {
     const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, is_original, is_thirdparty } = req.body;
-    db.prepare(`
-      INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance, is_original, is_thirdparty)
-      VALUES (?,?,?,?,?,?,?,?,?,?)
-    `).run(
-      name, version, description, zip_url || "", apk_url || "",
-      is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0,
-      is_original ? 1 : 0, is_thirdparty ? 1 : 0
-    );
+    db.prepare(`INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance, is_original, is_thirdparty) VALUES (?,?,?,?,?,?,?,?,?,?)`).run(name, version, description, zip_url || "", apk_url || "", is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, is_original ? 1 : 0, is_thirdparty ? 1 : 0);
     res.json({ success: true });
   } catch (e) { res.status(500).json({error: e.message}); }
 });
-
 app.put("/api/software/:id", auth, (req, res) => {
   try {
-    const id = req.params.id;
     const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, zip_downloads, apk_downloads, is_original, is_thirdparty } = req.body;
-    db.prepare(`
-      UPDATE software 
-      SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?, is_original=?, is_thirdparty=?
-      WHERE id=?
-    `).run(
-      name, version, description, zip_url || "", apk_url || "",
-      is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0,
-      parseInt(zip_downloads) || 0, parseInt(apk_downloads) || 0,
-      is_original ? 1 : 0, is_thirdparty ? 1 : 0, id
-    );
+    db.prepare(`UPDATE software SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?, is_original=?, is_thirdparty=? WHERE id=?`).run(name, version, description, zip_url || "", apk_url || "", is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, parseInt(zip_downloads) || 0, parseInt(apk_downloads) || 0, is_original ? 1 : 0, is_thirdparty ? 1 : 0, req.params.id);
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-
-app.delete("/api/software/:id", auth, (req, res) => {
-  try {
-    db.prepare("DELETE FROM software WHERE id=?").run(req.params.id);
-    res.json({ success: true });
-  } catch(e) { res.status(500).json({error: e.message}); }
-});
-
+app.delete("/api/software/:id", auth, (req, res) => { try { db.prepare("DELETE FROM software WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
 app.post("/api/download/:id/:type", (req, res) => {
   try {
-    const { id, type } = req.params;
-    const item = db.prepare("SELECT zip_path, apk_path, is_maintenance FROM software WHERE id=?").get(id);
-    if(!item) return res.status(404).json({error:"Not found"});
-    if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
-
-    if (type === 'zip' && item.zip_path) {
-      db.prepare("UPDATE software SET zip_downloads=zip_downloads+1 WHERE id=?").run(id);
-      return res.json({ link: item.zip_path });
-    } else if (type === 'apk' && item.apk_path) {
-      db.prepare("UPDATE software SET apk_downloads=apk_downloads+1 WHERE id=?").run(id);
-      return res.json({ link: item.apk_path });
-    } else {
-      return res.status(404).json({error:"File not found"});
-    }
+    const { id, type } = req.params; const item = db.prepare("SELECT zip_path, apk_path, is_maintenance FROM software WHERE id=?").get(id);
+    if(!item) return res.status(404).json({error:"Not found"}); if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
+    if (type === 'zip' && item.zip_path) { db.prepare("UPDATE software SET zip_downloads=zip_downloads+1 WHERE id=?").run(id); return res.json({ link: item.zip_path }); }
+    else if (type === 'apk' && item.apk_path) { db.prepare("UPDATE software SET apk_downloads=apk_downloads+1 WHERE id=?").run(id); return res.json({ link: item.apk_path }); }
+    else { return res.status(404).json({error:"File not found"}); }
   } catch(e) { res.status(500).json({error: "Server error"}); }
 });
+
+/* ===== ★ 一般ユーザー投稿ソフト API ===== */
+app.get("/api/user_software", (req, res) => { res.json(db.prepare("SELECT * FROM user_software ORDER BY created_at DESC").all()); });
+// 誰でも投稿可能 (authなし)
+app.post("/api/user_software", (req, res) => {
+  try {
+    const { name, version, description, zip_url, apk_url, is_original, is_thirdparty, author_name } = req.body;
+    db.prepare(`INSERT INTO user_software (name, version, description, zip_url, apk_url, is_original, is_thirdparty, author_name) VALUES (?,?,?,?,?,?,?,?)`).run(name, version, description, zip_url || "", apk_url || "", is_original ? 1 : 0, is_thirdparty ? 1 : 0, author_name || "Anonymous");
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({error: e.message}); }
+});
+// 削除は管理者のみ (authあり)
+app.delete("/api/user_software/:id", auth, (req, res) => { try { db.prepare("DELETE FROM user_software WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
+// DLカウント用
+app.post("/api/download_user/:id", (req, res) => {
+  try { db.prepare("UPDATE user_software SET downloads=downloads+1 WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: "Server error"}); }
+});
+
+/* ===== ★ SNS宣伝 API ===== */
+app.get("/api/sns", (req, res) => { res.json(db.prepare("SELECT * FROM sns_promotions ORDER BY created_at DESC").all()); });
+// 誰でも投稿可能
+app.post("/api/sns", (req, res) => {
+  try {
+    const { user_name, sns_type, url, description } = req.body;
+    db.prepare(`INSERT INTO sns_promotions (user_name, sns_type, url, description) VALUES (?,?,?,?)`).run(user_name || "Anonymous", sns_type || "other", url, description);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({error: e.message}); }
+});
+// 削除は管理者のみ
+app.delete("/api/sns/:id", auth, (req, res) => { try { db.prepare("DELETE FROM sns_promotions WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`>> Server running on port ${PORT}`));
