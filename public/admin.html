@@ -14,7 +14,7 @@
   .panel h2 { margin-top:0; font-size:18px; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:20px; color:#fff; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-  input, textarea { width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:12px; border-radius:6px; margin-bottom:15px; box-sizing:border-box; font-family:'Inter',sans-serif; }
+  input, textarea, select { width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:12px; border-radius:6px; margin-bottom:15px; box-sizing:border-box; font-family:'Inter',sans-serif; }
   input:focus, textarea:focus { outline:none; border-color:var(--primary); }
   button.action-btn { width:100%; padding:14px; background:var(--primary); color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; transition:0.2s; }
   button.action-btn:hover { opacity:0.9; transform:translateY(-1px); }
@@ -40,10 +40,12 @@
 
   .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(5px); }
   .modal-content { background:var(--panel); padding:30px; border-radius:12px; border:1px solid var(--border); width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.7); max-height: 90vh; overflow-y: auto;}
-  .stats-container { display:flex; gap:15px; margin-bottom:20px; }
-  .stat-box { flex:1; background:#1a1a1f; border:1px solid var(--border); padding:15px; border-radius:8px; text-align:center; }
-  .stat-title { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
-  .stat-value { font-size:28px; font-family:'JetBrains Mono', monospace; font-weight:bold; }
+  
+  /* ★ Custom Tag Input */
+  .tag-select-container { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+  .tag-option { padding:5px 10px; border-radius:15px; border:1px solid var(--border); cursor:pointer; font-size:12px; transition:0.2s; user-select:none; }
+  .tag-option:hover { background:#333; }
+  .tag-option.selected { border-color:var(--primary); box-shadow:0 0 5px var(--primary); }
 </style>
 </head>
 <body>
@@ -64,26 +66,27 @@
 
     <!-- TABS -->
     <div class="admin-tabs">
-      <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">OFFICIAL SOFTS</div>
+      <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">OFFICIAL</div>
+      <div class="admin-tab" onclick="switchAdminTab('tagManagerTab', this)">TAGS</div>
       <div class="admin-tab" onclick="switchAdminTab('userSoftsTab', this); loadUserItems();">USER UPLOADS</div>
-      <div class="admin-tab" onclick="switchAdminTab('snsPromoTab', this); loadSnsItems();">SNS PROMOS</div>
-      <div class="admin-tab" onclick="switchAdminTab('settingsTab', this)">SITE SETTINGS</div>
+      <div class="admin-tab" onclick="switchAdminTab('snsPromoTab', this); loadSnsItems();">PROMOS</div>
+      <div class="admin-tab" onclick="switchAdminTab('settingsTab', this)">SETTINGS</div>
     </div>
 
     <!-- ★ OFFICIAL SOFTWARE TAB -->
     <div id="softwareTab">
-      <!-- (以前の公式ソフト管理と全く同じ内容) -->
-      <div class="stats-container">
-        <div class="stat-box"><div class="stat-title">Official Softs</div><div class="stat-value" id="statTotal" style="color:var(--primary);">0</div></div>
-      </div>
       <div class="panel">
-        <h2>DEPLOY OFFICIAL (External URL)</h2>
-        <input id="name" placeholder="Software Name"><input id="version" placeholder="Version (e.g. v1.0.0)">
+        <h2>DEPLOY OFFICIAL</h2>
+        <input id="name" placeholder="Software Name"><input id="version" placeholder="Version">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-          <div><input type="url" id="zipUrl" placeholder="ZIP Download URL"></div>
-          <div><input type="url" id="apkUrl" placeholder="APK Download URL"></div>
+          <div><input type="url" id="zipUrl" placeholder="ZIP URL"></div>
+          <div><input type="url" id="apkUrl" placeholder="APK URL"></div>
         </div>
         <textarea id="description" placeholder="Description"></textarea>
+        
+        <label style="font-size:12px; color:#888;">Select Tags:</label>
+        <div id="addTagContainer" class="tag-select-container"></div>
+
         <div class="options-grid">
           <label class="toggle-wrap"><input type="checkbox" id="isOrig"><span>ORIGINAL</span></label>
           <label class="toggle-wrap"><input type="checkbox" id="isThird"><span>THIRD-PARTY</span></label>
@@ -96,22 +99,27 @@
       <div class="panel"><h2>OFFICIAL RELEASES</h2><div id="list">loading...</div></div>
     </div>
 
-    <!-- ★ USER SOFTS TAB (一般ユーザー投稿の管理) -->
-    <div id="userSoftsTab" style="display:none;">
+    <!-- ★ TAG MANAGER TAB -->
+    <div id="tagManagerTab" style="display:none;">
       <div class="panel">
-        <h2>COMMUNITY UPLOADS</h2>
-        <p style="font-size:12px; color:#888; margin-bottom:15px;">一般ユーザーが投稿したソフトウェアです。不適切なものは削除してください。</p>
-        <div id="user-list">loading...</div>
+        <h2>CREATE TAG</h2>
+        <div style="display:flex; gap:10px;">
+          <input id="newTagName" placeholder="Tag Name (e.g. Utility)">
+          <input type="color" id="newTagColor" value="#8be9ff" style="width:60px; height:46px; padding:0;">
+          <button class="action-btn" style="width:100px;" onclick="createTag()">ADD</button>
+        </div>
       </div>
+      <div class="panel"><h2>EXISTING TAGS</h2><div id="tagList"></div></div>
     </div>
 
-    <!-- ★ SNS PROMOS TAB (宣伝の管理) -->
+    <!-- ★ USER SOFTS TAB -->
+    <div id="userSoftsTab" style="display:none;">
+      <div class="panel"><h2>COMMUNITY UPLOADS</h2><div id="user-list">loading...</div></div>
+    </div>
+
+    <!-- ★ SNS PROMOS TAB -->
     <div id="snsPromoTab" style="display:none;">
-      <div class="panel">
-        <h2>USER PROMOTIONS</h2>
-        <p style="font-size:12px; color:#888; margin-bottom:15px;">一般ユーザーが投稿したSNSリンクです。</p>
-        <div id="sns-list">loading...</div>
-      </div>
+      <div class="panel"><h2>USER PROMOTIONS</h2><div id="sns-list">loading...</div></div>
     </div>
 
     <!-- ★ SITE SETTINGS TAB -->
@@ -120,105 +128,132 @@
         <h2>GLOBAL SETTINGS</h2>
         <input id="set_hero_title" placeholder="Hero Title">
         <input id="set_hero_subtitle" placeholder="Hero Subtitle">
-        <input type="url" id="set_discord_link" placeholder="Discord Invite URL">
-        <input type="url" id="set_x_link" placeholder="X (Twitter) URL">
+        <input type="url" id="set_discord_link" placeholder="Discord URL">
+        <input type="url" id="set_x_link" placeholder="X URL">
         <input type="url" id="set_youtube_link" placeholder="YouTube URL">
-        <textarea id="set_ad_code" placeholder="AdSense Code etc..." rows="4"></textarea>
-        <input type="file" id="set_bg_image" accept="image/*, video/mp4, video/webm">
+        <textarea id="set_ad_code" placeholder="Ad Code" rows="4"></textarea>
+        <input type="file" id="set_bg_image" accept="image/*, video/*">
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- (EDIT MODAL - 変更なしなので省略。既存のものをそのまま残してください) -->
+<!-- EDIT MODAL -->
 <div id="editModal" class="modal-overlay">
   <div class="modal-content">
     <h2>EDIT SOFTWARE</h2><input type="hidden" id="editId"><input id="editName"><input id="editVersion"><input type="url" id="editZipUrl"><input type="url" id="editApkUrl"><input type="number" id="editZipDl"><input type="number" id="editApkDl"><textarea id="editDescription"></textarea>
+    <label style="font-size:12px; color:#888;">Select Tags:</label>
+    <div id="editTagContainer" class="tag-select-container"></div>
+    <div class="options-grid">
+      <label class="toggle-wrap"><input type="checkbox" id="editOrig"><span>ORIGINAL</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editThird"><span>THIRD-PARTY</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editBeta"><span>BETA</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editUpdate"><span>UPDATE</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editMaint"><span>MAINT</span></label>
+    </div>
     <div style="display:flex; gap:10px;"><button class="action-btn" onclick="closeModal()">CANCEL</button><button class="action-btn" onclick="saveEdit()">SAVE CHANGES</button></div>
   </div>
 </div>
 
 <script>
-function switchAdminTab(tabId, element) {
-  document.getElementById('softwareTab').style.display = 'none';
-  document.getElementById('userSoftsTab').style.display = 'none';
-  document.getElementById('snsPromoTab').style.display = 'none';
-  document.getElementById('settingsTab').style.display = 'none';
-  document.getElementById(tabId).style.display = 'block';
-  document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
-  element.classList.add('active');
+let currentData = [], availableTags = [];
+
+function switchAdminTab(tabId, el) {
+  ['softwareTab', 'tagManagerTab', 'userSoftsTab', 'snsPromoTab', 'settingsTab'].forEach(id => document.getElementById(id).style.display='none');
+  document.getElementById(tabId).style.display='block';
+  document.querySelectorAll('.admin-tab').forEach(e => e.classList.remove('active')); el.classList.add('active');
+  if(tabId==='tagManagerTab') loadTags();
+  if(tabId==='softwareTab') { loadTags(); loadItems(); }
 }
 
 async function checkAuth() {
   try {
-    const res = await fetch("/api/me");
-    const data = await res.json();
-    if(data.loggedIn) {
-      document.getElementById("loginPanel").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-      document.getElementById("adminName").innerText = data.user;
-      loadItems(); loadSettings();
-    } else { document.getElementById("loginPanel").style.display = "block"; }
+    const res = await fetch("/api/me"); const data = await res.json();
+    if(data.loggedIn) { document.getElementById("loginPanel").style.display = "none"; document.getElementById("dashboard").style.display = "block"; document.getElementById("adminName").innerText = data.user; loadTags(); loadItems(); loadSettings(); } 
+    else document.getElementById("loginPanel").style.display = "block";
   } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
 }
 
-// ==== 公式ソフト関連 (既存のまま) ====
-let currentData = [];
+// ==== TAG MANAGER ====
+async function loadTags() {
+  const res = await fetch("/api/tags"); availableTags = await res.json();
+  const list = document.getElementById("tagList"); list.innerHTML = "";
+  availableTags.forEach(t => {
+    list.innerHTML += `<div class="item"><div class="item-info"><strong style="color:${t.color}">${t.name}</strong></div><button class="del-btn" onclick="delTag(${t.id})">DEL</button></div>`;
+  });
+  renderTagSelector("addTagContainer");
+}
+async function createTag() {
+  const name = document.getElementById("newTagName").value; const color = document.getElementById("newTagColor").value;
+  if(!name) return alert("Tag name required");
+  await fetch("/api/tags", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name, color}) });
+  document.getElementById("newTagName").value=""; loadTags();
+}
+async function delTag(id) { if(confirm("Delete tag?")) { await fetch("/api/tags/"+id, {method:"DELETE"}); loadTags(); } }
+
+function renderTagSelector(containerId, selectedIds=[]) {
+  const container = document.getElementById(containerId); container.innerHTML = "";
+  availableTags.forEach(t => {
+    const isSel = selectedIds.includes(t.id) ? "selected" : "";
+    const style = isSel ? `background:${t.color}22; border-color:${t.color}; color:${t.color};` : `border-color:#444; color:#888;`;
+    container.innerHTML += `<div class="tag-option ${isSel}" style="${style}" onclick="toggleTagSelection(this, ${t.id})" data-id="${t.id}">${t.name}</div>`;
+  });
+}
+function toggleTagSelection(el, id) {
+  el.classList.toggle("selected");
+  // Visual update
+  const t = availableTags.find(tag => tag.id === id);
+  if(el.classList.contains("selected")) { el.style.background = t.color+"22"; el.style.borderColor = t.color; el.style.color = t.color; }
+  else { el.style.background = ""; el.style.borderColor = "#444"; el.style.color = "#888"; }
+}
+function getSelectedTagIds(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} .tag-option.selected`)).map(el => parseInt(el.dataset.id));
+}
+
+// ==== OFFICIAL SOFTS ====
 async function loadItems(){
   const res = await fetch("/api/software"); currentData = await res.json();
-  document.getElementById("statTotal").innerText = currentData.length;
   const list = document.getElementById("list"); list.innerHTML = "";
   currentData.forEach(item => {
-    list.innerHTML += `<div class="item"><div class="item-info"><strong>${item.name}</strong><span>v${item.version}</span></div><div class="btn-group"><button class="edit-btn" onclick="openEdit(${item.id})">EDIT</button><button class="del-btn" onclick="delItem(${item.id})">DEL</button></div></div>`;
+    let tagBadges = "";
+    try {
+      const tagIds = JSON.parse(item.tags || "[]");
+      tagIds.forEach(tid => {
+        const t = availableTags.find(at => at.id === tid);
+        if(t) tagBadges += `<span class="tag" style="color:${t.color}; border:1px solid ${t.color}; background:${t.color}22;">${t.name}</span>`;
+      });
+    } catch(e){}
+    list.innerHTML += `<div class="item"><div class="item-info"><strong>${item.name}</strong><span>v${item.version}</span><div class="tags">${tagBadges}</div></div><div class="btn-group"><button class="edit-btn" onclick="openEdit(${item.id})">EDIT</button><button class="del-btn" onclick="delItem(${item.id})">DEL</button></div></div>`;
   });
 }
 async function addItem(){
-  const data = { name: document.getElementById("name").value, version: document.getElementById("version").value, description: document.getElementById("description").value, zip_url: document.getElementById("zipUrl").value, apk_url: document.getElementById("apkUrl").value, is_original: document.getElementById("isOrig").checked, is_thirdparty: document.getElementById("isThird").checked, is_beta: document.getElementById("isBeta").checked, is_update: document.getElementById("isUpdate").checked, is_maintenance: document.getElementById("isMaint").checked };
+  const data = { name: document.getElementById("name").value, version: document.getElementById("version").value, description: document.getElementById("description").value, zip_url: document.getElementById("zipUrl").value, apk_url: document.getElementById("apkUrl").value, is_original: document.getElementById("isOrig").checked, is_thirdparty: document.getElementById("isThird").checked, is_beta: document.getElementById("isBeta").checked, is_update: document.getElementById("isUpdate").checked, is_maintenance: document.getElementById("isMaint").checked, tags: getSelectedTagIds("addTagContainer") };
   await fetch("/api/software", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
   loadItems();
 }
-function openEdit(id) { document.getElementById("editId").value=id; document.getElementById("editModal").style.display="flex"; }
+function openEdit(id) {
+  const item = currentData.find(d => d.id === id); document.getElementById("editId").value=id; document.getElementById("editName").value=item.name; document.getElementById("editVersion").value=item.version; document.getElementById("editDescription").value=item.description; document.getElementById("editZipUrl").value=item.zip_path||""; document.getElementById("editApkUrl").value=item.apk_path||""; document.getElementById("editZipDl").value=item.zip_downloads; document.getElementById("editApkDl").value=item.apk_downloads; document.getElementById("editOrig").checked=item.is_original; document.getElementById("editThird").checked=item.is_thirdparty; document.getElementById("editBeta").checked=item.is_beta; document.getElementById("editUpdate").checked=item.is_update; document.getElementById("editMaint").checked=item.is_maintenance;
+  renderTagSelector("editTagContainer", JSON.parse(item.tags || "[]"));
+  document.getElementById("editModal").style.display="flex";
+}
 function closeModal() { document.getElementById("editModal").style.display="none"; }
-async function saveEdit() { await fetch("/api/software/"+document.getElementById("editId").value, { method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name:document.getElementById("editName").value}) }); closeModal(); loadItems(); }
+async function saveEdit() {
+  const data = { name: document.getElementById("editName").value, version: document.getElementById("editVersion").value, description: document.getElementById("editDescription").value, zip_url: document.getElementById("editZipUrl").value, apk_url: document.getElementById("editApkUrl").value, zip_downloads: document.getElementById("editZipDl").value, apk_downloads: document.getElementById("editApkDl").value, is_original: document.getElementById("editOrig").checked, is_thirdparty: document.getElementById("editThird").checked, is_beta: document.getElementById("editBeta").checked, is_update: document.getElementById("editUpdate").checked, is_maintenance: document.getElementById("editMaint").checked, tags: getSelectedTagIds("editTagContainer") };
+  await fetch("/api/software/"+document.getElementById("editId").value, { method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) }); closeModal(); loadItems();
+}
 async function delItem(id){ if(confirm("Delete?")) { await fetch("/api/software/" + id, { method: "DELETE" }); loadItems(); } }
 
-// ==== ★ ユーザー投稿ソフト管理 ====
-async function loadUserItems() {
-  const res = await fetch("/api/user_software");
-  const data = await res.json();
-  const list = document.getElementById("user-list");
-  list.innerHTML = "";
-  if(data.length === 0) return list.innerHTML = "<p style='color:#666'>No user uploads.</p>";
-  data.forEach(item => {
-    list.innerHTML += `<div class="item"><div class="item-info"><strong style="color:var(--warning);">${item.name} (by ${item.author_name})</strong><span style="font-size:12px; color:#888;">${item.description}</span><div style="font-size:11px; margin-top:5px;"><a href="${item.zip_url||item.apk_url}" target="_blank" style="color:var(--primary);">[Check Link]</a></div></div><button class="del-btn" onclick="delUserItem(${item.id})">DELETE</button></div>`;
-  });
-}
-async function delUserItem(id){ if(confirm("Remove this user upload?")) { await fetch("/api/user_software/" + id, { method: "DELETE" }); loadUserItems(); } }
+// ==== USER SOFTS & SNS ====
+async function loadUserItems() { const res = await fetch("/api/user_software"); const data = await res.json(); const list = document.getElementById("user-list"); list.innerHTML = data.map(i=>`<div class="item"><div class="item-info"><strong>${i.name}</strong><span>by ${i.author_name}</span></div><button class="del-btn" onclick="delUser(${i.id})">DEL</button></div>`).join(""); }
+async function delUser(id){ if(confirm("Del?")) { await fetch("/api/user_software/"+id, {method:"DELETE"}); loadUserItems(); }}
+async function loadSnsItems() { const res = await fetch("/api/sns"); const data = await res.json(); const list = document.getElementById("sns-list"); list.innerHTML = data.map(i=>`<div class="item"><div class="item-info"><strong>${i.user_name}</strong><span>${i.url}</span></div><button class="del-btn" onclick="delSns(${i.id})">DEL</button></div>`).join(""); }
+async function delSns(id){ if(confirm("Del?")) { await fetch("/api/sns/"+id, {method:"DELETE"}); loadSnsItems(); }}
 
-// ==== ★ SNSプロモ管理 ====
-async function loadSnsItems() {
-  const res = await fetch("/api/sns");
-  const data = await res.json();
-  const list = document.getElementById("sns-list");
-  list.innerHTML = "";
-  if(data.length === 0) return list.innerHTML = "<p style='color:#666'>No promotions.</p>";
-  data.forEach(item => {
-    list.innerHTML += `<div class="item"><div class="item-info"><strong>${item.user_name} [${item.sns_type.toUpperCase()}]</strong><span style="font-size:12px; color:#888;">${item.description}</span><div style="font-size:11px; margin-top:5px;"><a href="${item.url}" target="_blank" style="color:var(--primary);">${item.url}</a></div></div><button class="del-btn" onclick="delSnsItem(${item.id})">DELETE</button></div>`;
-  });
-}
-async function delSnsItem(id){ if(confirm("Remove this promotion?")) { await fetch("/api/sns/" + id, { method: "DELETE" }); loadSnsItems(); } }
+// ==== SETTINGS ====
+async function loadSettings() { const res = await fetch("/api/settings"); const data = await res.json(); document.getElementById("set_hero_title").value = data.hero_title || ""; document.getElementById("set_hero_subtitle").value = data.hero_subtitle || ""; document.getElementById("set_discord_link").value = data.discord_link || ""; document.getElementById("set_x_link").value = data.x_link || ""; document.getElementById("set_youtube_link").value = data.youtube_link || ""; document.getElementById("set_ad_code").value = data.ad_code || ""; }
+async function saveSettings() { const fd = new FormData(); fd.append("hero_title", document.getElementById("set_hero_title").value); fd.append("hero_subtitle", document.getElementById("set_hero_subtitle").value); fd.append("discord_link", document.getElementById("set_discord_link").value); fd.append("x_link", document.getElementById("set_x_link").value); fd.append("youtube_link", document.getElementById("set_youtube_link").value); fd.append("ad_code", document.getElementById("set_ad_code").value); const bgFile = document.getElementById("set_bg_image").files[0]; if(bgFile) fd.append("bg_image", bgFile); await fetch("/api/settings", { method: "POST", body: fd }); alert("Saved!"); }
 
-// ==== 設定関連 ====
-async function loadSettings() {
-  const res = await fetch("/api/settings"); const data = await res.json();
-  document.getElementById("set_hero_title").value = data.hero_title || ""; document.getElementById("set_hero_subtitle").value = data.hero_subtitle || ""; document.getElementById("set_discord_link").value = data.discord_link || ""; document.getElementById("set_x_link").value = data.x_link || ""; document.getElementById("set_youtube_link").value = data.youtube_link || ""; document.getElementById("set_ad_code").value = data.ad_code || "";
-}
-async function saveSettings() {
-  const fd = new FormData(); fd.append("hero_title", document.getElementById("set_hero_title").value); fd.append("hero_subtitle", document.getElementById("set_hero_subtitle").value); fd.append("discord_link", document.getElementById("set_discord_link").value); fd.append("x_link", document.getElementById("set_x_link").value); fd.append("youtube_link", document.getElementById("set_youtube_link").value); fd.append("ad_code", document.getElementById("set_ad_code").value);
-  const bgFile = document.getElementById("set_bg_image").files[0]; if(bgFile) fd.append("bg_image", bgFile);
-  await fetch("/api/settings", { method: "POST", body: fd }); alert("Saved!");
-}
 window.onload = checkAuth;
 </script>
 </body>
