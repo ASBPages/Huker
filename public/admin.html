@@ -49,7 +49,6 @@
   .tag-option { padding:5px 10px; border-radius:15px; border:1px solid var(--border); cursor:pointer; font-size:12px; transition:0.2s; user-select:none; }
   .tag-option.selected { border-color:var(--primary); box-shadow:0 0 5px var(--primary); }
 
-  /* ★ プレビュー枠 */
   .preview-media { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); background:#000; margin-top:10px; display:none; }
   .stats-container { display:flex; gap:15px; margin-bottom:20px; }
   .stat-box { flex:1; background:#1a1a1f; border:1px solid var(--border); padding:15px; border-radius:8px; text-align:center; }
@@ -147,7 +146,6 @@
         <label style="font-size:12px; color:#888;">Background Media (Image / MP4 / WebM / GIF)</label>
         <input type="file" id="set_bg_image" accept="image/*, video/*">
         
-        <!-- ★ PREVIEW BOX -->
         <div style="margin-bottom:20px;">
           <label style="font-size:12px; color:#888;">Preview:</label>
           <img id="bg_preview_img" class="preview-media">
@@ -196,7 +194,6 @@ async function checkAuth() {
   } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
 }
 
-// ==== PREVIEW LOGIC ====
 document.getElementById('set_bg_image').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if(file) {
@@ -208,7 +205,6 @@ document.getElementById('set_bg_image').addEventListener('change', function(e) {
   }
 });
 
-// ==== SETTINGS & PREVIEW LOAD ====
 async function loadSettings() {
   const res = await fetch("/api/settings"); const data = await res.json();
   document.getElementById("set_hero_title").value = data.hero_title || "";
@@ -239,7 +235,6 @@ async function saveSettings() {
   await fetch("/api/settings", { method: "POST", body: fd }); alert("Saved!"); loadSettings();
 }
 
-// (以下、タグ管理・ソフト管理のロジックは変更なしのため省略せず保持)
 async function loadTags() {
   const res = await fetch("/api/tags"); availableTags = await res.json();
   document.getElementById("tagList").innerHTML = availableTags.map(t => `<div class="item"><div class="item-info"><strong style="color:${t.color}">${t.name}</strong></div><button class="del-btn" onclick="delTag(${t.id})">DEL</button></div>`).join("");
@@ -269,7 +264,15 @@ async function loadItems(){
   document.getElementById("statApkDl").innerText = currentData.reduce((s,i)=>s+(i.apk_downloads||0),0);
   const list = document.getElementById("list"); list.innerHTML = "";
   currentData.forEach(item => {
-    list.innerHTML += `<div class="item"><div class="item-info"><strong>${item.name}</strong><span>v${item.version}</span></div><div class="btn-group"><button class="edit-btn" onclick="openEdit(${item.id})">EDIT</button><button class="del-btn" onclick="delItem(${item.id})">DEL</button></div></div>`;
+    let tagBadges = "";
+    try {
+      const tagIds = JSON.parse(item.tags || "[]");
+      tagIds.forEach(tid => {
+        const t = availableTags.find(at => at.id === tid);
+        if(t) tagBadges += `<span class="tag" style="color:${t.color}; border:1px solid ${t.color}; background:${t.color}22;">${t.name}</span>`;
+      });
+    } catch(e){}
+    list.innerHTML += `<div class="item"><div class="item-info"><strong>${item.name}</strong><span>v${item.version}</span><div class="tags">${tagBadges}</div></div><div class="btn-group"><button class="edit-btn" onclick="openEdit(${item.id})">EDIT</button><button class="del-btn" onclick="delItem(${item.id})">DEL</button></div></div>`;
   });
 }
 async function addItem(){
