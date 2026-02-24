@@ -1,32 +1,16 @@
 require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
-const Database = require("better-sqlite3");
 const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-/* ===== Railway対応: Volume設定 ===== */
-const STORAGE_DIR = process.env.STORAGE_DIR || path.join(__dirname, "storage");
-const DATA_DIR = path.join(STORAGE_DIR, "data");
-const UPLOADS_DIR = path.join(STORAGE_DIR, "uploads");
+// ★ Supabaseの初期化 (Service Role Key を使用)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-if (!fs.existsSync(STORAGE_DIR)) fs.mkdirSync(STORAGE_DIR, { recursive: true });
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-
-const db = new Database(path.join(DATA_DIR, "database.sqlite"));
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-  filename: (req, file, cb) => {
-    const safeName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    cb(null, "bg_" + Date.now() + "_" + safeName);
-  }
-});
-const upload = multer({ storage });
+// ★ ローカルディスクに保存せず、メモリに一時保存してSupabaseに送る
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,149 +22,219 @@ app.use(session({
 }));
 
 app.use(express.static("public"));
-app.use("/uploads", express.static(UPLOADS_DIR));
 
-/* --- DB初期化 & 自動マイグレーション --- */
-try {
-  // 公式ソフト
-  db.prepare(`
-    CREATE TABLE IF NOT EXISTS software (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      version TEXT,
-      description TEXT,
-      zip_path TEXT,
-      apk_path TEXT,
-      zip_downloads INTEGER DEFAULT 0,
-      apk_downloads INTEGER DEFAULT 0,
-      is_beta INTEGER DEFAULT 0,
-      is_update INTEGER DEFAULT 0,
-      is_maintenance INTEGER DEFAULT 0,
-      is_original INTEGER DEFAULT 0,
-      is_thirdparty INTEGER DEFAULT 0,
-      tags TEXT DEFAULT '[]',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `).run();
+/* --- 認証ミドルウェア --- */
+function auth(req, res, next){
+  if(!req.session.admin) return res.status(401).json({error:"Unauthorized"});
+  next();
+}
 
-  // ★ 新機能: カスタムタグテーブル
-  db.prepare(`
-    CREATE TABLE IF NOT EXISTS tags (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      color TEXT
-    )
-  `).run();
+/* ===== Discord Auth ===== */
+app.get("/auth/discord", (req, res) => {
+  res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`);
+});
 
-  // サイト設定
-  db.prepare(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT)`).run();
-  const insertSetting = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)');
-  insertSetting.run('hero_title', 'ASB');
-  insertSetting.run('hero_subtitle', 'Production greatly advances freedom.');
-  insertSetting.run('bg_image', 'background.jpg');
-  insertSetting.run('discord_link', 'https://discord.gg/44cQR8BD');
-  insertSetting.run('x_link', '');
-  insertSetting.run('youtube_link', '');
-  insertSetting.run('ad_code', '');
-
-  // 一般ユーザー投稿
-  db.prepare(`CREATE TABLE IF NOT EXISTS user_software (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, version TEXT, description TEXT, zip_url TEXT, apk_url TEXT, author_name TEXT, is_original INTEGER DEFAULT 0, is_thirdparty INTEGER DEFAULT 0, downloads INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
-
-  // SNS宣伝
-  db.prepare(`CREATE TABLE IF NOT EXISTS sns_promotions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_name TEXT, sns_type TEXT, url TEXT, description TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).run();
-
-  // ★ カラム追加のマイグレーション
-  try { db.prepare("ALTER TABLE software ADD COLUMN tags TEXT DEFAULT '[]'").run(); } catch(e){}
-
-} catch (err) { console.error("DB Error:", err.message); }
-
-function auth(req, res, next){ if(!req.session.admin) return res.status(401).json({error:"Unauthorized"}); next(); }
-
-/* ===== Auth ===== */
-app.get("/auth/discord", (req, res) => { res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`); });
 app.get("/auth/discord/callback", async (req, res) => {
-  const code = req.query.code; if (!code) return res.send("Error: No code provided.");
+  const code = req.query.code;
+  if (!code) return res.send("Error: No code provided.");
   try {
-    const tokenRes = await fetch("https://discord.com/api/oauth2/token", { method: "POST", body: new URLSearchParams({ client_id: process.env.DISCORD_CLIENT_ID, client_secret: process.env.DISCORD_CLIENT_SECRET, grant_type: "authorization_code", code, redirect_uri: process.env.DISCORD_REDIRECT_URI }), headers: { "Content-Type": "application/x-www-form-urlencoded" } });
-    const tokenData = await tokenRes.json(); if (!tokenData.access_token) return res.send("Auth Failed.");
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      body: new URLSearchParams({ client_id: process.env.DISCORD_CLIENT_ID, client_secret: process.env.DISCORD_CLIENT_SECRET, grant_type: "authorization_code", code, redirect_uri: process.env.DISCORD_REDIRECT_URI }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" }
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return res.send("Auth Failed.");
+
     const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
+    if (memberRes.status === 404) return res.status(403).send("Error: 指定サーバーに参加していません。");
     const memberData = await memberRes.json();
-    if (memberData.roles && memberData.roles.includes(process.env.ALLOWED_ROLE_ID)) { req.session.admin = true; req.session.username = memberData.user ? memberData.user.username : "Admin"; res.redirect("/admin.html"); } else { res.status(403).send("Admin role required."); }
+
+    if (memberData.roles && memberData.roles.includes(process.env.ALLOWED_ROLE_ID)) {
+      req.session.admin = true;
+      req.session.username = memberData.user ? memberData.user.username : "Admin";
+      res.redirect("/admin.html");
+    } else {
+      res.status(403).send("Admin role required.");
+    }
   } catch (err) { res.status(500).send("Server Error."); }
 });
-app.get("/api/me", (req, res) => { if (req.session.admin) res.json({ loggedIn: true, user: req.session.username }); else res.json({ loggedIn: false }); });
-app.get("/logout", (req, res) => { req.session.destroy(); res.redirect("/"); });
+
+app.get("/api/me", (req, res) => {
+  if (req.session.admin) res.json({ loggedIn: true, user: req.session.username });
+  else res.json({ loggedIn: false });
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.redirect("/");
+});
+
 
 /* ===== サイト設定 API ===== */
-app.get("/api/settings", (req, res) => { try { const rows = db.prepare("SELECT key, value FROM site_settings").all(); const settings = {}; rows.forEach(r => settings[r.key] = r.value); res.json(settings); } catch(e) { res.status(500).json({error: "Server error"}); } });
-app.post("/api/settings", auth, upload.single("bg_image"), (req, res) => {
+app.get("/api/settings", async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('site_settings').select('*');
+    if (error) throw error;
+    const settings = {};
+    data.forEach(r => settings[r.key] = r.value);
+    res.json(settings);
+  } catch(e) { res.status(500).json({error: e.message}); }
+});
+
+app.post("/api/settings", auth, upload.single("bg_image"), async (req, res) => {
   try {
     const { hero_title, hero_subtitle, discord_link, x_link, youtube_link, ad_code } = req.body;
-    const update = db.prepare("UPDATE site_settings SET value = ? WHERE key = ?");
-    if (hero_title !== undefined) update.run(hero_title, 'hero_title'); if (hero_subtitle !== undefined) update.run(hero_subtitle, 'hero_subtitle'); if (discord_link !== undefined) update.run(discord_link, 'discord_link'); if (x_link !== undefined) update.run(x_link, 'x_link'); if (youtube_link !== undefined) update.run(youtube_link, 'youtube_link'); if (ad_code !== undefined) update.run(ad_code, 'ad_code');
-    if (req.file) { const oldBg = db.prepare("SELECT value FROM site_settings WHERE key = 'bg_image'").get(); if (oldBg && oldBg.value.startsWith('/uploads/')) { const oldFullPath = path.join(UPLOADS_DIR, oldBg.value.replace('/uploads/', '')); if (fs.existsSync(oldFullPath)) fs.unlinkSync(oldFullPath); } update.run(`/uploads/${req.file.filename}`, 'bg_image'); }
+    
+    const updates = [];
+    if (hero_title !== undefined) updates.push({ key: 'hero_title', value: hero_title });
+    if (hero_subtitle !== undefined) updates.push({ key: 'hero_subtitle', value: hero_subtitle });
+    if (discord_link !== undefined) updates.push({ key: 'discord_link', value: discord_link });
+    if (x_link !== undefined) updates.push({ key: 'x_link', value: x_link });
+    if (youtube_link !== undefined) updates.push({ key: 'youtube_link', value: youtube_link });
+    if (ad_code !== undefined) updates.push({ key: 'ad_code', value: ad_code });
+    
+    // 背景画像のアップロード処理
+    if (req.file) {
+      const ext = path.extname(req.file.originalname);
+      const fileName = `bg_${Date.now()}${ext}`;
+      const { data, error } = await supabase.storage.from('uploads').upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+      if (!error) {
+        const { data: publicUrlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+        updates.push({ key: 'bg_image', value: publicUrlData.publicUrl });
+      }
+    }
+
+    if (updates.length > 0) {
+      await supabase.from('site_settings').upsert(updates);
+    }
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-/* ===== ★ カスタムタグ API ===== */
-app.get("/api/tags", (req, res) => { res.json(db.prepare("SELECT * FROM tags").all()); });
-app.post("/api/tags", auth, (req, res) => {
-  try { db.prepare("INSERT INTO tags (name, color) VALUES (?, ?)").run(req.body.name, req.body.color); res.json({success:true}); } catch(e){ res.status(500).json({error:e.message}); }
+
+/* ===== カスタムタグ API ===== */
+app.get("/api/tags", async (req, res) => {
+  const { data } = await supabase.from('tags').select('*').order('id', { ascending: true });
+  res.json(data || []);
 });
-app.delete("/api/tags/:id", auth, (req, res) => {
-  try { db.prepare("DELETE FROM tags WHERE id=?").run(req.params.id); res.json({success:true}); } catch(e){ res.status(500).json({error:e.message}); }
+app.post("/api/tags", auth, async (req, res) => {
+  await supabase.from('tags').insert([{ name: req.body.name, color: req.body.color }]);
+  res.json({success:true});
+});
+app.delete("/api/tags/:id", auth, async (req, res) => {
+  await supabase.from('tags').delete().eq('id', req.params.id);
+  res.json({success:true});
 });
 
-/* ===== 公式ソフトウェア API (タグ対応) ===== */
-app.get("/api/software", (req, res) => { res.json(db.prepare("SELECT * FROM software ORDER BY created_at DESC").all()); });
-app.post("/api/software", auth, (req, res) => {
+
+/* ===== 公式ソフトウェア API ===== */
+app.get("/api/software", async (req, res) => {
+  const { data } = await supabase.from('software').select('*').order('created_at', { ascending: false });
+  res.json(data || []);
+});
+
+app.post("/api/software", auth, async (req, res) => {
   try {
     const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, is_original, is_thirdparty, tags } = req.body;
-    db.prepare(`INSERT INTO software (name, version, description, zip_path, apk_path, is_beta, is_update, is_maintenance, is_original, is_thirdparty, tags) VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(name, version, description, zip_url || "", apk_url || "", is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, is_original ? 1 : 0, is_thirdparty ? 1 : 0, JSON.stringify(tags || []));
+    await supabase.from('software').insert([{
+      name, version, description, zip_path: zip_url || "", apk_path: apk_url || "",
+      is_beta: is_beta ? 1 : 0, is_update: is_update ? 1 : 0, is_maintenance: is_maintenance ? 1 : 0,
+      is_original: is_original ? 1 : 0, is_thirdparty: is_thirdparty ? 1 : 0,
+      tags: JSON.stringify(tags || [])
+    }]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({error: e.message}); }
 });
-app.put("/api/software/:id", auth, (req, res) => {
+
+app.put("/api/software/:id", auth, async (req, res) => {
   try {
     const { name, version, description, zip_url, apk_url, is_beta, is_update, is_maintenance, zip_downloads, apk_downloads, is_original, is_thirdparty, tags } = req.body;
-    db.prepare(`UPDATE software SET name=?, version=?, description=?, zip_path=?, apk_path=?, is_beta=?, is_update=?, is_maintenance=?, zip_downloads=?, apk_downloads=?, is_original=?, is_thirdparty=?, tags=? WHERE id=?`).run(name, version, description, zip_url || "", apk_url || "", is_beta ? 1 : 0, is_update ? 1 : 0, is_maintenance ? 1 : 0, parseInt(zip_downloads) || 0, parseInt(apk_downloads) || 0, is_original ? 1 : 0, is_thirdparty ? 1 : 0, JSON.stringify(tags || []), req.params.id);
+    await supabase.from('software').update({
+      name, version, description, zip_path: zip_url || "", apk_path: apk_url || "",
+      is_beta: is_beta ? 1 : 0, is_update: is_update ? 1 : 0, is_maintenance: is_maintenance ? 1 : 0,
+      zip_downloads: parseInt(zip_downloads) || 0, apk_downloads: parseInt(apk_downloads) || 0,
+      is_original: is_original ? 1 : 0, is_thirdparty: is_thirdparty ? 1 : 0,
+      tags: JSON.stringify(tags || [])
+    }).eq('id', req.params.id);
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-app.delete("/api/software/:id", auth, (req, res) => { try { db.prepare("DELETE FROM software WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
-app.post("/api/download/:id/:type", (req, res) => {
+
+app.delete("/api/software/:id", auth, async (req, res) => {
+  await supabase.from('software').delete().eq('id', req.params.id);
+  res.json({ success: true });
+});
+
+app.post("/api/download/:id/:type", async (req, res) => {
   try {
-    const { id, type } = req.params; const item = db.prepare("SELECT zip_path, apk_path, is_maintenance FROM software WHERE id=?").get(id);
-    if(!item) return res.status(404).json({error:"Not found"}); if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
-    if (type === 'zip' && item.zip_path) { db.prepare("UPDATE software SET zip_downloads=zip_downloads+1 WHERE id=?").run(id); return res.json({ link: item.zip_path }); }
-    else if (type === 'apk' && item.apk_path) { db.prepare("UPDATE software SET apk_downloads=apk_downloads+1 WHERE id=?").run(id); return res.json({ link: item.apk_path }); }
-    else { return res.status(404).json({error:"File not found"}); }
+    const { id, type } = req.params;
+    const { data: item } = await supabase.from('software').select('*').eq('id', id).single();
+    
+    if(!item) return res.status(404).json({error:"Not found"});
+    if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
+
+    if (type === 'zip' && item.zip_path) {
+      await supabase.from('software').update({ zip_downloads: item.zip_downloads + 1 }).eq('id', id);
+      return res.json({ link: item.zip_path });
+    } else if (type === 'apk' && item.apk_path) {
+      await supabase.from('software').update({ apk_downloads: item.apk_downloads + 1 }).eq('id', id);
+      return res.json({ link: item.apk_path });
+    } else {
+      return res.status(404).json({error:"File not found"});
+    }
   } catch(e) { res.status(500).json({error: "Server error"}); }
 });
 
+
 /* ===== 一般ユーザー投稿ソフト API ===== */
-app.get("/api/user_software", (req, res) => { res.json(db.prepare("SELECT * FROM user_software ORDER BY created_at DESC").all()); });
-app.post("/api/user_software", (req, res) => {
+app.get("/api/user_software", async (req, res) => {
+  const { data } = await supabase.from('user_software').select('*').order('created_at', { ascending: false });
+  res.json(data || []);
+});
+app.post("/api/user_software", async (req, res) => {
   try {
     const { name, version, description, zip_url, apk_url, is_original, is_thirdparty, author_name } = req.body;
-    db.prepare(`INSERT INTO user_software (name, version, description, zip_url, apk_url, is_original, is_thirdparty, author_name) VALUES (?,?,?,?,?,?,?,?)`).run(name, version, description, zip_url || "", apk_url || "", is_original ? 1 : 0, is_thirdparty ? 1 : 0, author_name || "Anonymous");
+    await supabase.from('user_software').insert([{
+      name, version, description, zip_url: zip_url || "", apk_url: apk_url || "",
+      is_original: is_original ? 1 : 0, is_thirdparty: is_thirdparty ? 1 : 0, author_name: author_name || "Anonymous"
+    }]);
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-app.delete("/api/user_software/:id", auth, (req, res) => { try { db.prepare("DELETE FROM user_software WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
-app.post("/api/download_user/:id", (req, res) => { try { db.prepare("UPDATE user_software SET downloads=downloads+1 WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: "Server error"}); } });
+app.delete("/api/user_software/:id", auth, async (req, res) => {
+  await supabase.from('user_software').delete().eq('id', req.params.id);
+  res.json({ success: true });
+});
+app.post("/api/download_user/:id", async (req, res) => {
+  try {
+    const { data: item } = await supabase.from('user_software').select('downloads').eq('id', req.params.id).single();
+    if(item) {
+      await supabase.from('user_software').update({ downloads: item.downloads + 1 }).eq('id', req.params.id);
+    }
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({error: "Server error"}); }
+});
+
 
 /* ===== SNS宣伝 API ===== */
-app.get("/api/sns", (req, res) => { res.json(db.prepare("SELECT * FROM sns_promotions ORDER BY created_at DESC").all()); });
-app.post("/api/sns", (req, res) => {
+app.get("/api/sns", async (req, res) => {
+  const { data } = await supabase.from('sns_promotions').select('*').order('created_at', { ascending: false });
+  res.json(data || []);
+});
+app.post("/api/sns", async (req, res) => {
   try {
     const { user_name, sns_type, url, description } = req.body;
-    db.prepare(`INSERT INTO sns_promotions (user_name, sns_type, url, description) VALUES (?,?,?,?)`).run(user_name || "Anonymous", sns_type || "other", url, description);
+    await supabase.from('sns_promotions').insert([{
+      user_name: user_name || "Anonymous", sns_type: sns_type || "other", url, description
+    }]);
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-app.delete("/api/sns/:id", auth, (req, res) => { try { db.prepare("DELETE FROM sns_promotions WHERE id=?").run(req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
+app.delete("/api/sns/:id", auth, async (req, res) => {
+  await supabase.from('sns_promotions').delete().eq('id', req.params.id);
+  res.json({ success: true });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`>> Server running on port ${PORT}`));
