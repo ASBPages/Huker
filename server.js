@@ -21,7 +21,11 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-app.use(express.static("public"));
+// ↓もしファイルの先頭付近に path が無ければ追加してください
+const path = require("path");
+
+// ↓元々 app.use(express.static("public")); だった場所を以下に変更
+app.use(express.static(path.join(__dirname, "public")));
 
 /* --- 認証ミドルウェア --- */
 function auth(req, res, next){
@@ -238,3 +242,4 @@ app.delete("/api/sns/:id", auth, async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`>> Server running on port ${PORT}`));
+
