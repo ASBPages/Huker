@@ -9,9 +9,6 @@
 <meta name="description" content="ASB Official - High-performance automation tools and software distribution.">
 <meta name="juicyads-site-verification" content="150f17e20f3c062a465e34ceefc8e33d">
 
-<!-- ★ ブラウザのタブ用アイコン（ファビコン） -->
-<link rel="icon" href="/logo.png" type="image/png">
-
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root { --primary: #8be9ff; --primary-glow: rgba(139, 233, 255, 0.4); --bg: #05070c; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); --text-main: #ffffff; --text-sub: #a0aec0; }
@@ -26,21 +23,24 @@
   body.en-mode .lang-ja-block { display: none; }
 
   ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: rgba(139, 233, 255, 0.2); border-radius: 10px; }
+  
   header { position: fixed; top: 0; width: 100%; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(5, 7, 12, 0.6); backdrop-filter: blur(12px); z-index: 1000; border-bottom: 1px solid var(--border); }
   
-  /* ★ 画像ロゴ用のスタイル */
-  .header-logo { height: 45px; width: auto; object-fit: contain; cursor: pointer; transition: transform 0.3s; }
-  .header-logo:hover { transform: scale(1.05); }
+  /* ★ 文字ロゴ（クリックでトップへ） */
+  .logo { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; letter-spacing: 1px; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; transition: 0.3s; }
+  .logo:hover { text-shadow: 0 0 10px var(--primary-glow); }
   
   nav { display:flex; align-items:center; gap:20px; }
   nav ul { display: flex; list-style: none; gap: 20px; margin: 0; padding: 0; white-space: nowrap; }
   nav li { cursor: pointer; font-size: 13px; color: var(--text-sub); transition: color 0.3s; position: relative; display: flex; align-items: center; }
   nav li:hover, nav li.active { color: #fff; } nav li.active::after { content: ""; position: absolute; bottom: -25px; left: 0; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+  
   .lang-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: #fff; padding: 5px 10px; border-radius: 15px; cursor: pointer; font-size: 11px; transition: 0.3s; }
   .lang-btn:hover { background: var(--primary); color: #000; }
 
-  .header-sns { display: flex; gap: 15px; border-left: 1px solid var(--border); padding-left: 20px; margin-left: 10px; }
-  .header-sns a { color: var(--text-sub); transition: 0.3s; display: flex; align-items: center; }
+  /* ★ ヘッダー右上のSNSアイコン枠 */
+  .header-sns { display: flex; gap: 15px; border-left: 1px solid var(--border); padding-left: 20px; margin-left: 5px; }
+  .header-sns a { color: var(--text-sub); transition: 0.3s; align-items: center; justify-content: center; }
   .header-sns a:hover { color: var(--primary); transform: scale(1.1); }
 
   .tab-content { display: none; padding-top: 70px; min-height: 100vh; animation: fadeIn 0.4s ease; padding-bottom: 40px; } .tab-content.active { display: block; }
@@ -76,6 +76,7 @@
   .card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
   .card h3 { margin: 0 0 5px 0; font-size: 20px; }
   .version { font-size: 12px; color: var(--primary); font-family: monospace; }
+  
   .badge { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-top: 5px; margin-right: 5px; }
   .b-beta { border: 1px solid #f1c40f; color: #f1c40f; background: rgba(241, 196, 15, 0.1); }
   .b-update { border: 1px solid #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
@@ -84,11 +85,16 @@
   .b-apk { border: 1px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
   .b-orig { border: 1px solid #9b59b6; color: #9b59b6; background: rgba(155, 89, 182, 0.1); }
   .b-third { border: 1px solid #e67e22; color: #e67e22; background: rgba(230, 126, 34, 0.1); }
+
   .desc { margin: 15px 0; font-size: 13px; color: var(--text-sub); line-height: 1.6; flex-grow: 1; white-space: pre-wrap; }
   .card-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top:10px; }
   .dl-count { font-size: 12px; color: #666; }
+  
   .dl-btn { padding: 8px 16px; background: linear-gradient(135deg, #8be9ff, #3b82f6); color: #000; font-weight: bold; font-size:12px; border: none; border-radius: 20px; cursor: pointer; text-decoration:none; display:inline-block; }
   .dl-btn:hover { box-shadow: 0 0 15px var(--primary-glow); transform: scale(1.05); }
+  .dl-btn.apk { background: linear-gradient(135deg, #a8ff78, #78ffd6); }
+  .dl-btn.apk:hover { box-shadow: 0 0 15px rgba(120, 255, 214, 0.4); }
+  .dl-btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none;}
   
   .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; justify-content: center; }
   .filter-btn { padding: 8px 16px; background: transparent; border: 1px solid var(--border); color: #888; border-radius: 20px; cursor: pointer; font-size: 12px; transition: 0.2s; }
@@ -98,6 +104,7 @@
   .sns-type-youtube { border-left-color: #ff0000; } .sns-type-x { border-left-color: #fff; } .sns-type-discord { border-left-color: #5865F2; }
   .post-btn-container { position: absolute; top: 60px; right: 10%; z-index: 10; }
   .post-btn { background: var(--primary); color: #000; padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px var(--primary-glow);}
+  
   .post-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
   .post-modal-content { background: #131316; padding: 30px; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 500px; }
   .post-modal input, .post-modal textarea, .post-modal select { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; }
@@ -120,8 +127,8 @@
 <body class="ja-mode">
 
 <header>
-  <!-- ★ 画像ロゴに変更 -->
-  <img src="/logo.png" alt="ASB Team" class="header-logo" onclick="window.scrollTo(0,0)">
+  <!-- ★ 文字ロゴに戻しました -->
+  <div class="logo" id="site-logo" onclick="window.scrollTo(0,0)">ASB.</div>
   
   <nav>
     <ul>
@@ -132,7 +139,7 @@
       <li onclick="switchTab('legal', this)">Legal</li>
     </ul>
     
-    <!-- SNSリンク -->
+    <!-- ★ 右上のSNSアイコン（設定でURLが入ると表示されます） -->
     <div class="header-sns">
       <a href="#" target="_blank" id="head-youtube" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.052-.074 1.972l-.008.106-.022.26-.01.104c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z"/></svg></a>
       <a href="#" target="_blank" id="head-x" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/></svg></a>
@@ -255,8 +262,7 @@
     <h1 class="page-title">Roadmap</h1>
     <div class="doc-section" style="border-left: 4px solid var(--primary);">
       <h3>2026 Q1</h3>
-      <p class="lang-ja">・公式サイトローンチ<br>・Auto click ASB ベータテスト</p>
-      <p class="lang-en">・Site Launch<br>・Auto click ASB Beta</p>
+      <p><span class="lang-ja">・公式サイトローンチ<br>・Auto click ASB ベータテスト</span><span class="lang-en">・Site Launch<br>・Auto click ASB Beta</span></p>
     </div>
   </div>
 </div>
@@ -304,6 +310,7 @@ document.getElementById('year').innerText = new Date().getFullYear();
 window.siteAdCode = "";
 let availableTags = [], allSoftwareData = [];
 
+// ★ 言語切り替えロジック
 let currentLang = localStorage.getItem('asb_lang') || 'ja';
 function toggleLanguage() {
   currentLang = currentLang === 'ja' ? 'en' : 'ja';
@@ -315,21 +322,31 @@ function toggleLanguage() {
 function updateLangDisplay() {
   document.body.className = currentLang === 'ja' ? 'ja-mode' : 'en-mode';
 }
+updateLangDisplay();
 
 async function loadSiteSettings() {
   try {
     const res = await fetch("/api/settings"); const settings = await res.json();
-    if(settings.hero_title) { document.getElementById("hero-title").innerText = settings.hero_title; document.title = settings.hero_title + " Official"; }
+    if(settings.hero_title) { document.getElementById("hero-title").innerText = settings.hero_title; document.getElementById("site-logo").innerText = settings.hero_title + "."; }
     if(settings.hero_subtitle) document.getElementById("hero-subtitle").innerText = settings.hero_subtitle;
     if(settings.ad_code && settings.ad_code.trim() !== "") {
       window.siteAdCode = settings.ad_code; const adC = document.getElementById("global-ad-container"); adC.style.display = "block"; adC.innerHTML = settings.ad_code;
       Array.from(adC.querySelectorAll("script")).forEach(oldScript => { const newS = document.createElement("script"); Array.from(oldScript.attributes).forEach(attr => newS.setAttribute(attr.name, attr.value)); newS.text = oldScript.innerHTML; oldScript.parentNode.replaceChild(newS, oldScript); });
     }
     
-    // SNSアイコンの表示
-    if(settings.discord_link) { document.getElementById("panel-discord-link").href=settings.discord_link; document.getElementById("panel-discord-link").style.display="inline-block"; document.getElementById("head-discord").href=settings.discord_link; document.getElementById("head-discord").style.display="flex"; }
-    if(settings.x_link) { document.getElementById("panel-x-link").href=settings.x_link; document.getElementById("panel-x-link").style.display="inline-block"; document.getElementById("head-x").href=settings.x_link; document.getElementById("head-x").style.display="flex"; }
-    if(settings.youtube_link) { document.getElementById("panel-youtube-link").href=settings.youtube_link; document.getElementById("panel-youtube-link").style.display="inline-block"; document.getElementById("head-youtube").href=settings.youtube_link; document.getElementById("head-youtube").style.display="flex"; }
+    // ★ 右上のSNSアイコンの表示処理（DBからURLがあれば表示する）
+    if(settings.discord_link) { 
+      document.getElementById("panel-discord-link").href=settings.discord_link; document.getElementById("panel-discord-link").style.display="inline-block"; 
+      document.getElementById("head-discord").href=settings.discord_link; document.getElementById("head-discord").style.display="flex"; 
+    }
+    if(settings.x_link) { 
+      document.getElementById("panel-x-link").href=settings.x_link; document.getElementById("panel-x-link").style.display="inline-block"; 
+      document.getElementById("head-x").href=settings.x_link; document.getElementById("head-x").style.display="flex"; 
+    }
+    if(settings.youtube_link) { 
+      document.getElementById("panel-youtube-link").href=settings.youtube_link; document.getElementById("panel-youtube-link").style.display="inline-block"; 
+      document.getElementById("head-youtube").href=settings.youtube_link; document.getElementById("head-youtube").style.display="flex"; 
+    }
     
     const bgUrl = settings.bg_image || 'background.jpg'; const isVideo = bgUrl.match(/\.(mp4|webm|ogg)$/i);
     if (isVideo) { document.getElementById("hero-video").src = bgUrl; document.getElementById("hero-video").style.display = 'block'; document.getElementById("hero-video").onloadeddata = () => { document.getElementById("hero-video").style.opacity = "1"; }; } 
@@ -373,6 +390,9 @@ function renderSoftwareList(data) {
     if(item.is_thirdparty) badges += `<span class="badge b-third">THIRD-PARTY</span>`;
     try { const tids = JSON.parse(item.tags || "[]"); tids.forEach(tid => { const t = availableTags.find(at => at.id === tid); if(t) badges += `<span class="badge" style="color:${t.color}; border:1px solid ${t.color}; background:${t.color}22;">${t.name}</span>`; }); } catch(e){}
     if(item.zip_path) badges += `<span class="badge b-zip">ZIP</span>`; if(item.apk_path) badges += `<span class="badge b-apk">APK</span>`;
+    if(item.is_maintenance) badges += `<span class="badge b-maint">MAINTENANCE</span>`;
+    else if(item.is_update) badges += `<span class="badge b-update">UPDATING</span>`;
+    if(item.is_beta) badges += ` <span class="badge b-beta">BETA</span>`;
     
     const dlZipText = currentLang === 'ja' ? 'DL (ZIP)' : 'Download (ZIP)';
     const dlApkText = currentLang === 'ja' ? 'DL (APK)' : 'Download (APK)';
@@ -409,6 +429,7 @@ async function loadSnsPromos() {
   });
 }
 
+// Download Modal
 let dlTimer;
 async function downloadSw(id, type) {
   try {
