@@ -2,11 +2,12 @@ require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const multer = require("multer");
+const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-// ★ Supabaseの初期化 (Service Role Key を使用)
+// ★ Supabaseの初期化 (Renderの環境変数を使用)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 // ★ ローカルディスクに保存せず、メモリに一時保存してSupabaseに送る
@@ -21,10 +22,7 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// ↓もしファイルの先頭付近に path が無ければ追加してください
-const path = require("path");
-
-// ↓元々 app.use(express.static("public")); だった場所を以下に変更
+// publicフォルダの確実な指定
 app.use(express.static(path.join(__dirname, "public")));
 
 /* --- 認証ミドルウェア --- */
@@ -38,19 +36,28 @@ app.get("/auth/discord", (req, res) => {
   res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`);
 });
 
+// ここがログイン後に戻ってくる重要なURLです！
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) return res.send("Error: No code provided.");
   try {
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
-      body: new URLSearchParams({ client_id: process.env.DISCORD_CLIENT_ID, client_secret: process.env.DISCORD_CLIENT_SECRET, grant_type: "authorization_code", code, redirect_uri: process.env.DISCORD_REDIRECT_URI }),
+      body: new URLSearchParams({ 
+        client_id: process.env.DISCORD_CLIENT_ID, 
+        client_secret: process.env.DISCORD_CLIENT_SECRET, 
+        grant_type: "authorization_code", 
+        code, 
+        redirect_uri: process.env.DISCORD_REDIRECT_URI 
+      }),
       headers: { "Content-Type": "application/x-www-form-urlencoded" }
     });
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return res.send("Auth Failed.");
+    if (!tokenData.access_token) return res.send("Auth Failed. (トークン取得失敗)");
 
-    const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
+    const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, { 
+      headers: { Authorization: `Bearer ${tokenData.access_token}` } 
+    });
     if (memberRes.status === 404) return res.status(403).send("Error: 指定サーバーに参加していません。");
     const memberData = await memberRes.json();
 
@@ -59,9 +66,12 @@ app.get("/auth/discord/callback", async (req, res) => {
       req.session.username = memberData.user ? memberData.user.username : "Admin";
       res.redirect("/admin.html");
     } else {
-      res.status(403).send("Admin role required.");
+      res.status(403).send("Admin role required. (管理者ロールがありません)");
     }
-  } catch (err) { res.status(500).send("Server Error."); }
+  } catch (err) { 
+    console.error(err);
+    res.status(500).send("Server Error during Discord Auth."); 
+  }
 });
 
 app.get("/api/me", (req, res) => {
@@ -74,14 +84,13 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-
 /* ===== サイト設定 API ===== */
 app.get("/api/settings", async (req, res) => {
   try {
     const { data, error } = await supabase.from('site_settings').select('*');
     if (error) throw error;
     const settings = {};
-    data.forEach(r => settings[r.key] = r.value);
+    if(data) data.forEach(r => settings[r.key] = r.value);
     res.json(settings);
   } catch(e) { res.status(500).json({error: e.message}); }
 });
@@ -116,7 +125,6 @@ app.post("/api/settings", auth, upload.single("bg_image"), async (req, res) => {
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-
 /* ===== カスタムタグ API ===== */
 app.get("/api/tags", async (req, res) => {
   const { data } = await supabase.from('tags').select('*').order('id', { ascending: true });
@@ -130,7 +138,6 @@ app.delete("/api/tags/:id", auth, async (req, res) => {
   await supabase.from('tags').delete().eq('id', req.params.id);
   res.json({success:true});
 });
-
 
 /* ===== 公式ソフトウェア API ===== */
 app.get("/api/software", async (req, res) => {
@@ -220,7 +227,6 @@ app.post("/api/download_user/:id", async (req, res) => {
   } catch(e) { res.status(500).json({error: "Server error"}); }
 });
 
-
 /* ===== SNS宣伝 API ===== */
 app.get("/api/sns", async (req, res) => {
   const { data } = await supabase.from('sns_promotions').select('*').order('created_at', { ascending: false });
@@ -242,4 +248,3 @@ app.delete("/api/sns/:id", auth, async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`>> Server running on port ${PORT}`));
-
