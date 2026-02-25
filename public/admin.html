@@ -72,7 +72,6 @@
       <button onclick="location.href='/logout'" style="padding:8px 16px; background:#333; color:#fff; border:none; border-radius:4px; cursor:pointer;">Logout</button>
     </div>
 
-    <!-- TABS -->
     <div class="admin-tabs">
       <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">OFFICIAL</div>
       <div class="admin-tab" onclick="switchAdminTab('tagManagerTab', this)">TAGS</div>
@@ -138,12 +137,19 @@
         <h2>GLOBAL SETTINGS</h2>
         <input id="set_hero_title" placeholder="Hero Title">
         <input id="set_hero_subtitle" placeholder="Hero Subtitle">
+        
+        <h3 style="color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Social Links</h3>
         <input type="url" id="set_discord_link" placeholder="Discord URL">
-        <input type="url" id="set_x_link" placeholder="X URL">
+        <input type="url" id="set_x_link" placeholder="X (Twitter) URL">
         <input type="url" id="set_youtube_link" placeholder="YouTube URL">
+        
+        <!-- ★ Roblox入力欄を追加 -->
+        <input type="url" id="set_roblox_link" placeholder="Roblox Profile/Group URL">
+
+        <h3 style="color:var(--warning); border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Monetization</h3>
         <textarea id="set_ad_code" placeholder="Ad Code" rows="4"></textarea>
         
-        <label style="font-size:12px; color:#888;">Background Media (Image / MP4 / WebM / GIF)</label>
+        <h3 style="color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Background</h3>
         <input type="file" id="set_bg_image" accept="image/*, video/*">
         
         <div style="margin-bottom:20px;">
@@ -212,6 +218,8 @@ async function loadSettings() {
   document.getElementById("set_discord_link").value = data.discord_link || "";
   document.getElementById("set_x_link").value = data.x_link || "";
   document.getElementById("set_youtube_link").value = data.youtube_link || "";
+  // ★ Robloxの読み込み
+  document.getElementById("set_roblox_link").value = data.roblox_link || "";
   document.getElementById("set_ad_code").value = data.ad_code || "";
   
   if (data.bg_image) {
@@ -229,6 +237,8 @@ async function saveSettings() {
   fd.append("discord_link", document.getElementById("set_discord_link").value);
   fd.append("x_link", document.getElementById("set_x_link").value);
   fd.append("youtube_link", document.getElementById("set_youtube_link").value);
+  // ★ Robloxの保存
+  fd.append("roblox_link", document.getElementById("set_roblox_link").value);
   fd.append("ad_code", document.getElementById("set_ad_code").value);
   const bgFile = document.getElementById("set_bg_image").files[0];
   if(bgFile) fd.append("bg_image", bgFile);
