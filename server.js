@@ -7,7 +7,6 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-// Supabase初期化
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -20,21 +19,17 @@ app.use(session({
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// publicフォルダの指定
 app.use(express.static(path.join(__dirname, "public")));
 
-/* --- 認証 --- */
 function auth(req, res, next){
   if(!req.session.admin) return res.status(401).json({error:"Unauthorized"});
   next();
 }
 
-/* ===== Discord Auth ===== */
 app.get("/auth/discord", (req, res) => {
   res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`);
 });
 
-// ★ ここが Not Found になっている原因の場所です。このコードが必要です！
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) return res.send("Error: No code provided.");
@@ -56,6 +51,7 @@ app.get("/auth/discord/callback", async (req, res) => {
     const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, { 
       headers: { Authorization: `Bearer ${tokenData.access_token}` } 
     });
+    if (memberRes.status === 404) return res.status(403).send("Error: 指定サーバーに参加していません。");
     const memberData = await memberRes.json();
 
     if (memberData.roles && memberData.roles.includes(process.env.ALLOWED_ROLE_ID)) {
@@ -86,16 +82,19 @@ app.get("/api/settings", async (req, res) => {
     res.json(settings);
   } catch(e) { res.status(500).json({error: e.message}); }
 });
+
 app.post("/api/settings", auth, upload.single("bg_image"), async (req, res) => {
   try {
-    const { hero_title, hero_subtitle, discord_link, x_link, youtube_link, ad_code } = req.body;
+    const { hero_title, hero_subtitle, discord_link, x_link, youtube_link, roblox_link, ad_code } = req.body;
     const updates = [];
     if(hero_title!==undefined) updates.push({key:'hero_title', value:hero_title});
     if(hero_subtitle!==undefined) updates.push({key:'hero_subtitle', value:hero_subtitle});
     if(discord_link!==undefined) updates.push({key:'discord_link', value:discord_link});
     if(x_link!==undefined) updates.push({key:'x_link', value:x_link});
     if(youtube_link!==undefined) updates.push({key:'youtube_link', value:youtube_link});
+    if(roblox_link!==undefined) updates.push({key:'roblox_link', value:roblox_link}); // ★ 追加
     if(ad_code!==undefined) updates.push({key:'ad_code', value:ad_code});
+    
     if (req.file) {
       const fileName = `bg_${Date.now()}${path.extname(req.file.originalname)}`;
       const { error } = await supabase.storage.from('uploads').upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
@@ -109,7 +108,7 @@ app.post("/api/settings", auth, upload.single("bg_image"), async (req, res) => {
   } catch(e) { res.status(500).json({error: e.message}); }
 });
 
-app.get("/api/tags", async (req, res) => { const { data } = await supabase.from('tags').select('*'); res.json(data||[]); });
+app.get("/api/tags", async (req, res) => { const { data } = await supabase.from('tags').select('*').order('id', { ascending: true }); res.json(data||[]); });
 app.post("/api/tags", auth, async (req, res) => { await supabase.from('tags').insert([{ name: req.body.name, color: req.body.color }]); res.json({success:true}); });
 app.delete("/api/tags/:id", auth, async (req, res) => { await supabase.from('tags').delete().eq('id', req.params.id); res.json({success:true}); });
 
