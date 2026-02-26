@@ -16,6 +16,8 @@
 
   input, textarea, select { width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:12px; border-radius:6px; margin-bottom:15px; box-sizing:border-box; font-family:'Inter',sans-serif; }
   input:focus, textarea:focus { outline:none; border-color:var(--primary); }
+  input[type="file"] { padding:10px; background:#1a1a1f; cursor:pointer; }
+
   button.action-btn { width:100%; padding:14px; background:var(--primary); color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; transition:0.2s; }
   button.action-btn:hover { opacity:0.9; transform:translateY(-1px); }
   button.discord-btn { background:var(--discord); color:#fff; font-size:16px; display:flex; justify-content:center; align-items:center; gap:10px; }
@@ -28,12 +30,32 @@
   .options-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:20px; }
   .toggle-wrap { background:#1a1a1f; padding:8px 10px; border-radius:6px; display:flex; align-items:center; gap:8px; cursor:pointer; border:1px solid transparent; transition:0.2s; font-size:13px; }
   .toggle-wrap:has(input:checked) { border-color:var(--primary); background:rgba(139,233,255,0.1); }
+  .toggle-wrap.t-orig:has(input:checked) { border-color:var(--orig); background:rgba(155,89,182,0.1); color:var(--orig); }
+  .toggle-wrap.t-third:has(input:checked) { border-color:var(--third); background:rgba(230,126,34,0.1); color:var(--third); }
   
   .item { background:#000; border:1px solid var(--border); padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
   .item-info strong { color:#fff; font-size:16px; display:block; }
+  .tags { margin-top:5px; display:flex; gap:5px; flex-wrap:wrap; }
+  .tag { font-size:10px; padding:3px 6px; border-radius:3px; font-weight:bold; color:#000; }
+  
   .btn-group { display:flex; gap:10px; }
+  .edit-btn { background:transparent; border:1px solid var(--warning); color:var(--warning); padding:6px 12px; border-radius:4px; cursor:pointer; }
+  .edit-btn:hover { background:var(--warning); color:#000; }
   .del-btn { background:transparent; border:1px solid var(--error); color:var(--error); padding:6px 12px; border-radius:4px; cursor:pointer; }
   .del-btn:hover { background:var(--error); color:#fff; }
+
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter:blur(5px); }
+  .modal-content { background:var(--panel); padding:30px; border-radius:12px; border:1px solid var(--border); width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.7); max-height: 90vh; overflow-y: auto;}
+  
+  .tag-select-container { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+  .tag-option { padding:5px 10px; border-radius:15px; border:1px solid var(--border); cursor:pointer; font-size:12px; transition:0.2s; user-select:none; }
+  .tag-option.selected { border-color:var(--primary); box-shadow:0 0 5px var(--primary); }
+
+  .preview-media { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); background:#000; margin-top:10px; display:none; }
+  .stats-container { display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap; }
+  .stat-box { flex:1; min-width:120px; background:#1a1a1f; border:1px solid var(--border); padding:15px; border-radius:8px; text-align:center; }
+  .stat-title { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
+  .stat-value { font-size:28px; font-family:'JetBrains Mono', monospace; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -43,7 +65,6 @@
 
   <div id="loginPanel" class="panel" style="text-align:center; display:none;">
     <h2>RESTRICTED ACCESS</h2>
-    <!-- ★ 飛び先を /admin に変更 -->
     <button class="action-btn discord-btn" onclick="location.href='/auth/discord/admin'">Login with Discord</button>
   </div>
 
@@ -56,36 +77,76 @@
     <!-- TABS -->
     <div class="admin-tabs">
       <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">OFFICIAL</div>
+      <div class="admin-tab" onclick="switchAdminTab('tagManagerTab', this)">TAGS</div>
       <div class="admin-tab" onclick="switchAdminTab('recruitTab', this); loadRecruits();">RECRUIT</div>
       <div class="admin-tab" onclick="switchAdminTab('userSoftsTab', this); loadUserItems();">COMMUNITY</div>
       <div class="admin-tab" onclick="switchAdminTab('snsPromoTab', this); loadSnsItems();">PROMOS</div>
       <div class="admin-tab" onclick="switchAdminTab('settingsTab', this)">SETTINGS</div>
     </div>
 
-    <!-- OFFICIAL TAB (省略せずに保持) -->
+    <!-- OFFICIAL SOFTWARE TAB -->
     <div id="softwareTab">
+      <div class="stats-container">
+        <div class="stat-box"><div class="stat-title">Official Softs</div><div class="stat-value" id="statTotal" style="color:var(--primary);">0</div></div>
+        <div class="stat-box"><div class="stat-title">Total ZIP DLs</div><div class="stat-value" id="statZipDl" style="color:#3498db;">0</div></div>
+        <div class="stat-box"><div class="stat-title">Total APK DLs</div><div class="stat-value" id="statApkDl" style="color:#2ecc71;">0</div></div>
+      </div>
+
       <div class="panel">
-        <h2>DEPLOY OFFICIAL</h2>
-        <input id="name" placeholder="Software Name"><input id="version" placeholder="Version">
+        <h2>DEPLOY OFFICIAL (External URL)</h2>
+        <input id="name" placeholder="Software Name">
+        <input id="version" placeholder="Version (e.g. v1.0.0)">
+        
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-          <div><input type="url" id="zipUrl" placeholder="ZIP URL"></div>
-          <div><input type="url" id="apkUrl" placeholder="APK URL"></div>
+          <div><label style="font-size:12px; color:#888;">ZIP Download URL</label><input type="url" id="zipUrl" placeholder="https://..." style="margin-bottom:0;"></div>
+          <div><label style="font-size:12px; color:#888;">APK Download URL</label><input type="url" id="apkUrl" placeholder="https://..." style="margin-bottom:0;"></div>
         </div>
         <textarea id="description" placeholder="Description"></textarea>
+        
+        <label style="font-size:12px; color:#888;">Select Tags:</label>
+        <div id="addTagContainer" class="tag-select-container"></div>
+
+        <div class="options-grid">
+          <label class="toggle-wrap t-orig"><input type="checkbox" id="isOrig" onchange="if(this.checked) document.getElementById('isThird').checked=false;"> <span>ORIGINAL</span></label>
+          <label class="toggle-wrap t-third"><input type="checkbox" id="isThird" onchange="if(this.checked) document.getElementById('isOrig').checked=false;"> <span>THIRD-PARTY</span></label>
+          <label class="toggle-wrap"><input type="checkbox" id="isBeta"> <span>BETA</span></label>
+          <label class="toggle-wrap"><input type="checkbox" id="isUpdate"> <span>UPDATE</span></label>
+          <label class="toggle-wrap"><input type="checkbox" id="isMaint"> <span>MAINT</span></label>
+        </div>
         <button class="action-btn" onclick="addItem()">DEPLOY</button>
       </div>
-      <div class="panel"><h2>OFFICIAL RELEASES</h2><div id="list">loading...</div></div>
+
+      <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>RELEASES</h2>
+          <input type="text" id="searchInput" placeholder="Search..." oninput="renderList()" style="width:200px; padding:6px; margin-bottom:15px;">
+        </div>
+        <div id="list">loading...</div>
+      </div>
     </div>
 
-    <!-- ★ RECRUIT TAB (新設) -->
+    <!-- TAG MANAGER TAB -->
+    <div id="tagManagerTab" style="display:none;">
+      <div class="panel">
+        <h2>CREATE TAG</h2>
+        <div style="display:flex; gap:10px;">
+          <input id="newTagName" placeholder="Tag Name">
+          <input type="color" id="newTagColor" value="#8be9ff" style="width:60px; height:46px; padding:0;">
+          <button class="action-btn" style="width:100px;" onclick="createTag()">ADD</button>
+        </div>
+      </div>
+      <div class="panel"><h2>EXISTING TAGS</h2><div id="tagList"></div></div>
+    </div>
+
+    <!-- RECRUIT TAB -->
     <div id="recruitTab" style="display:none;">
       <div class="panel">
         <h2>RECRUITMENT SETTINGS (募集設定)</h2>
         <label style="font-size:12px; color:#888;">
-          <input type="checkbox" id="set_recruit_enabled"> Enable Recruitment Tab (募集タブをサイトに表示する)
+          <input type="checkbox" id="set_recruit_enabled"> Enable Recruitment Tab (サイトに表示)
         </label>
         <input id="set_recruit_title" placeholder="Title (e.g. Co-Founder Wanted)" style="margin-top:15px;">
-        <textarea id="set_recruit_description" placeholder="Description (求めるスキルなど)" rows="4"></textarea>
+        <textarea id="set_recruit_description" placeholder="Description" rows="4"></textarea>
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
       </div>
       <div class="panel">
@@ -95,34 +156,93 @@
       </div>
     </div>
 
+    <!-- USER SOFTS TAB -->
     <div id="userSoftsTab" style="display:none;">
       <div class="panel"><h2>COMMUNITY UPLOADS</h2><div id="user-list">loading...</div></div>
     </div>
+
+    <!-- SNS PROMOS TAB -->
     <div id="snsPromoTab" style="display:none;">
       <div class="panel"><h2>USER PROMOTIONS</h2><div id="sns-list">loading...</div></div>
     </div>
 
-    <!-- SETTINGS TAB -->
+    <!-- SITE SETTINGS TAB -->
     <div id="settingsTab" style="display:none;">
       <div class="panel">
         <h2>GLOBAL SETTINGS</h2>
-        <input id="set_hero_title" placeholder="Hero Title">
-        <input id="set_hero_subtitle" placeholder="Hero Subtitle">
+        <label style="font-size:12px; color:#888;">Hero Title (大見出し)</label><input id="set_hero_title" placeholder="ASB">
+        <label style="font-size:12px; color:#888;">Hero Subtitle (小見出し)</label><input id="set_hero_subtitle" placeholder="Production greatly advances freedom.">
+        
+        <h3 style="color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Social Links</h3>
         <input type="url" id="set_discord_link" placeholder="Discord URL">
-        <input type="url" id="set_x_link" placeholder="X URL">
+        <input type="url" id="set_x_link" placeholder="X (Twitter) URL">
         <input type="url" id="set_youtube_link" placeholder="YouTube URL">
-        <input type="url" id="set_roblox_link" placeholder="Roblox URL">
+        <input type="url" id="set_roblox_link" placeholder="Roblox Profile/Group URL">
+
+        <h3 style="color:var(--warning); border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Monetization</h3>
         <textarea id="set_ad_code" placeholder="Ad Code" rows="4"></textarea>
+
+        <h3 style="color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:30px;">Background</h3>
+        <input type="file" id="set_bg_image" accept="image/*, video/*">
+        <div style="margin-bottom: 20px;">
+          <label style="font-size:12px; color:#888;">Current Preview</label><br>
+          <img id="bg_preview_img" class="preview-media" src="" alt="Preview">
+          <video id="bg_preview_vid" class="preview-media" src="" autoplay loop muted playsinline></video>
+        </div>
+        
         <button class="action-btn" onclick="saveSettings()">SAVE SETTINGS</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-content">
+    <h2>EDIT SOFTWARE</h2>
+    <input type="hidden" id="editId">
+    <label style="font-size:12px; color:#888;">Software Name</label><input id="editName" placeholder="Name">
+    <label style="font-size:12px; color:#888;">Version</label><input id="editVersion" placeholder="Version">
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+      <div><label style="font-size:12px; color:#888;">ZIP URL</label><input type="url" id="editZipUrl" placeholder="https://..."></div>
+      <div><label style="font-size:12px; color:#888;">APK URL</label><input type="url" id="editApkUrl" placeholder="https://..."></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+      <div><label style="font-size:12px; color:var(--primary);">ZIP DLs (手動)</label><input type="number" id="editZipDl" style="border-color:var(--primary);"></div>
+      <div><label style="font-size:12px; color:var(--primary);">APK DLs (手動)</label><input type="number" id="editApkDl" style="border-color:var(--primary);"></div>
+    </div>
+
+    <label style="font-size:12px; color:#888;">Description</label>
+    <textarea id="editDescription" placeholder="Description"></textarea>
+    
+    <label style="font-size:12px; color:#888;">Select Tags:</label>
+    <div id="editTagContainer" class="tag-select-container"></div>
+
+    <div class="options-grid">
+      <label class="toggle-wrap t-orig"><input type="checkbox" id="editOrig" onchange="if(this.checked) document.getElementById('editThird').checked=false;"> <span>ORIGINAL</span></label>
+      <label class="toggle-wrap t-third"><input type="checkbox" id="editThird" onchange="if(this.checked) document.getElementById('editOrig').checked=false;"> <span>THIRD-PARTY</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editBeta"> <span>BETA</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editUpdate"> <span>UPDATE</span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="editMaint"> <span>MAINT</span></label>
+    </div>
+    
+    <div style="display:flex; gap:10px;">
+      <button class="action-btn" style="background:#444; color:#fff;" onclick="closeModal()">CANCEL</button>
+      <button class="action-btn" onclick="saveEdit()">SAVE CHANGES</button>
+    </div>
+  </div>
+</div>
+
 <script>
-function switchAdminTab(tabId, el) {['softwareTab', 'recruitTab', 'userSoftsTab', 'snsPromoTab', 'settingsTab'].forEach(id => document.getElementById(id).style.display='none');
+let currentData =[], availableTags = [];
+
+function switchAdminTab(tabId, el) {['softwareTab', 'tagManagerTab', 'recruitTab', 'userSoftsTab', 'snsPromoTab', 'settingsTab'].forEach(id => document.getElementById(id).style.display='none');
   document.getElementById(tabId).style.display='block';
   document.querySelectorAll('.admin-tab').forEach(e => e.classList.remove('active')); el.classList.add('active');
+  if(tabId==='tagManagerTab') loadTags();
+  if(tabId==='softwareTab') { loadTags(); loadItems(); }
   if(tabId==='settingsTab') loadSettings();
 }
 
@@ -133,12 +253,25 @@ async function checkAuth() {
       document.getElementById("loginPanel").style.display = "none"; 
       document.getElementById("dashboard").style.display = "block"; 
       document.getElementById("adminName").innerText = data.user; 
-      loadItems(); loadSettings(); loadRecruits();
+      loadTags(); loadItems(); loadSettings(); 
     } 
     else document.getElementById("loginPanel").style.display = "block";
   } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
 }
 
+// Preview Logic
+document.getElementById('set_bg_image').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if(file) {
+    const isVideo = file.type.startsWith('video/');
+    const imgPrev = document.getElementById('bg_preview_img');
+    const vidPrev = document.getElementById('bg_preview_vid');
+    if (isVideo) { imgPrev.style.display='none'; vidPrev.src = URL.createObjectURL(file); vidPrev.style.display='block'; }
+    else { vidPrev.style.display='none'; imgPrev.src = URL.createObjectURL(file); imgPrev.style.display='block'; }
+  }
+});
+
+// Settings Logic
 async function loadSettings() {
   const res = await fetch("/api/settings"); const data = await res.json();
   document.getElementById("set_hero_title").value = data.hero_title || "";
@@ -148,10 +281,17 @@ async function loadSettings() {
   document.getElementById("set_youtube_link").value = data.youtube_link || "";
   document.getElementById("set_roblox_link").value = data.roblox_link || "";
   document.getElementById("set_ad_code").value = data.ad_code || "";
-  
   document.getElementById("set_recruit_enabled").checked = (data.recruit_enabled === 'true');
   document.getElementById("set_recruit_title").value = data.recruit_title || "";
   document.getElementById("set_recruit_description").value = data.recruit_description || "";
+  
+  if (data.bg_image) {
+    const isVideo = data.bg_image.match(/\.(mp4|webm|ogg)$/i);
+    const imgPrev = document.getElementById('bg_preview_img');
+    const vidPrev = document.getElementById('bg_preview_vid');
+    if(isVideo) { vidPrev.src = data.bg_image; vidPrev.style.display = 'block'; imgPrev.style.display = 'none'; } 
+    else { imgPrev.src = data.bg_image; imgPrev.style.display = 'block'; vidPrev.style.display = 'none'; }
+  }
 }
 
 async function saveSettings() {
@@ -163,38 +303,153 @@ async function saveSettings() {
   fd.append("youtube_link", document.getElementById("set_youtube_link").value);
   fd.append("roblox_link", document.getElementById("set_roblox_link").value);
   fd.append("ad_code", document.getElementById("set_ad_code").value);
-  
   fd.append("recruit_enabled", document.getElementById("set_recruit_enabled").checked);
   fd.append("recruit_title", document.getElementById("set_recruit_title").value);
   fd.append("recruit_description", document.getElementById("set_recruit_description").value);
+  
+  const bgFile = document.getElementById("set_bg_image").files[0];
+  if(bgFile) fd.append("bg_image", bgFile);
 
-  await fetch("/api/settings", { method: "POST", body: fd }); 
-  alert("Saved!"); loadSettings();
+  const res = await fetch("/api/settings", { method: "POST", body: fd });
+  if(res.ok) alert("Settings saved successfully!"); else alert("Failed to save settings.");
 }
 
-// ==== ★ RECRUIT ====
+// Tags Logic
+async function loadTags() {
+  const res = await fetch("/api/tags"); availableTags = await res.json();
+  document.getElementById("tagList").innerHTML = availableTags.map(t => `<div class="item"><div class="item-info"><strong style="color:${t.color}">${t.name}</strong></div><button class="del-btn" onclick="delTag(${t.id})">DEL</button></div>`).join("");
+  renderTagSelector("addTagContainer");
+}
+async function createTag() {
+  const name = document.getElementById("newTagName").value; const color = document.getElementById("newTagColor").value;
+  if(!name) return; await fetch("/api/tags", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name, color}) });
+  document.getElementById("newTagName").value=""; loadTags();
+}
+async function delTag(id) { if(confirm("Del?")) { await fetch("/api/tags/"+id, {method:"DELETE"}); loadTags(); } }
+
+function renderTagSelector(cid, sIds=[]) {
+  const c = document.getElementById(cid); c.innerHTML = "";
+  availableTags.forEach(t => {
+    const isSel = sIds.includes(t.id) ? "selected" : "";
+    const style = isSel ? `background:${t.color}22; border-color:${t.color}; color:${t.color};` : `border-color:#444; color:#888;`;
+    c.innerHTML += `<div class="tag-option ${isSel}" style="${style}" onclick="toggleTag(this,${t.id})" data-id="${t.id}">${t.name}</div>`;
+  });
+}
+function toggleTag(el, id) { el.classList.toggle("selected"); const t = availableTags.find(x=>x.id===id); el.style.cssText = el.classList.contains("selected") ? `background:${t.color}22; border-color:${t.color}; color:${t.color};` : `border-color:#444; color:#888;`; }
+function getSelectedTagIds(cid) { return Array.from(document.querySelectorAll(`#${cid} .tag-option.selected`)).map(e => parseInt(e.dataset.id)); }
+
+// Recruit Logic
 async function loadRecruits() {
   const res = await fetch("/api/recruit/applications"); const data = await res.json();
   const list = document.getElementById("recruit-list"); list.innerHTML = "";
   if(data.length === 0) return list.innerHTML = "<p style='color:#666'>No applications yet.</p>";
   data.forEach(item => {
-    list.innerHTML += `<div class="item"><div class="item-info"><strong style="color:var(--primary);">${item.discord_username} <span style="font-size:11px; color:#666;">(ID: ${item.discord_id})</span></strong><p style="font-size:13px; color:#ccc; margin-top:5px; white-space:pre-wrap;">${item.message}</p><span style="font-size:11px; color:#666;">${item.created_at.substring(0,16)}</span></div><button class="del-btn" onclick="delRecruit(${item.id})">DELETE</button></div>`;
+    list.innerHTML += `<div class="item"><div class="item-info"><strong style="color:var(--primary);">${item.discord_username} <span style="font-size:11px; color:#666;">(ID: ${item.discord_id})</span></strong><p style="font-size:13px; color:#ccc; margin-top:5px; white-space:pre-wrap;">${item.message}</p><span style="font-size:11px; color:#666;">${item.created_at.substring(0,16)}</span></div><button class="del-btn" onclick="delRecruit(${item.id})">DEL</button></div>`;
   });
 }
 async function delRecruit(id){ if(confirm("Remove?")) { await fetch("/api/recruit/applications/"+id, {method:"DELETE"}); loadRecruits(); }}
 
-// ==== OFFICIAL SOFTS ====
+// Software Logic
 async function loadItems(){
-  const res = await fetch("/api/software"); const data = await res.json();
-  document.getElementById("list").innerHTML = data.map(item => `<div class="item"><div class="item-info"><strong>${item.name}</strong></div><button class="del-btn" onclick="delItem(${item.id})">DEL</button></div>`).join("");
+  const res = await fetch("/api/software"); currentData = await res.json();
+  document.getElementById("statTotal").innerText = currentData.length;
+  document.getElementById("statZipDl").innerText = currentData.reduce((s,i)=>s+(i.zip_downloads||0),0);
+  document.getElementById("statApkDl").innerText = currentData.reduce((s,i)=>s+(i.apk_downloads||0),0);
+  renderList();
 }
-async function addItem(){
-  const data = { name: document.getElementById("name").value, version: document.getElementById("version").value, description: document.getElementById("description").value, zip_url: document.getElementById("zipUrl").value, apk_url: document.getElementById("apkUrl").value };
-  await fetch("/api/software", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) }); loadItems();
-}
-async function delItem(id){ if(confirm("Delete?")) { await fetch("/api/software/" + id, { method: "DELETE" }); loadItems(); } }
 
-// ==== USER SOFTS & SNS ====
+function renderList() {
+  const list = document.getElementById("list");
+  const query = document.getElementById("searchInput").value.toLowerCase();
+  list.innerHTML = "";
+  const filtered = currentData.filter(item => item.name.toLowerCase().includes(query));
+  if(filtered.length === 0) return list.innerHTML = "<div style='text-align:center; color:#555;'>No software found.</div>";
+
+  filtered.forEach(item => {
+    let tags = "";
+    if(item.is_original) tags += `<span class="tag" style="background:rgba(155,89,182,0.2); color:#9b59b6; border:1px solid #9b59b6;">ORIGINAL</span>`;
+    if(item.is_thirdparty) tags += `<span class="tag" style="background:rgba(230,126,34,0.2); color:#e67e22; border:1px solid #e67e22;">THIRD-PARTY</span>`;
+    try {
+      const tagIds = JSON.parse(item.tags || "[]");
+      tagIds.forEach(tid => {
+        const t = availableTags.find(at => at.id === tid);
+        if(t) tags += `<span class="tag" style="color:${t.color}; border:1px solid ${t.color}; background:${t.color}22;">${t.name}</span>`;
+      });
+    } catch(e){}
+    if(item.zip_path) tags += `<span class="tag" style="background:rgba(52,152,219,0.2); color:#3498db; border:1px solid #3498db;">ZIP</span>`;
+    if(item.apk_path) tags += `<span class="tag" style="background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid #2ecc71;">APK</span>`;
+    if(item.is_beta) tags += `<span class="tag" style="background:#f1c40f;">BETA</span>`;
+    if(item.is_update) tags += `<span class="tag" style="background:#e74c3c;">UPDATE</span>`;
+    if(item.is_maintenance) tags += `<span class="tag" style="background:#95a5a6;">MAINT</span>`;
+
+    list.innerHTML += `
+      <div class="item">
+        <div class="item-info">
+          <strong>${item.name}</strong>
+          <span style="font-size:12px; color:#666;">v${item.version} | ZIP DL: ${item.zip_downloads||0} | APK DL: ${item.apk_downloads||0}</span>
+          <div class="tags">${tags}</div>
+        </div>
+        <div class="btn-group">
+          <button class="edit-btn" onclick="openEdit(${item.id})">EDIT</button>
+          <button class="del-btn" onclick="delItem(${item.id})">DEL</button>
+        </div>
+      </div>`;
+  });
+}
+
+async function addItem(){
+  const name = document.getElementById("name").value;
+  if(!name) return alert("Name required!");
+  const data = {
+    name: name, version: document.getElementById("version").value, description: document.getElementById("description").value,
+    zip_url: document.getElementById("zipUrl").value, apk_url: document.getElementById("apkUrl").value,
+    is_original: document.getElementById("isOrig").checked, is_thirdparty: document.getElementById("isThird").checked,
+    is_beta: document.getElementById("isBeta").checked, is_update: document.getElementById("isUpdate").checked, is_maintenance: document.getElementById("isMaint").checked,
+    tags: getSelectedTagIds("addTagContainer")
+  };
+  await fetch("/api/software", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
+  
+  document.getElementById("name").value = ""; document.getElementById("version").value = ""; document.getElementById("description").value = ""; document.getElementById("zipUrl").value = ""; document.getElementById("apkUrl").value = "";
+  document.getElementById("isOrig").checked = false; document.getElementById("isThird").checked = false;
+  loadItems();
+}
+
+function openEdit(id) {
+  const item = currentData.find(d => d.id === id);
+  if(!item) return;
+  document.getElementById("editId").value = item.id;
+  document.getElementById("editName").value = item.name;
+  document.getElementById("editVersion").value = item.version;
+  document.getElementById("editDescription").value = item.description;
+  document.getElementById("editZipUrl").value = item.zip_path || "";
+  document.getElementById("editApkUrl").value = item.apk_path || "";
+  document.getElementById("editZipDl").value = item.zip_downloads || 0;
+  document.getElementById("editApkDl").value = item.apk_downloads || 0;
+  document.getElementById("editOrig").checked = item.is_original === 1;
+  document.getElementById("editThird").checked = item.is_thirdparty === 1;
+  document.getElementById("editBeta").checked = item.is_beta === 1;
+  document.getElementById("editUpdate").checked = item.is_update === 1;
+  document.getElementById("editMaint").checked = item.is_maintenance === 1;
+  renderTagSelector("editTagContainer", JSON.parse(item.tags || "[]"));
+  document.getElementById("editModal").style.display = "flex";
+}
+function closeModal() { document.getElementById("editModal").style.display = "none"; }
+
+async function saveEdit() {
+  const id = document.getElementById("editId").value;
+  const data = {
+    name: document.getElementById("editName").value, version: document.getElementById("editVersion").value, description: document.getElementById("editDescription").value,
+    zip_url: document.getElementById("editZipUrl").value, apk_url: document.getElementById("editApkUrl").value,
+    zip_downloads: document.getElementById("editZipDl").value, apk_downloads: document.getElementById("editApkDl").value,
+    is_original: document.getElementById("editOrig").checked, is_thirdparty: document.getElementById("editThird").checked,
+    is_beta: document.getElementById("editBeta").checked, is_update: document.getElementById("editUpdate").checked, is_maintenance: document.getElementById("editMaint").checked,
+    tags: getSelectedTagIds("editTagContainer")
+  };
+  const res = await fetch("/api/software/" + id, { method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify(data) });
+  if(res.ok) { closeModal(); loadItems(); } else { alert("Update failed."); }
+}
+
+async function delItem(id){ if(confirm("Delete this software?")) { await fetch("/api/software/" + id, { method: "DELETE" }); loadItems(); } }
 async function loadUserItems() { const res = await fetch("/api/user_software"); const data = await res.json(); document.getElementById("user-list").innerHTML = data.map(i=>`<div class="item"><div class="item-info"><strong>${i.name}</strong><span>by ${i.author_name}</span></div><button class="del-btn" onclick="delUser(${i.id})">DEL</button></div>`).join(""); }
 async function delUser(id){ if(confirm("Del?")) { await fetch("/api/user_software/"+id, {method:"DELETE"}); loadUserItems(); }}
 async function loadSnsItems() { const res = await fetch("/api/sns"); const data = await res.json(); document.getElementById("sns-list").innerHTML = data.map(i=>`<div class="item"><div class="item-info"><strong>${i.user_name}</strong><span>${i.url}</span></div><button class="del-btn" onclick="delSns(${i.id})">DEL</button></div>`).join(""); }
