@@ -7,26 +7,31 @@
 <!-- ★ SEO & SNS拡散対策 メタタグ -->
 <title>ASB Official</title>
 <meta name="description" content="ASB Official - High-performance automation tools and software distribution.">
+<meta name="keywords" content="ASB, Auto click, オートクリッカー, 自動化ツール, ソフトウェア配布, APK, ZIP">
+<meta property="og:title" content="ASB Official Portal">
+<meta property="og:description" content="Production greatly advances freedom. 最新ソフトウェアのダウンロードはこちら。">
+<meta property="og:image" content="https://huker-production.onrender.com/logo.png">
+<meta property="og:url" content="https://huker-production.onrender.com/">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- ★ JuicyAds サイト認証用メタタグ -->
 <meta name="juicyads-site-verification" content="150f17e20f3c062a465e34ceefc8e33d">
 <link rel="icon" href="/logo.png" type="image/png">
+
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root { --primary: #8be9ff; --primary-glow: rgba(139, 233, 255, 0.4); --bg: #05070c; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); --text-main: #ffffff; --text-sub: #a0aec0; }
   * { box-sizing: border-box; scroll-behavior: smooth; }
   body { margin: 0; background: var(--bg); color: var(--text-main); font-family: 'Noto Sans JP', sans-serif; overflow-x: hidden; }
   
-  /* Lang Switcher Logic */
-  .lang-en { display: none; }
-  body.en-mode .lang-ja { display: none; }
-  body.en-mode .lang-en { display: inline; }
-  body.en-mode .lang-en-block { display: block; }
-  body.en-mode .lang-ja-block { display: none; }
+  .lang-en { display: none; } body.en-mode .lang-ja { display: none; } body.en-mode .lang-en { display: inline; }
+  body.en-mode .lang-en-block { display: block; } body.en-mode .lang-ja-block { display: none; }
 
   ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: rgba(139, 233, 255, 0.2); border-radius: 10px; }
-  header { position: fixed; top: 0; width: 100%; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(5, 7, 12, 0.6); backdrop-filter: blur(12px); z-index: 1000; border-bottom: 1px solid var(--border); }
   
-  .logo { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; letter-spacing: 1px; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; transition: 0.3s; }
-  .logo:hover { text-shadow: 0 0 10px var(--primary-glow); }
+  header { position: fixed; top: 0; width: 100%; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(5, 7, 12, 0.7); backdrop-filter: blur(12px); z-index: 1000; border-bottom: 1px solid var(--border); }
+  .header-logo { height: 45px; width: auto; object-fit: contain; cursor: pointer; transition: transform 0.3s; }
+  .header-logo:hover { transform: scale(1.05); }
   
   nav { display:flex; align-items:center; gap:20px; }
   nav ul { display: flex; list-style: none; gap: 20px; margin: 0; padding: 0; white-space: nowrap; }
@@ -54,7 +59,7 @@
   @keyframes particleDrift { 0% { background-position: 0 0, 0 0; } 100% { background-position: 150px -300px, 300px -600px; } }
 
   .hero-inner { position: relative; z-index: 4; }
-  .hero h1 { font-family: 'Playfair Display', serif; font-size: 100px; margin: 0; line-height: 1; background: linear-gradient(135deg, #fff 0%, #a0d8ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 30px rgba(139, 233, 255, 0.3);}
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: 100px; margin: 0; line-height: 1; background: linear-gradient(135deg, #fff 0%, #a0d8ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
   .hero p { font-size: 20px; letter-spacing: 4px; margin-top: 20px; color: #cbd5e0; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
   .btn-explore { margin-top: 40px; padding: 12px 30px; border: 1px solid var(--primary); background: rgba(139, 233, 255, 0.1); color: var(--primary); font-size: 14px; cursor: pointer; transition: 0.3s; border-radius: 30px; text-decoration: none; display: inline-block; backdrop-filter: blur(5px);}
   .btn-explore:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow); }
@@ -71,7 +76,9 @@
   .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 25px; transition: 0.3s; display: flex; flex-direction: column; backdrop-filter: blur(10px);}
   .card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
   .card h3 { margin: 0 0 5px 0; font-size: 20px; }
+  .card .author { font-size: 12px; color: #888; margin-bottom: 10px; display: block; }
   .version { font-size: 12px; color: var(--primary); font-family: monospace; }
+  
   .badge { display: inline-block; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; margin-top: 5px; margin-right: 5px; }
   .b-beta { border: 1px solid #f1c40f; color: #f1c40f; background: rgba(241, 196, 15, 0.1); }
   .b-update { border: 1px solid #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
@@ -80,11 +87,17 @@
   .b-apk { border: 1px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
   .b-orig { border: 1px solid #9b59b6; color: #9b59b6; background: rgba(155, 89, 182, 0.1); }
   .b-third { border: 1px solid #e67e22; color: #e67e22; background: rgba(230, 126, 34, 0.1); }
+
   .desc { margin: 15px 0; font-size: 13px; color: var(--text-sub); line-height: 1.6; flex-grow: 1; white-space: pre-wrap; }
   .card-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top:10px; }
   .dl-count { font-size: 12px; color: #666; }
+  
+  .btn-wrapper { display: flex; gap: 10px; }
   .dl-btn { padding: 8px 16px; background: linear-gradient(135deg, #8be9ff, #3b82f6); color: #000; font-weight: bold; font-size:12px; border: none; border-radius: 20px; cursor: pointer; text-decoration:none; display:inline-block; }
   .dl-btn:hover { box-shadow: 0 0 15px var(--primary-glow); transform: scale(1.05); }
+  .dl-btn.apk { background: linear-gradient(135deg, #a8ff78, #78ffd6); }
+  .dl-btn.apk:hover { box-shadow: 0 0 15px rgba(120, 255, 214, 0.4); }
+  .dl-btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none;}
   
   .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; justify-content: center; }
   .filter-btn { padding: 8px 16px; background: transparent; border: 1px solid var(--border); color: #888; border-radius: 20px; cursor: pointer; font-size: 12px; transition: 0.2s; }
@@ -98,6 +111,8 @@
   .post-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
   .post-modal-content { background: #131316; padding: 30px; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 500px; }
   .post-modal input, .post-modal textarea, .post-modal select { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; }
+  .post-modal input:focus { border-color: var(--primary); outline: none; }
+  
   .dl-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
   .dl-modal-content { background: #131316; padding: 30px; border-radius: 16px; border: 1px solid var(--border); width: 90%; max-width: 500px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
   .dl-ad-box { margin: 20px auto; min-height: 250px; max-width: 100%; display: flex; justify-content: center; align-items: center; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; }
@@ -117,7 +132,7 @@
 <body class="ja-mode">
 
 <header>
-  <div class="logo" id="site-logo" onclick="window.scrollTo(0,0)">ASB.</div>
+  <img src="/logo.png" alt="ASB" class="header-logo" onclick="window.scrollTo(0,0)">
   
   <nav>
     <ul>
@@ -125,10 +140,11 @@
       <li onclick="switchTab('software', this)">Softs</li>
       <li onclick="switchTab('community', this)">Community</li>
       <li onclick="switchTab('promote', this)">Promote</li>
+      <!-- ★ 動的表示されるリクルートタブ -->
+      <li id="nav-recruit-li" onclick="switchTab('recruit', this)" style="display:none; color:var(--warning); font-weight:bold;">Join Us</li>
       <li onclick="switchTab('legal', this)">Legal</li>
     </ul>
     
-    <!-- ★ SNSリンク (右上に復活 + Roblox追加) -->
     <div class="header-sns">
       <a href="#" target="_blank" id="head-youtube" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.052-.074 1.972l-.008.106-.022.26-.01.104c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z"/></svg></a>
       <a href="#" target="_blank" id="head-x" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/></svg></a>
@@ -136,7 +152,6 @@
       <a href="#" target="_blank" id="head-roblox" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M5.3 3.3h13.4v13.4H5.3z" transform="rotate(14 12 12)"/></svg></a>
     </div>
 
-    <!-- Language Switcher -->
     <button class="lang-btn" onclick="toggleLanguage()">🌐 JP/EN</button>
   </nav>
 </header>
@@ -170,14 +185,12 @@
         <a href="#" target="_blank" class="btn-explore" id="panel-discord-link" style="margin-top:0; border-color:#5865F2; color:#5865F2; display:none;">Join Discord</a>
         <a href="#" target="_blank" class="btn-explore" id="panel-youtube-link" style="margin-top:0; border-color:#ff0000; color:#ff0000; display:none;">YouTube</a>
         <a href="#" target="_blank" class="btn-explore" id="panel-x-link" style="margin-top:0; border-color:#fff; color:#fff; display:none;">X (Twitter)</a>
-        <!-- ★ Robloxボタン -->
         <a href="#" target="_blank" class="btn-explore" id="panel-roblox-link" style="margin-top:0; border-color:#fff; color:#fff; display:none;">Roblox</a>
       </div>
     </div>
   </div>
 </div>
 
-<!-- (Software / Community / Promote / Legal / Security / Roadmap Tabs remain same) -->
 <div id="software" class="tab-content">
   <div class="container">
     <h1 class="page-title"><span class="lang-ja">公式ソフトウェア</span><span class="lang-en">Official Software</span></h1>
@@ -189,9 +202,7 @@
 <div id="community" class="tab-content">
   <div class="container">
     <div class="post-btn-container">
-      <button class="post-btn" onclick="openPostModal('soft')">
-        <span class="lang-ja">＋ 投稿する</span><span class="lang-en">＋ Post Software</span>
-      </button>
+      <button class="post-btn" onclick="openPostModal('soft')"><span class="lang-ja">＋ 投稿する</span><span class="lang-en">＋ Post Software</span></button>
     </div>
     <h1 class="page-title"><span class="lang-ja">みんなの投稿</span><span class="lang-en">Community Uploads</span></h1>
     <div id="user-software-list" class="grid"><div style="color:#666; text-align:center;">Loading...</div></div>
@@ -201,12 +212,29 @@
 <div id="promote" class="tab-content">
   <div class="container">
     <div class="post-btn-container">
-      <button class="post-btn" onclick="openPostModal('sns')">
-        <span class="lang-ja">＋ 宣伝する</span><span class="lang-en">＋ Promote SNS</span>
-      </button>
+      <button class="post-btn" onclick="openPostModal('sns')"><span class="lang-ja">＋ 宣伝する</span><span class="lang-en">＋ Promote SNS</span></button>
     </div>
     <h1 class="page-title"><span class="lang-ja">SNS宣伝掲示板</span><span class="lang-en">User Promotions</span></h1>
     <div id="sns-list" style="max-width: 800px; margin: 0 auto;"><div style="color:#666; text-align:center;">Loading...</div></div>
+  </div>
+</div>
+
+<!-- ★ RECRUIT TAB (共同創設者募集) -->
+<div id="recruit" class="tab-content">
+  <div class="container" style="max-width: 800px; text-align:center;">
+    <h1 class="page-title" id="r_title" style="color:var(--primary);">Co-Founder Wanted</h1>
+    <div style="background:var(--card-bg); border:1px solid var(--primary); padding:40px; border-radius:16px; margin-bottom:30px;">
+      <p id="r_desc" style="color:#ddd; line-height:1.8; font-size:16px; margin-bottom:30px; white-space:pre-wrap;"></p>
+      
+      <div style="background:rgba(88,101,242,0.1); border:1px dashed #5865F2; padding:20px; border-radius:8px;">
+        <h3 style="color:#5865F2; margin-top:0;">Discord Authentication Required</h3>
+        <p style="font-size:12px; color:#aaa; margin-bottom:20px;" class="lang-ja">スパム防止のため、応募には公式Discordサーバーへの参加が必須です。<br>下のボタンからDiscordアカウントを連携して応募画面に進んでください。</p>
+        <p style="font-size:12px; color:#aaa; margin-bottom:20px;" class="lang-en">To prevent spam, joining our official Discord server is required to apply.<br>Please link your Discord account below to proceed.</p>
+        <button class="btn-explore" style="background:#5865F2; color:#fff; border:none;" onclick="location.href='/auth/discord/apply'">
+          Login with Discord & Apply
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -255,7 +283,8 @@
     <h1 class="page-title">Roadmap</h1>
     <div class="doc-section" style="border-left: 4px solid var(--primary);">
       <h3>2026 Q1</h3>
-      <p><span class="lang-ja">・公式サイトローンチ<br>・Auto click ASB ベータテスト</span><span class="lang-en">・Site Launch<br>・Auto click ASB Beta</span></p>
+      <p class="lang-ja">・公式サイトローンチ<br>・Auto click ASB ベータテスト</p>
+      <p class="lang-en">・Site Launch<br>・Auto click ASB Beta</p>
     </div>
   </div>
 </div>
@@ -263,7 +292,7 @@
 <div id="global-ad-container"></div>
 <footer><p>&copy; <span id="year">2026</span> ASB Project.</p></footer>
 
-<!-- MODALS (Download & Post) -->
+<!-- MODALS -->
 <div id="dlModal" class="dl-modal-overlay">
   <div class="dl-modal-content">
     <h2 style="margin-top:0; color:var(--primary); font-family:'Playfair Display', serif;"><span class="lang-ja">ダウンロード準備中</span><span class="lang-en">Preparing Download</span></h2>
@@ -273,8 +302,22 @@
     <button onclick="closeDlModal()" style="background:transparent; border:none; color:#666; margin-top:15px; cursor:pointer; font-size:12px; text-decoration:underline;"><span class="lang-ja">閉じる</span><span class="lang-en">Cancel</span></button>
   </div>
 </div>
+
+<!-- ★ 応募フォーム用モーダル -->
+<div id="applyModal" class="post-modal">
+  <div class="post-modal-content" style="text-align:left;">
+    <h2 style="color:var(--primary); margin-top:0;">Application Form</h2>
+    <p style="font-size:12px; color:#aaa; margin-bottom:20px;">あなたのDiscordアカウント: <strong id="apply-discord-name" style="color:#fff;"></strong></p>
+    <textarea id="apply-message" placeholder="意気込みや自己PR、持っているスキルなどを自由に書いてください！" rows="6"></textarea>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-explore" style="margin:0; width:50%; text-align:center;" onclick="closeApplyModal()">Cancel</button>
+      <button class="post-btn" style="width:50%;" onclick="submitApplication()">Submit</button>
+    </div>
+  </div>
+</div>
+
 <div id="postModal" class="post-modal">
-  <div class="post-modal-content" id="post-soft-form" style="display:none;">
+  <div class="post-modal-content" id="post-soft-form" style="display:none; text-align:left;">
     <h2 style="color:var(--primary); margin-top:0;">Post Software</h2>
     <input id="u_author" placeholder="Your Name">
     <input id="u_name" placeholder="Software Name">
@@ -285,22 +328,22 @@
       <label style="color:#888; font-size:12px;"><input type="radio" name="u_type" value="orig" checked> <span class="lang-ja">自作</span><span class="lang-en">Original</span></label><br>
       <label style="color:#888; font-size:12px;"><input type="radio" name="u_type" value="third"> <span class="lang-ja">他作・紹介</span><span class="lang-en">Third-Party</span></label>
     </div>
-    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%;" onclick="closePostModal()">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitUserSoft()">Submit</button></div>
+    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%; text-align:center;" onclick="closePostModal()">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitUserSoft()">Submit</button></div>
   </div>
-  <div class="post-modal-content" id="post-sns-form" style="display:none;">
+  <div class="post-modal-content" id="post-sns-form" style="display:none; text-align:left;">
     <h2 style="color:var(--primary); margin-top:0;">Promote SNS</h2>
     <input id="s_name" placeholder="Name / Channel">
     <select id="s_type"><option value="youtube">YouTube</option><option value="x">X (Twitter)</option><option value="discord">Discord</option><option value="other">Other</option></select>
     <input type="url" id="s_url" placeholder="URL">
     <textarea id="s_desc" placeholder="Description"></textarea>
-    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%;" onclick="closePostModal()">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitSns()">Submit</button></div>
+    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%; text-align:center;" onclick="closePostModal()">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitSns()">Submit</button></div>
   </div>
 </div>
 
 <script>
 document.getElementById('year').innerText = new Date().getFullYear();
 window.siteAdCode = "";
-let availableTags = [], allSoftwareData = [];
+let availableTags = [], allSoftwareData =[];
 
 // Lang Switcher
 let currentLang = localStorage.getItem('asb_lang') || 'ja';
@@ -317,24 +360,25 @@ updateLangDisplay();
 async function loadSiteSettings() {
   try {
     const res = await fetch("/api/settings"); const settings = await res.json();
-    if(settings.hero_title) { document.getElementById("hero-title").innerText = settings.hero_title; document.getElementById("site-logo").innerText = settings.hero_title + "."; document.title = settings.hero_title + " Official"; }
+    if(settings.hero_title) { document.getElementById("hero-title").innerText = settings.hero_title; document.title = settings.hero_title + " Official"; }
     if(settings.hero_subtitle) document.getElementById("hero-subtitle").innerText = settings.hero_subtitle;
+    
+    // ★ 募集タブの表示制御
+    if(settings.recruit_enabled === 'true') {
+      document.getElementById("nav-recruit-li").style.display = "flex";
+      document.getElementById("r_title").innerText = settings.recruit_title || "Co-Founder Wanted";
+      document.getElementById("r_desc").innerText = settings.recruit_description || "";
+    }
+
     if(settings.ad_code && settings.ad_code.trim() !== "") {
       window.siteAdCode = settings.ad_code; const adC = document.getElementById("global-ad-container"); adC.style.display = "block"; adC.innerHTML = settings.ad_code;
       Array.from(adC.querySelectorAll("script")).forEach(oldScript => { const newS = document.createElement("script"); Array.from(oldScript.attributes).forEach(attr => newS.setAttribute(attr.name, attr.value)); newS.text = oldScript.innerHTML; oldScript.parentNode.replaceChild(newS, oldScript); });
     }
     
-    // SNS Links (Display logic)
     if(settings.discord_link) { document.getElementById("panel-discord-link").href=settings.discord_link; document.getElementById("panel-discord-link").style.display="inline-block"; document.getElementById("head-discord").href=settings.discord_link; document.getElementById("head-discord").style.display="flex"; }
     if(settings.x_link) { document.getElementById("panel-x-link").href=settings.x_link; document.getElementById("panel-x-link").style.display="inline-block"; document.getElementById("head-x").href=settings.x_link; document.getElementById("head-x").style.display="flex"; }
     if(settings.youtube_link) { document.getElementById("panel-youtube-link").href=settings.youtube_link; document.getElementById("panel-youtube-link").style.display="inline-block"; document.getElementById("head-youtube").href=settings.youtube_link; document.getElementById("head-youtube").style.display="flex"; }
-    // ★ Roblox Link
-    if(settings.roblox_link) { 
-      document.getElementById("panel-roblox-link").href=settings.roblox_link; 
-      document.getElementById("panel-roblox-link").style.display="inline-block"; 
-      document.getElementById("head-roblox").href=settings.roblox_link; 
-      document.getElementById("head-roblox").style.display="flex"; 
-    }
+    if(settings.roblox_link) { document.getElementById("panel-roblox-link").href=settings.roblox_link; document.getElementById("panel-roblox-link").style.display="inline-block"; document.getElementById("head-roblox").href=settings.roblox_link; document.getElementById("head-roblox").style.display="flex"; }
 
     const bgUrl = settings.bg_image || 'background.jpg'; const isVideo = bgUrl.match(/\.(mp4|webm|ogg)$/i);
     if (isVideo) { document.getElementById("hero-video").src = bgUrl; document.getElementById("hero-video").style.display = 'block'; document.getElementById("hero-video").onloadeddata = () => { document.getElementById("hero-video").style.opacity = "1"; }; } 
@@ -375,6 +419,7 @@ function renderSoftwareList(data) {
     if(item.is_original) badges += `<span class="badge b-orig">ORIGINAL</span>`;
     if(item.is_thirdparty) badges += `<span class="badge b-third">THIRD-PARTY</span>`;
     try { const tids = JSON.parse(item.tags || "[]"); tids.forEach(tid => { const t = availableTags.find(at => at.id === tid); if(t) badges += `<span class="badge" style="color:${t.color}; border:1px solid ${t.color}; background:${t.color}22;">${t.name}</span>`; }); } catch(e){}
+
     if(item.zip_path) badges += `<span class="badge b-zip">ZIP</span>`; if(item.apk_path) badges += `<span class="badge b-apk">APK</span>`;
     
     const dlZipText = currentLang === 'ja' ? 'DL (ZIP)' : 'Download (ZIP)';
@@ -412,6 +457,7 @@ async function loadSnsPromos() {
   });
 }
 
+// Download Modal
 let dlTimer;
 async function downloadSw(id, type) {
   try {
@@ -441,6 +487,7 @@ function openDlModal(link) {
 }
 function closeDlModal() { clearInterval(dlTimer); document.getElementById("dlModal").style.display = "none"; document.getElementById("dl-ad-container").innerHTML = ""; }
 
+// Post Modals
 function openPostModal(type) { document.getElementById("postModal").style.display = "flex"; document.getElementById("post-soft-form").style.display = type==='soft'?"block":"none"; document.getElementById("post-sns-form").style.display = type==='sns'?"block":"none"; }
 function closePostModal() { document.getElementById("postModal").style.display = "none"; }
 async function submitUserSoft() {
@@ -455,6 +502,34 @@ async function submitSns() {
   if(!name || !url) return alert("Name & URL required");
   await fetch("/api/sns", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ user_name: name, sns_type: document.getElementById("s_type").value, url, description: document.getElementById("s_desc").value }) });
   closePostModal(); loadSnsPromos(); alert("Posted!");
+}
+
+// ★ 応募処理
+window.addEventListener('load', async () => { 
+  loadSiteSettings(); loadRealNews(); 
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('error') === 'not_in_guild') {
+    alert("エラー: ASBの公式Discordサーバーに参加してから再度応募してください。");
+    window.history.replaceState({}, document.title, "/");
+  } else if (urlParams.get('apply') === 'ready') {
+    const res = await fetch("/api/me/applicant");
+    const data = await res.json();
+    if(data.loggedIn) {
+      document.getElementById("apply-discord-name").innerText = data.user.username;
+      document.getElementById("applyModal").style.display = "flex";
+      window.history.replaceState({}, document.title, "/");
+    }
+  }
+});
+
+function closeApplyModal() { document.getElementById("applyModal").style.display = "none"; }
+
+async function submitApplication() {
+  const msg = document.getElementById("apply-message").value;
+  if(!msg) return alert("意気込みを入力してください！");
+  const res = await fetch("/api/recruit/apply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: msg }) });
+  if(res.ok) { alert("応募が完了しました！管理者が確認次第、Discordにてご連絡いたします。"); closeApplyModal(); } 
+  else { alert("エラーが発生しました。"); }
 }
 
 function formatDate(utcDateString) {
@@ -483,8 +558,6 @@ async function loadRealNews() {
     newsBox.innerHTML = dynamicNewsHtml + staticNewsHtml;
   } catch (e) { newsBox.innerHTML = "<div class='news-item'>Loading failed.</div>"; }
 }
-
-window.addEventListener('load', () => { loadSiteSettings(); loadRealNews(); });
 </script>
 </body>
 </html>
