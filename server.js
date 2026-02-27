@@ -7,9 +7,8 @@ const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 
-// Supabase初期化
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-const upload = multer({ storage: multer.memoryStorage() }); // Render環境向け（メモリ処理）
+const upload = multer({ storage: multer.memoryStorage() }); 
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,13 +21,12 @@ app.use(session({
 
 app.use(express.static(path.join(__dirname, "public")));
 
-/* --- 認証ミドルウェア --- */
 function auth(req, res, next){
   if(!req.session.admin) return res.status(401).json({error:"Unauthorized"});
   next();
 }
 
-/* ===== Discord Auth (管理者用 & 一般応募用 分岐対応) ===== */
+/* ===== Discord Auth ===== */
 app.get("/auth/discord/admin", (req, res) => {
   req.session.auth_type = 'admin';
   res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`);
@@ -39,12 +37,13 @@ app.get("/auth/discord/apply", (req, res) => {
   res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`);
 });
 
-// 認証コールバック
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) return res.send("Error: No code provided.");
+  
   try {
-    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+    // ★ ブロック回避のために User-Agent などをしっかり設定
+    const tokenRes = await fetch("https://discord.com/api/v10/oauth2/token", {
       method: "POST",
       body: new URLSearchParams({ 
         client_id: process.env.DISCORD_CLIENT_ID, 
@@ -53,30 +52,50 @@ app.get("/auth/discord/callback", async (req, res) => {
         code, 
         redirect_uri: process.env.DISCORD_REDIRECT_URI 
       }),
-      headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      headers: { 
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
+        "User-Agent": "DiscordBot (https://asb-team-official.onrender.com, 1.0.0)"
+      }
     });
-    const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return res.send("Auth Failed. (トークン取得失敗)");
 
-    // サーバー(Guild)参加チェック
-    const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, { 
-      headers: { Authorization: `Bearer ${tokenData.access_token}` } 
+    // エラーの場合は理由をログに出す
+    if (!tokenRes.ok) {
+      const errText = await tokenRes.text();
+      console.error("Token Error:", errText);
+      return res.send("Discordの認証システムとの通信に失敗しました。設定を確認してください。");
+    }
+
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return res.send("Auth Failed.");
+
+    const memberRes = await fetch(`https://discord.com/api/v10/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, { 
+      headers: { 
+        Authorization: `Bearer ${tokenData.access_token}`,
+        "Accept": "application/json",
+        "User-Agent": "DiscordBot (https://asb-team-official.onrender.com, 1.0.0)"
+      } 
     });
     
     if (memberRes.status === 404) {
       if (req.session.auth_type === 'apply') return res.redirect("/?error=not_in_guild");
-      return res.status(403).send("Error: 指定サーバーに参加していません。");
+      return res.status(403).send("Error: 指定されたDiscordサーバーに参加していません。");
     }
+    
+    if (!memberRes.ok) {
+      console.error("Member Error:", await memberRes.text());
+      return res.send("ユーザー情報の取得に失敗しました。");
+    }
+
     const memberData = await memberRes.json();
 
-    // 処理の分岐
     if (req.session.auth_type === 'admin') {
       if (memberData.roles && memberData.roles.includes(process.env.ALLOWED_ROLE_ID)) {
         req.session.admin = true;
         req.session.username = memberData.user ? memberData.user.username : "Admin";
         res.redirect("/admin.html");
       } else {
-        res.status(403).send("Admin role required.");
+        res.status(403).send("Error: 管理者ロールを持っていません。");
       }
     } else if (req.session.auth_type === 'apply') {
       req.session.applicant = { id: memberData.user.id, username: memberData.user.username };
@@ -114,7 +133,7 @@ app.post("/api/recruit/apply", async (req, res) => {
       discord_username: req.session.applicant.username,
       message: req.body.message
     }]);
-    req.session.applicant = null; // 送信後はセッションを消す
+    req.session.applicant = null;
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
@@ -159,8 +178,8 @@ app.post("/api/settings", auth, upload.single("bg_image"), async (req, res) => {
       const fileName = `bg_${Date.now()}${ext}`;
       const { error } = await supabase.storage.from('uploads').upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
       if (!error) {
-        const { data: publicUrlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
-        updates.push({ key: 'bg_image', value: publicUrlData.publicUrl });
+        const { data } = supabase.storage.from('uploads').getPublicUrl(fileName);
+        updates.push({ key: 'bg_image', value: data.publicUrl });
       }
     }
 
