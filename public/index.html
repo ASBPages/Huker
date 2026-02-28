@@ -3,21 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- ★ SEO & SNS拡散対策 メタタグ -->
 <title>ASB Official</title>
 <meta name="description" content="ASB Official - High-performance automation tools and software distribution.">
-<meta name="keywords" content="ASB, Auto click, オートクリッカー, 自動化ツール, ソフトウェア配布, APK, ZIP">
-<meta property="og:title" content="ASB Official Portal">
-<meta property="og:description" content="Production greatly advances freedom. 最新ソフトウェアのダウンロードはこちら。">
-<meta property="og:image" content="https://huker-production.onrender.com/logo.png">
-<meta property="og:url" content="https://huker-production.onrender.com/">
-<meta name="twitter:card" content="summary_large_image">
-
-<!-- ★ JuicyAds サイト認証用メタタグ -->
 <meta name="juicyads-site-verification" content="150f17e20f3c062a465e34ceefc8e33d">
 <link rel="icon" href="/logo.png" type="image/png">
-
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root { --primary: #8be9ff; --primary-glow: rgba(139, 233, 255, 0.4); --bg: #05070c; --card-bg: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); --text-main: #ffffff; --text-sub: #a0aec0; }
@@ -29,7 +18,7 @@
 
   ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: rgba(139, 233, 255, 0.2); border-radius: 10px; }
   
-  header { position: fixed; top: 0; width: 100%; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(5, 7, 12, 0.7); backdrop-filter: blur(12px); z-index: 1000; border-bottom: 1px solid var(--border); }
+  header { position: fixed; top: 0; width: 100%; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; background: rgba(5, 7, 12, 0.6); backdrop-filter: blur(12px); z-index: 1000; border-bottom: 1px solid var(--border); }
   .header-logo { height: 45px; width: auto; object-fit: contain; cursor: pointer; transition: transform 0.3s; }
   .header-logo:hover { transform: scale(1.05); }
   
@@ -41,8 +30,7 @@
   .lang-btn:hover { background: var(--primary); color: #000; }
 
   .header-sns { display: flex; gap: 15px; border-left: 1px solid var(--border); padding-left: 20px; margin-left: 5px; }
-  .header-sns a { color: var(--text-sub); transition: 0.3s; display: flex; align-items: center; }
-  .header-sns a:hover { color: var(--primary); transform: scale(1.1); }
+  .header-sns a { color: var(--text-sub); transition: 0.3s; display: flex; align-items: center; } .header-sns a:hover { color: var(--primary); transform: scale(1.1); }
 
   .tab-content { display: none; padding-top: 70px; min-height: 100vh; animation: fadeIn 0.4s ease; padding-bottom: 40px; } .tab-content.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -60,7 +48,7 @@
 
   .hero-inner { position: relative; z-index: 4; }
   .hero h1 { font-family: 'Playfair Display', serif; font-size: 100px; margin: 0; line-height: 1; background: linear-gradient(135deg, #fff 0%, #a0d8ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
-  .hero p { font-size: 20px; letter-spacing: 4px; margin-top: 20px; color: #cbd5e0; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+  .hero p { font-size: 20px; letter-spacing: 4px; margin-top: 20px; color: #cbd5e0; }
   .btn-explore { margin-top: 40px; padding: 12px 30px; border: 1px solid var(--primary); background: rgba(139, 233, 255, 0.1); color: var(--primary); font-size: 14px; cursor: pointer; transition: 0.3s; border-radius: 30px; text-decoration: none; display: inline-block; backdrop-filter: blur(5px);}
   .btn-explore:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary-glow); }
 
@@ -91,8 +79,6 @@
   .desc { margin: 15px 0; font-size: 13px; color: var(--text-sub); line-height: 1.6; flex-grow: 1; white-space: pre-wrap; }
   .card-bottom { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top:10px; }
   .dl-count { font-size: 12px; color: #666; }
-  
-  .btn-wrapper { display: flex; gap: 10px; }
   .dl-btn { padding: 8px 16px; background: linear-gradient(135deg, #8be9ff, #3b82f6); color: #000; font-weight: bold; font-size:12px; border: none; border-radius: 20px; cursor: pointer; text-decoration:none; display:inline-block; }
   .dl-btn:hover { box-shadow: 0 0 15px var(--primary-glow); transform: scale(1.05); }
   .dl-btn.apk { background: linear-gradient(135deg, #a8ff78, #78ffd6); }
@@ -109,7 +95,7 @@
   .post-btn { background: var(--primary); color: #000; padding: 10px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 0 10px var(--primary-glow);}
   
   .post-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px); }
-  .post-modal-content { background: #131316; padding: 30px; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 500px; }
+  .post-modal-content { background: #131316; padding: 30px; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 500px; text-align:left;}
   .post-modal input, .post-modal textarea, .post-modal select { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; }
   .post-modal input:focus { border-color: var(--primary); outline: none; }
   
@@ -133,25 +119,21 @@
 
 <header>
   <img src="/logo.png" alt="ASB" class="header-logo" onclick="window.scrollTo(0,0)">
-  
   <nav>
     <ul>
       <li onclick="switchTab('home', this)" class="active">Home</li>
       <li onclick="switchTab('software', this)">Softs</li>
       <li onclick="switchTab('community', this)">Community</li>
       <li onclick="switchTab('promote', this)">Promote</li>
-      <!-- ★ 動的表示されるリクルートタブ -->
       <li id="nav-recruit-li" onclick="switchTab('recruit', this)" style="display:none; color:var(--warning); font-weight:bold;">Join Us</li>
       <li onclick="switchTab('legal', this)">Legal</li>
     </ul>
-    
     <div class="header-sns">
       <a href="#" target="_blank" id="head-youtube" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.052-.074 1.972l-.008.106-.022.26-.01.104c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z"/></svg></a>
       <a href="#" target="_blank" id="head-x" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/></svg></a>
       <a href="#" target="_blank" id="head-discord" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.545 2.907a13.227 13.227 0 0 0-3.257-1.011.05.05 0 0 0-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 0 0-3.658 0 8.258 8.258 0 0 0-.412-.833.051.051 0 0 0-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 0 0-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 0 0 3.995 2.02.05.05 0 0 0 .056-.019c.308-.42.582-.863.818-1.329a.05.05 0 0 0-.01-.059.051.051 0 0 0-.018-.011 8.875 8.875 0 0 1-1.248-.595.05.05 0 0 1-.02-.066.051.051 0 0 1 .015-.019c.084-.063.168-.129.248-.195a.05.05 0 0 1 .051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 0 1 .053.007c.08.066.164.132.248.195a.051.051 0 0 1-.004.085 8.254 8.254 0 0 1-1.249.594.05.05 0 0 0-.03.03.052.052 0 0 0 .003.041c.24.465.515.909.817 1.329a.05.05 0 0 0 .056.019 13.235 13.235 0 0 0 4.001-2.02.049.049 0 0 0 .021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 0 0-.02-.019zM5.89 8.631c-.598 0-1.082-.533-1.082-1.183 0-.651.484-1.183 1.082-1.183.608 0 1.092.532 1.082 1.183 0 .65-.484 1.183-1.082 1.183zm4.22 0c-.598 0-1.082-.533-1.082-1.183 0-.651.484-1.183 1.082-1.183.608 0 1.092.532 1.082 1.183 0 .65-.484 1.183-1.082 1.183z"/></svg></a>
       <a href="#" target="_blank" id="head-roblox" style="display:none;"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M5.3 3.3h13.4v13.4H5.3z" transform="rotate(14 12 12)"/></svg></a>
     </div>
-
     <button class="lang-btn" onclick="toggleLanguage()">🌐 JP/EN</button>
   </nav>
 </header>
@@ -160,8 +142,7 @@
   <div class="hero">
     <div class="hero-bg" id="hero-bg"></div>
     <video class="hero-video" id="hero-video" autoplay loop muted playsinline></video>
-    <div class="hero-overlay"></div>
-    <div class="particles"></div>
+    <div class="hero-overlay"></div><div class="particles"></div>
     <div class="hero-inner">
       <h1 id="hero-title">ASB</h1>
       <p id="hero-subtitle">Production greatly advances freedom.</p>
@@ -170,13 +151,11 @@
       </button>
     </div>
   </div>
-  
   <div class="info-section">
     <div class="panel">
       <h2><span class="lang-ja">システムログ</span><span class="lang-en">System Logs</span></h2>
       <div id="news-box"><div style="color:#666; font-size:12px;">Loading...</div></div>
     </div>
-    
     <div class="panel">
       <h2><span class="lang-ja">コミュニティ</span><span class="lang-en">Community & Socials</span></h2>
       <p style="color:#aaa;" class="lang-ja">最新情報やバグ報告はDiscordまたは各SNSにて。</p>
@@ -191,48 +170,20 @@
   </div>
 </div>
 
-<div id="software" class="tab-content">
-  <div class="container">
-    <h1 class="page-title"><span class="lang-ja">公式ソフトウェア</span><span class="lang-en">Official Software</span></h1>
-    <div id="filter-container" class="filter-bar"></div>
-    <div id="software-list" class="grid"><div style="color:#666; text-align:center;">Loading...</div></div>
-  </div>
-</div>
+<div id="software" class="tab-content"><div class="container"><h1 class="page-title"><span class="lang-ja">公式ソフトウェア</span><span class="lang-en">Official Software</span></h1><div id="filter-container" class="filter-bar"></div><div id="software-list" class="grid"></div></div></div>
+<div id="community" class="tab-content"><div class="container"><div class="post-btn-container"><button class="post-btn" onclick="openPostModal('soft')"><span class="lang-ja">＋ 投稿する</span><span class="lang-en">＋ Post</span></button></div><h1 class="page-title"><span class="lang-ja">みんなの投稿</span><span class="lang-en">Community Uploads</span></h1><div id="user-software-list" class="grid"></div></div></div>
+<div id="promote" class="tab-content"><div class="container"><div class="post-btn-container"><button class="post-btn" onclick="openPostModal('sns')"><span class="lang-ja">＋ 宣伝する</span><span class="lang-en">＋ Promote</span></button></div><h1 class="page-title"><span class="lang-ja">SNS宣伝掲示板</span><span class="lang-en">User Promotions</span></h1><div id="sns-list" style="max-width: 800px; margin: 0 auto;"></div></div></div>
 
-<div id="community" class="tab-content">
-  <div class="container">
-    <div class="post-btn-container">
-      <button class="post-btn" onclick="openPostModal('soft')"><span class="lang-ja">＋ 投稿する</span><span class="lang-en">＋ Post Software</span></button>
-    </div>
-    <h1 class="page-title"><span class="lang-ja">みんなの投稿</span><span class="lang-en">Community Uploads</span></h1>
-    <div id="user-software-list" class="grid"><div style="color:#666; text-align:center;">Loading...</div></div>
-  </div>
-</div>
-
-<div id="promote" class="tab-content">
-  <div class="container">
-    <div class="post-btn-container">
-      <button class="post-btn" onclick="openPostModal('sns')"><span class="lang-ja">＋ 宣伝する</span><span class="lang-en">＋ Promote SNS</span></button>
-    </div>
-    <h1 class="page-title"><span class="lang-ja">SNS宣伝掲示板</span><span class="lang-en">User Promotions</span></h1>
-    <div id="sns-list" style="max-width: 800px; margin: 0 auto;"><div style="color:#666; text-align:center;">Loading...</div></div>
-  </div>
-</div>
-
-<!-- ★ RECRUIT TAB (共同創設者募集) -->
 <div id="recruit" class="tab-content">
   <div class="container" style="max-width: 800px; text-align:center;">
     <h1 class="page-title" id="r_title" style="color:var(--primary);">Co-Founder Wanted</h1>
     <div style="background:var(--card-bg); border:1px solid var(--primary); padding:40px; border-radius:16px; margin-bottom:30px;">
       <p id="r_desc" style="color:#ddd; line-height:1.8; font-size:16px; margin-bottom:30px; white-space:pre-wrap;"></p>
-      
       <div style="background:rgba(88,101,242,0.1); border:1px dashed #5865F2; padding:20px; border-radius:8px;">
         <h3 style="color:#5865F2; margin-top:0;">Discord Authentication Required</h3>
-        <p style="font-size:12px; color:#aaa; margin-bottom:20px;" class="lang-ja">スパム防止のため、応募には公式Discordサーバーへの参加が必須です。<br>下のボタンからDiscordアカウントを連携して応募画面に進んでください。</p>
-        <p style="font-size:12px; color:#aaa; margin-bottom:20px;" class="lang-en">To prevent spam, joining our official Discord server is required to apply.<br>Please link your Discord account below to proceed.</p>
-        <button class="btn-explore" style="background:#5865F2; color:#fff; border:none;" onclick="location.href='/auth/discord/apply'">
-          Login with Discord & Apply
-        </button>
+        <p style="font-size:12px; color:#aaa; margin-bottom:20px;" class="lang-ja">応募には公式Discordサーバーへの参加が必須です。下のボタンからDiscord連携してください。</p>
+        <p style="font-size:12px; color:#aaa; margin-bottom:20px;" class="lang-en">Joining our Discord server is required to apply. Please link your account below.</p>
+        <button class="btn-explore" style="background:#5865F2; color:#fff; border:none;" onclick="location.href='/auth/discord/apply'">Login with Discord & Apply</button>
       </div>
     </div>
   </div>
@@ -240,26 +191,14 @@
 
 <div id="legal" class="tab-content">
   <div class="container">
-    <h1 class="page-title"><span class="lang-ja">利用規約</span><span class="lang-en">Legal Documents</span></h1>
+    <h1 class="page-title"><span class="lang-ja">利用規約</span><span class="lang-en">Legal</span></h1>
     <div class="doc-section lang-ja-block">
-      <h3>利用規約 (Terms of Service)</h3>
-      <p>ASBが提供するすべてのソフトウェア（以下「本ソフト」）をダウンロード、または利用した時点で、以下の規約にすべて同意したものとみなします。</p>
-      <h4>1. 免責事項</h4>
-      <p>本ソフトを使用したことによって生じた、いかなる損害（ゲームアカウントの停止・BAN、データの消失、PCの不具合等）について、開発者は<strong>一切の責任を負いません。</strong>すべてユーザー自身の自己責任において利用してください。</p>
-      <h4>2. 禁止事項</h4>
-      <ul><li>リバースエンジニアリング、解析、改変行為。</li><li>無断での再配布、販売、商用利用。</li><li>他者への嫌がらせ、サーバーへの攻撃等。</li></ul>
-      <h3 style="margin-top:40px;">プライバシーポリシー</h3>
-      <p>当サイトではアクセス解析のためにIPアドレス等のログを取得しています。これらはセキュリティ維持のためにのみ使用されます。</p>
+      <h3>利用規約</h3><p>本ソフトを使用したことによって生じた損害（BAN等）について、開発者は一切の責任を負いません。</p>
+      <h3>プライバシーポリシー</h3><p>アクセス解析のためにIP等のログを取得しています。</p>
     </div>
     <div class="doc-section lang-en-block">
-      <h3>Terms of Service</h3>
-      <p>By downloading or using ASB software, you agree to these terms.</p>
-      <h4>1. Disclaimer</h4>
-      <p>The developers assume <strong>no responsibility</strong> for any damages (account bans, data loss, etc.) caused by the software. Use at your own risk.</p>
-      <h4>2. Prohibitions</h4>
-      <ul><li>Reverse engineering, modification.</li><li>Unauthorized redistribution or sale.</li><li>Malicious use against others or servers.</li></ul>
-      <h3 style="margin-top:40px;">Privacy Policy</h3>
-      <p>We collect logs (IP addresses) for security and analytics purposes only.</p>
+      <h3>Terms of Service</h3><p>The developers assume no responsibility for any damages (account bans, etc.) caused by the software.</p>
+      <h3>Privacy Policy</h3><p>We collect logs for security and analytics purposes only.</p>
     </div>
   </div>
 </div>
@@ -267,76 +206,44 @@
 <div id="security" class="tab-content">
   <div class="container">
     <h1 class="page-title"><span class="lang-ja">セキュリティ</span><span class="lang-en">Security</span></h1>
-    <div class="doc-section lang-ja-block">
-      <h3>安全性について</h3>
-      <p>全てのソフトはウイルススキャン済みですが、自動化ツール特有の挙動により、セキュリティソフトに誤検知される場合があります。その際は例外設定に追加してください。</p>
-    </div>
-    <div class="doc-section lang-en-block">
-      <h3>Safety</h3>
-      <p>All software is scanned. However, automation tools may trigger false positives in antivirus software. Please add them to exceptions if needed.</p>
-    </div>
-  </div>
-</div>
-
-<div id="roadmap" class="tab-content">
-  <div class="container">
-    <h1 class="page-title">Roadmap</h1>
-    <div class="doc-section" style="border-left: 4px solid var(--primary);">
-      <h3>2026 Q1</h3>
-      <p class="lang-ja">・公式サイトローンチ<br>・Auto click ASB ベータテスト</p>
-      <p class="lang-en">・Site Launch<br>・Auto click ASB Beta</p>
-    </div>
+    <div class="doc-section lang-ja-block"><h3>安全性について</h3><p>全てのソフトはスキャン済みですが、自動化ツールの性質上、誤検知される場合があります。</p></div>
+    <div class="doc-section lang-en-block"><h3>Safety</h3><p>All software is scanned. Automation tools may trigger false positives in antivirus software.</p></div>
   </div>
 </div>
 
 <div id="global-ad-container"></div>
 <footer><p>&copy; <span id="year">2026</span> ASB Project.</p></footer>
 
-<!-- MODALS -->
 <div id="dlModal" class="dl-modal-overlay">
   <div class="dl-modal-content">
-    <h2 style="margin-top:0; color:var(--primary); font-family:'Playfair Display', serif;"><span class="lang-ja">ダウンロード準備中</span><span class="lang-en">Preparing Download</span></h2>
+    <h2 style="margin-top:0; color:var(--primary); font-family:'Playfair Display', serif;"><span class="lang-ja">準備中</span><span class="lang-en">Preparing...</span></h2>
     <div id="dl-ad-container" class="dl-ad-box"><span style="color:#555; font-size:12px;">Advertisement</span></div>
     <div id="dl-countdown" style="font-size:36px; font-weight:bold; font-family:'JetBrains Mono', monospace; margin:20px 0; color:#fff;">5</div>
     <button id="dl-execute-btn" class="dl-btn" style="width:100%; padding:14px; font-size:16px; opacity:0.5; cursor:not-allowed;" disabled>Please Wait...</button>
-    <button onclick="closeDlModal()" style="background:transparent; border:none; color:#666; margin-top:15px; cursor:pointer; font-size:12px; text-decoration:underline;"><span class="lang-ja">閉じる</span><span class="lang-en">Cancel</span></button>
+    <button onclick="closeDlModal()" style="background:transparent; border:none; color:#666; margin-top:15px; cursor:pointer;"><span class="lang-ja">閉じる</span><span class="lang-en">Cancel</span></button>
   </div>
 </div>
 
-<!-- ★ 応募フォーム用モーダル -->
 <div id="applyModal" class="post-modal">
   <div class="post-modal-content" style="text-align:left;">
     <h2 style="color:var(--primary); margin-top:0;">Application Form</h2>
-    <p style="font-size:12px; color:#aaa; margin-bottom:20px;">あなたのDiscordアカウント: <strong id="apply-discord-name" style="color:#fff;"></strong></p>
-    <textarea id="apply-message" placeholder="意気込みや自己PR、持っているスキルなどを自由に書いてください！" rows="6"></textarea>
-    <div style="display:flex; gap:10px;">
-      <button class="btn-explore" style="margin:0; width:50%; text-align:center;" onclick="closeApplyModal()">Cancel</button>
-      <button class="post-btn" style="width:50%;" onclick="submitApplication()">Submit</button>
-    </div>
+    <p style="font-size:12px; color:#aaa; margin-bottom:20px;">Discord: <strong id="apply-discord-name" style="color:#fff;"></strong></p>
+    <textarea id="apply-message" placeholder="意気込みや自己PRを書いてください！" rows="6"></textarea>
+    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%; text-align:center;" onclick="document.getElementById('applyModal').style.display='none'">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitApplication()">Submit</button></div>
   </div>
 </div>
 
 <div id="postModal" class="post-modal">
   <div class="post-modal-content" id="post-soft-form" style="display:none; text-align:left;">
     <h2 style="color:var(--primary); margin-top:0;">Post Software</h2>
-    <input id="u_author" placeholder="Your Name">
-    <input id="u_name" placeholder="Software Name">
-    <input id="u_version" placeholder="Version (e.g. v1.0)">
-    <input type="url" id="u_url" placeholder="Download URL (Google Drive etc.)">
-    <textarea id="u_desc" placeholder="Description"></textarea>
-    <div style="margin-bottom:15px;">
-      <label style="color:#888; font-size:12px;"><input type="radio" name="u_type" value="orig" checked> <span class="lang-ja">自作</span><span class="lang-en">Original</span></label><br>
-      <label style="color:#888; font-size:12px;"><input type="radio" name="u_type" value="third"> <span class="lang-ja">他作・紹介</span><span class="lang-en">Third-Party</span></label>
-    </div>
-    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%; text-align:center;" onclick="closePostModal()">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitUserSoft()">Submit</button></div>
+    <input id="u_author" placeholder="Your Name"><input id="u_name" placeholder="Software Name"><input id="u_version" placeholder="Version"><input type="url" id="u_url" placeholder="Download URL"><textarea id="u_desc" placeholder="Description"></textarea>
+    <div style="margin-bottom:15px;"><label style="color:#888; font-size:12px;"><input type="radio" name="u_type" value="orig" checked> Original</label><br><label style="color:#888; font-size:12px;"><input type="radio" name="u_type" value="third"> Third-Party</label></div>
+    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%;" onclick="document.getElementById('postModal').style.display='none'">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitUserSoft()">Submit</button></div>
   </div>
   <div class="post-modal-content" id="post-sns-form" style="display:none; text-align:left;">
     <h2 style="color:var(--primary); margin-top:0;">Promote SNS</h2>
-    <input id="s_name" placeholder="Name / Channel">
-    <select id="s_type"><option value="youtube">YouTube</option><option value="x">X (Twitter)</option><option value="discord">Discord</option><option value="other">Other</option></select>
-    <input type="url" id="s_url" placeholder="URL">
-    <textarea id="s_desc" placeholder="Description"></textarea>
-    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%; text-align:center;" onclick="closePostModal()">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitSns()">Submit</button></div>
+    <input id="s_name" placeholder="Name"><select id="s_type"><option value="youtube">YouTube</option><option value="x">X (Twitter)</option><option value="discord">Discord</option><option value="other">Other</option></select><input type="url" id="s_url" placeholder="URL"><textarea id="s_desc" placeholder="Description"></textarea>
+    <div style="display:flex; gap:10px;"><button class="btn-explore" style="margin:0; width:50%;" onclick="document.getElementById('postModal').style.display='none'">Cancel</button><button class="post-btn" style="width:50%;" onclick="submitSns()">Submit</button></div>
   </div>
 </div>
 
@@ -345,36 +252,18 @@ document.getElementById('year').innerText = new Date().getFullYear();
 window.siteAdCode = "";
 let availableTags = [], allSoftwareData =[];
 
-// Lang Switcher
 let currentLang = localStorage.getItem('asb_lang') || 'ja';
-function toggleLanguage() {
-  currentLang = currentLang === 'ja' ? 'en' : 'ja';
-  localStorage.setItem('asb_lang', currentLang);
-  updateLangDisplay();
-  if(document.getElementById('software').classList.contains('active')) renderSoftwareList(allSoftwareData);
-  if(document.getElementById('community').classList.contains('active')) loadUserSofts();
-}
+function toggleLanguage() { currentLang = currentLang === 'ja' ? 'en' : 'ja'; localStorage.setItem('asb_lang', currentLang); updateLangDisplay(); if(document.getElementById('software').classList.contains('active')) renderSoftwareList(allSoftwareData); if(document.getElementById('community').classList.contains('active')) loadUserSofts(); }
 function updateLangDisplay() { document.body.className = currentLang === 'ja' ? 'ja-mode' : 'en-mode'; }
 updateLangDisplay();
 
 async function loadSiteSettings() {
   try {
     const res = await fetch("/api/settings"); const settings = await res.json();
-    if(settings.hero_title) { document.getElementById("hero-title").innerText = settings.hero_title; document.title = settings.hero_title + " Official"; }
+    if(settings.hero_title) { document.getElementById("hero-title").innerText = settings.hero_title; document.getElementById("site-logo").innerText = settings.hero_title + "."; document.title = settings.hero_title + " Official"; }
     if(settings.hero_subtitle) document.getElementById("hero-subtitle").innerText = settings.hero_subtitle;
-    
-    // ★ 募集タブの表示制御
-    if(settings.recruit_enabled === 'true') {
-      document.getElementById("nav-recruit-li").style.display = "flex";
-      document.getElementById("r_title").innerText = settings.recruit_title || "Co-Founder Wanted";
-      document.getElementById("r_desc").innerText = settings.recruit_description || "";
-    }
-
-    if(settings.ad_code && settings.ad_code.trim() !== "") {
-      window.siteAdCode = settings.ad_code; const adC = document.getElementById("global-ad-container"); adC.style.display = "block"; adC.innerHTML = settings.ad_code;
-      Array.from(adC.querySelectorAll("script")).forEach(oldScript => { const newS = document.createElement("script"); Array.from(oldScript.attributes).forEach(attr => newS.setAttribute(attr.name, attr.value)); newS.text = oldScript.innerHTML; oldScript.parentNode.replaceChild(newS, oldScript); });
-    }
-    
+    if(settings.recruit_enabled === 'true') { document.getElementById("nav-recruit-li").style.display = "flex"; document.getElementById("r_title").innerText = settings.recruit_title || "Co-Founder Wanted"; document.getElementById("r_desc").innerText = settings.recruit_description || ""; }
+    if(settings.ad_code && settings.ad_code.trim() !== "") { window.siteAdCode = settings.ad_code; const adC = document.getElementById("global-ad-container"); adC.style.display = "block"; adC.innerHTML = settings.ad_code; Array.from(adC.querySelectorAll("script")).forEach(oldScript => { const newS = document.createElement("script"); Array.from(oldScript.attributes).forEach(attr => newS.setAttribute(attr.name, attr.value)); newS.text = oldScript.innerHTML; oldScript.parentNode.replaceChild(newS, oldScript); }); }
     if(settings.discord_link) { document.getElementById("panel-discord-link").href=settings.discord_link; document.getElementById("panel-discord-link").style.display="inline-block"; document.getElementById("head-discord").href=settings.discord_link; document.getElementById("head-discord").style.display="flex"; }
     if(settings.x_link) { document.getElementById("panel-x-link").href=settings.x_link; document.getElementById("panel-x-link").style.display="inline-block"; document.getElementById("head-x").href=settings.x_link; document.getElementById("head-x").style.display="flex"; }
     if(settings.youtube_link) { document.getElementById("panel-youtube-link").href=settings.youtube_link; document.getElementById("panel-youtube-link").style.display="inline-block"; document.getElementById("head-youtube").href=settings.youtube_link; document.getElementById("head-youtube").style.display="flex"; }
@@ -389,174 +278,99 @@ async function loadSiteSettings() {
 function switchTab(tabId, element) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById(tabId).classList.add('active');
   document.querySelectorAll('nav li').forEach(el => el.classList.remove('active')); if(element) element.classList.add('active');
-  window.scrollTo(0, 0);
-  if(tabId === 'software') loadOfficialSofts();
-  if(tabId === 'community') loadUserSofts();
-  if(tabId === 'promote') loadSnsPromos();
+  window.scrollTo(0, 0); if(tabId === 'software') loadOfficialSofts(); if(tabId === 'community') loadUserSofts(); if(tabId === 'promote') loadSnsPromos();
 }
 
 async function loadOfficialSofts() {
   const filterContainer = document.getElementById("filter-container");
   const [tagsRes, softRes] = await Promise.all([fetch("/api/tags"), fetch("/api/software")]);
-  availableTags = await tagsRes.json();
-  allSoftwareData = await softRes.json();
+  availableTags = await tagsRes.json(); allSoftwareData = await softRes.json();
   filterContainer.innerHTML = `<button class="filter-btn active" onclick="filterSoftware('all', this)">ALL</button>`;
   availableTags.forEach(t => { filterContainer.innerHTML += `<button class="filter-btn" onclick="filterSoftware(${t.id}, this)">${t.name}</button>`; });
   renderSoftwareList(allSoftwareData);
 }
 
-function filterSoftware(tagId, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
-  if (tagId === 'all') renderSoftwareList(allSoftwareData);
-  else { const filtered = allSoftwareData.filter(item => { try { return JSON.parse(item.tags || "[]").includes(tagId); } catch(e){ return false; } }); renderSoftwareList(filtered); }
-}
+function filterSoftware(tagId, btn) { document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); if (tagId === 'all') renderSoftwareList(allSoftwareData); else { const filtered = allSoftwareData.filter(item => { try { return JSON.parse(item.tags || "[]").includes(tagId); } catch(e){ return false; } }); renderSoftwareList(filtered); } }
 
 function renderSoftwareList(data) {
   const listEl = document.getElementById("software-list"); listEl.innerHTML = "";
   if(data.length === 0) return listEl.innerHTML = "<p style='color:#666; text-align:center; grid-column:1/-1;'>No software found.</p>";
   data.forEach(item => {
     let badges = "";
-    if(item.is_original) badges += `<span class="badge b-orig">ORIGINAL</span>`;
-    if(item.is_thirdparty) badges += `<span class="badge b-third">THIRD-PARTY</span>`;
+    if(item.is_original) badges += `<span class="badge b-orig">ORIGINAL</span>`; if(item.is_thirdparty) badges += `<span class="badge b-third">THIRD-PARTY</span>`;
     try { const tids = JSON.parse(item.tags || "[]"); tids.forEach(tid => { const t = availableTags.find(at => at.id === tid); if(t) badges += `<span class="badge" style="color:${t.color}; border:1px solid ${t.color}; background:${t.color}22;">${t.name}</span>`; }); } catch(e){}
-
     if(item.zip_path) badges += `<span class="badge b-zip">ZIP</span>`; if(item.apk_path) badges += `<span class="badge b-apk">APK</span>`;
-    
-    const dlZipText = currentLang === 'ja' ? 'DL (ZIP)' : 'Download (ZIP)';
-    const dlApkText = currentLang === 'ja' ? 'DL (APK)' : 'Download (APK)';
-    const totalDlText = currentLang === 'ja' ? '総DL数:' : 'Total DLs:';
-    const unavailText = currentLang === 'ja' ? 'メンテナンス中' : 'Unavailable';
-    
+    const dlZipText = currentLang === 'ja' ? 'DL (ZIP)' : 'Download (ZIP)'; const dlApkText = currentLang === 'ja' ? 'DL (APK)' : 'Download (APK)'; const totalDlText = currentLang === 'ja' ? '総DL数:' : 'Total DLs:'; const unavailText = currentLang === 'ja' ? 'メンテナンス中' : 'Unavailable';
     let btnHtml = `<div class="btn-wrapper">`;
-    if (item.is_maintenance) { btnHtml += `<button class="dl-btn" disabled>${unavailText}</button>`; } else {
-      if(item.zip_path) btnHtml += `<button class="dl-btn" onclick="downloadSw(${item.id}, 'zip')">${dlZipText}</button>`;
-      if(item.apk_path) btnHtml += `<button class="dl-btn apk" onclick="downloadSw(${item.id}, 'apk')">${dlApkText}</button>`;
-    }
+    if (item.is_maintenance) { btnHtml += `<button class="dl-btn" disabled>${unavailText}</button>`; } else { if(item.zip_path) btnHtml += `<button class="dl-btn" onclick="downloadSw(${item.id}, 'zip')">${dlZipText}</button>`; if(item.apk_path) btnHtml += `<button class="dl-btn apk" onclick="downloadSw(${item.id}, 'apk')">${dlApkText}</button>`; }
     btnHtml += `</div>`;
     listEl.innerHTML += `<div class="card"><h3>${item.name} <span class="version">${item.version}</span></h3><div>${badges}</div><div class="desc">${item.description}</div><div class="card-bottom"><span class="dl-count">${totalDlText} ${(item.zip_downloads||0)+(item.apk_downloads||0)}</span>${btnHtml}</div></div>`;
   });
 }
 
 async function loadUserSofts() {
-  const listEl = document.getElementById("user-software-list");
-  const res = await fetch("/api/user_software"); const data = await res.json(); listEl.innerHTML = "";
+  const listEl = document.getElementById("user-software-list"); const res = await fetch("/api/user_software"); const data = await res.json(); listEl.innerHTML = "";
   if(data.length === 0) return listEl.innerHTML = `<p style='color:#666; text-align:center; grid-column:1/-1;'>${currentLang==='ja'?'最初の投稿者になろう！':'Be the first to upload!'}</p>`;
   data.forEach(item => {
-    let badges = item.is_original ? `<span class="badge b-orig">ORIGINAL</span>` : `<span class="badge b-third">THIRD-PARTY</span>`;
-    const btnText = currentLang === 'ja' ? 'リンクを取得' : 'Get Link';
+    let badges = item.is_original ? `<span class="badge b-orig">ORIGINAL</span>` : `<span class="badge b-third">THIRD-PARTY</span>`; const btnText = currentLang === 'ja' ? 'リンクを取得' : 'Get Link';
     listEl.innerHTML += `<div class="card"><h3>${item.name}</h3><span class="author">By ${item.author_name}</span><div>${badges}</div><div class="desc">${item.description}</div><div class="card-bottom"><a href="${item.zip_url||item.apk_url}" target="_blank" class="dl-btn" onclick="fetch('/api/download_user/${item.id}', {method:'POST'})">${btnText}</a></div></div>`;
   });
 }
 
 async function loadSnsPromos() {
-  const listEl = document.getElementById("sns-list");
-  const res = await fetch("/api/sns"); const data = await res.json(); listEl.innerHTML = "";
+  const listEl = document.getElementById("sns-list"); const res = await fetch("/api/sns"); const data = await res.json(); listEl.innerHTML = "";
   if(data.length === 0) return listEl.innerHTML = "<p style='color:#666; text-align:center;'>No promotions yet.</p>";
-  data.forEach(item => {
-    listEl.innerHTML += `<div class="sns-card sns-type-${item.sns_type}"><h3>${item.user_name} <span style="font-size:12px; color:#888;">[${item.sns_type.toUpperCase()}]</span></h3><p style="font-size:14px; color:#ccc;">${item.description}</p><a href="${item.url}" target="_blank" style="color:var(--primary); font-size:13px;">${item.url}</a></div>`;
-  });
+  data.forEach(item => { listEl.innerHTML += `<div class="sns-card sns-type-${item.sns_type}"><h3>${item.user_name} <span style="font-size:12px; color:#888;">[${item.sns_type.toUpperCase()}]</span></h3><p style="font-size:14px; color:#ccc;">${item.description}</p><a href="${item.url}" target="_blank" style="color:var(--primary); font-size:13px;">${item.url}</a></div>`; });
 }
 
-// Download Modal
 let dlTimer;
 async function downloadSw(id, type) {
-  try {
-    const res = await fetch(`/api/download/${id}/${type}`, { method: "POST" });
-    if(res.status === 403) return alert("Maintenance.");
-    const data = await res.json();
-    if(data.link) openDlModal(data.link);
-    else alert("Link not found.");
-  } catch(e) { alert("Connection failed."); }
+  try { const res = await fetch(`/api/download/${id}/${type}`, { method: "POST" }); if(res.status === 403) return alert("Maintenance."); const data = await res.json(); if(data.link) openDlModal(data.link); else alert("Link not found."); } catch(e) { alert("Connection failed."); }
 }
 function openDlModal(link) {
   const m = document.getElementById("dlModal"); const c = document.getElementById("dl-countdown"); const b = document.getElementById("dl-execute-btn"); const adC = document.getElementById("dl-ad-container");
   if(window.siteAdCode) { adC.innerHTML = ""; const range = document.createRange(); range.selectNode(adC); adC.appendChild(range.createContextualFragment(window.siteAdCode)); } else adC.style.display="none";
-  m.style.display = "flex"; let count = 5; c.innerText = count; 
-  b.innerText = currentLang === 'ja' ? "準備中..." : "Please Wait...";
-  b.disabled = true; b.style.opacity = 0.5;
-  clearInterval(dlTimer);
-  dlTimer = setInterval(() => { 
-    count--; c.innerText = count; 
-    if(count <= 0) { 
-      clearInterval(dlTimer); c.innerText = "Ready!"; 
-      b.innerText = currentLang === 'ja' ? "ダウンロード開始" : "Download Now";
-      b.disabled = false; b.style.opacity = 1; 
-      b.onclick = () => { window.open(link, '_blank'); closeDlModal(); loadOfficialSofts(); }; 
-    } 
-  }, 1000);
+  m.style.display = "flex"; let count = 5; c.innerText = count; b.innerText = currentLang === 'ja' ? "準備中..." : "Please Wait..."; b.disabled = true; b.style.opacity = 0.5;
+  clearInterval(dlTimer); dlTimer = setInterval(() => { count--; c.innerText = count; if(count <= 0) { clearInterval(dlTimer); c.innerText = "Ready!"; b.innerText = currentLang === 'ja' ? "ダウンロード開始" : "Download Now"; b.disabled = false; b.style.opacity = 1; b.onclick = () => { window.open(link, '_blank'); closeDlModal(); loadOfficialSofts(); }; } }, 1000);
 }
 function closeDlModal() { clearInterval(dlTimer); document.getElementById("dlModal").style.display = "none"; document.getElementById("dl-ad-container").innerHTML = ""; }
 
-// Post Modals
 function openPostModal(type) { document.getElementById("postModal").style.display = "flex"; document.getElementById("post-soft-form").style.display = type==='soft'?"block":"none"; document.getElementById("post-sns-form").style.display = type==='sns'?"block":"none"; }
-function closePostModal() { document.getElementById("postModal").style.display = "none"; }
 async function submitUserSoft() {
-  const name = document.getElementById("u_name").value; const url = document.getElementById("u_url").value;
-  if(!name || !url) return alert("Name & URL required");
+  const name = document.getElementById("u_name").value; const url = document.getElementById("u_url").value; if(!name || !url) return alert("Name & URL required");
   const isOrig = document.querySelector('input[name="u_type"]:checked').value === "orig";
   await fetch("/api/user_software", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ name, version: document.getElementById("u_version").value, description: document.getElementById("u_desc").value, zip_url: url, is_original: isOrig, is_thirdparty: !isOrig, author_name: document.getElementById("u_author").value }) });
-  closePostModal(); loadUserSofts(); alert("Posted!");
+  document.getElementById("postModal").style.display = "none"; loadUserSofts(); alert("Posted!");
 }
 async function submitSns() {
-  const name = document.getElementById("s_name").value; const url = document.getElementById("s_url").value;
-  if(!name || !url) return alert("Name & URL required");
+  const name = document.getElementById("s_name").value; const url = document.getElementById("s_url").value; if(!name || !url) return alert("Name & URL required");
   await fetch("/api/sns", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ user_name: name, sns_type: document.getElementById("s_type").value, url, description: document.getElementById("s_desc").value }) });
-  closePostModal(); loadSnsPromos(); alert("Posted!");
+  document.getElementById("postModal").style.display = "none"; loadSnsPromos(); alert("Posted!");
 }
 
-// ★ 応募処理
 window.addEventListener('load', async () => { 
   loadSiteSettings(); loadRealNews(); 
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('error') === 'not_in_guild') {
-    alert("エラー: ASBの公式Discordサーバーに参加してから再度応募してください。");
-    window.history.replaceState({}, document.title, "/");
-  } else if (urlParams.get('apply') === 'ready') {
-    const res = await fetch("/api/me/applicant");
-    const data = await res.json();
-    if(data.loggedIn) {
-      document.getElementById("apply-discord-name").innerText = data.user.username;
-      document.getElementById("applyModal").style.display = "flex";
-      window.history.replaceState({}, document.title, "/");
-    }
+  if (urlParams.get('error') === 'not_in_guild') { alert("エラー: Discordサーバーに参加してから応募してください。"); window.history.replaceState({}, document.title, "/"); } 
+  else if (urlParams.get('apply') === 'ready') {
+    const res = await fetch("/api/me/applicant"); const data = await res.json();
+    if(data.loggedIn) { document.getElementById("apply-discord-name").innerText = data.user.username; document.getElementById("applyModal").style.display = "flex"; window.history.replaceState({}, document.title, "/"); }
   }
 });
-
 function closeApplyModal() { document.getElementById("applyModal").style.display = "none"; }
-
 async function submitApplication() {
-  const msg = document.getElementById("apply-message").value;
-  if(!msg) return alert("意気込みを入力してください！");
+  const msg = document.getElementById("apply-message").value; if(!msg) return alert("入力してください！");
   const res = await fetch("/api/recruit/apply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: msg }) });
-  if(res.ok) { alert("応募が完了しました！管理者が確認次第、Discordにてご連絡いたします。"); closeApplyModal(); } 
-  else { alert("エラーが発生しました。"); }
+  if(res.ok) { alert("応募が完了しました！"); closeApplyModal(); } else alert("エラーが発生しました。");
 }
 
-function formatDate(utcDateString) {
-  if (!utcDateString) return "Unknown Date";
-  const d = new Date(utcDateString.replace(' ', 'T') + 'Z');
-  if (isNaN(d)) return utcDateString.substring(0, 16).replace(/-/g, '.');
-  const yyyy = d.getFullYear(); const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0'); const hh = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
-}
+function formatDate(utcDateString) { const d = new Date(utcDateString.replace(' ', 'T') + 'Z'); if (isNaN(d)) return utcDateString.substring(0, 16); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 async function loadRealNews() {
-  const newsBox = document.getElementById("news-box");
   try {
-    const res = await fetch("/api/software"); const data = await res.json();
-    let dynamicNewsHtml = "";
-    data.forEach(item => {
-      const timeStr = formatDate(item.created_at);
-      let actionJa = `「${item.name} v${item.version}」が公開されました。`;
-      let actionEn = `"${item.name} v${item.version}" has been released.`;
-      if (item.is_update) { actionJa = `「${item.name}」が v${item.version} に更新されました。`; actionEn = `"${item.name}" updated to v${item.version}.`; }
-      else if (item.is_beta) { actionJa = `「${item.name} v${item.version}」ベータ版公開。`; actionEn = `"${item.name} v${item.version}" Beta is out.`; }
-      dynamicNewsHtml += `<div class="news-item"><span>${timeStr}</span> <span class="lang-ja" style="color:var(--text-sub); font-weight:normal;">${actionJa}</span><span class="lang-en" style="color:var(--text-sub); font-weight:normal;">${actionEn}</span></div>`;
-    });
-    const staticNewsHtml = `<div class="news-item"><span>2026.02.21 12:00</span> <span class="lang-ja" style="color:var(--text-sub); font-weight:normal;">公式サイトローンチ。</span><span class="lang-en" style="color:var(--text-sub); font-weight:normal;">Official Site Launched.</span></div>`;
-    newsBox.innerHTML = dynamicNewsHtml + staticNewsHtml;
-  } catch (e) { newsBox.innerHTML = "<div class='news-item'>Loading failed.</div>"; }
+    const res = await fetch("/api/software"); const data = await res.json(); let html = "";
+    data.forEach(item => { const timeStr = formatDate(item.created_at); let aJ = `「${item.name}」が公開。`; let aE = `"${item.name}" released.`; if (item.is_update) { aJ = `「${item.name}」更新。`; aE = `"${item.name}" updated.`; } else if (item.is_beta) { aJ = `「${item.name}」ベータ公開。`; aE = `"${item.name}" Beta out.`; } html += `<div class="news-item"><span>${timeStr}</span> <span class="lang-ja" style="color:#aaa;">${aJ}</span><span class="lang-en" style="color:#aaa;">${aE}</span></div>`; });
+    document.getElementById("news-box").innerHTML = html + `<div class="news-item"><span>2026.02.21</span> 公式サイトローンチ。</div>`;
+  } catch (e) {}
 }
 </script>
 </body>
