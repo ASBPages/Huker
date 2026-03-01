@@ -5,13 +5,10 @@ const multer = require("multer");
 const path = require("path");
 const { createClient } = require("@supabase/supabase-js");
 const { TwitterApi } = require('twitter-api-v2');
-
 const app = express();
-
 // Supabase初期化
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const upload = multer({ storage: multer.memoryStorage() });
-
 // X (Twitter) Client初期化
 let twitterClient = null;
 let rwClient = null;
@@ -24,7 +21,6 @@ if (process.env.X_API_KEY && process.env.X_API_SECRET && process.env.X_ACCESS_TO
   });
   rwClient = twitterClient.readWrite;
 }
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -33,26 +29,25 @@ app.use(session({
   saveUninitialized: false,
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
-
 app.use(express.static(path.join(__dirname, "public")));
-
+// Clean URLs
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
 /* --- 認証ミドルウェア --- */
 function auth(req, res, next){
   if(!req.session.admin) return res.status(401).json({error:"Unauthorized"});
   next();
 }
-
 /* ===== Discord Auth ===== */
 app.get("/auth/discord/admin", (req, res) => {
   req.session.auth_type = 'admin';
   res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`);
 });
-
 app.get("/auth/discord/apply", (req, res) => {
   req.session.auth_type = 'apply';
   res.redirect(`https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify%20guilds%20guilds.members.read`);
 });
-
 app.get("/auth/discord/callback", async (req, res) => {
   const code = req.query.code;
   if (!code) return res.send("Error: No code provided.");
@@ -70,7 +65,6 @@ app.get("/auth/discord/callback", async (req, res) => {
     });
     const tokenData = await tokenRes.json();
     if (!tokenData.access_token) return res.send("Auth Failed.");
-
     const memberRes = await fetch(`https://discord.com/api/v10/users/@me/guilds/${process.env.ALLOWED_GUILD_ID}/member`, { 
       headers: { Authorization: `Bearer ${tokenData.access_token}`, "User-Agent": "ASB-App" } 
     });
@@ -80,12 +74,11 @@ app.get("/auth/discord/callback", async (req, res) => {
       return res.status(403).send("Error: 指定サーバーに参加していません。");
     }
     const memberData = await memberRes.json();
-
     if (req.session.auth_type === 'admin') {
       if (memberData.roles && memberData.roles.includes(process.env.ALLOWED_ROLE_ID)) {
         req.session.admin = true;
         req.session.username = memberData.user ? memberData.user.username : "Admin";
-        res.redirect("/admin.html");
+        res.redirect("/admin");
       } else {
         res.status(403).send("Admin role required.");
       }
@@ -97,17 +90,14 @@ app.get("/auth/discord/callback", async (req, res) => {
     }
   } catch (err) { res.status(500).send("Server Error."); }
 });
-
 app.get("/api/me", (req, res) => {
   if (req.session.admin) res.json({ loggedIn: true, user: req.session.username });
   else res.json({ loggedIn: false });
 });
-
 app.get("/logout", (req, res) => {
   req.session.destroy();
   res.redirect("/");
 });
-
 /* ===== サイト設定 API ===== */
 app.get("/api/settings", async (req, res) => {
   try {
@@ -116,7 +106,6 @@ app.get("/api/settings", async (req, res) => {
     res.json(settings);
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-
 app.post("/api/settings", auth, upload.single("bg_image"), async (req, res) => {
   try {
     const { hero_title, hero_subtitle, discord_link, x_link, youtube_link, roblox_link, ad_code, recruit_enabled, recruit_title, recruit_description } = req.body;
@@ -146,7 +135,6 @@ app.post("/api/settings", auth, upload.single("bg_image"), async (req, res) => {
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-
 /* ===== タグ API ===== */
 app.get("/api/tags", async (req, res) => {
   const { data } = await supabase.from('tags').select('*').order('id', { ascending: true });
@@ -160,18 +148,15 @@ app.delete("/api/tags/:id", auth, async (req, res) => {
   await supabase.from('tags').delete().eq('id', req.params.id);
   res.json({success:true});
 });
-
 /* ===== 公式ソフトウェア API (X連携) ===== */
 app.get("/api/software", async (req, res) => {
   const { data } = await supabase.from('software').select('*').order('created_at', { ascending: false });
   res.json(data ||[]);
 });
-
 app.post("/api/software", auth, async (req, res) => {
   try {
     const b = req.body;
     let tweetId = null;
-
     if (rwClient && b.is_maintenance !== "true" && b.is_maintenance !== true) {
       try {
         const tweetText = `【ASB New Release】\n📦 ${b.name} v${b.version}\n\n${b.description.substring(0, 100)}...\n\nCheck it out on ASB Official!`;
@@ -179,7 +164,6 @@ app.post("/api/software", auth, async (req, res) => {
         tweetId = tweet.id;
       } catch (err) { console.error("X Post Error:", err); }
     }
-
     await supabase.from('software').insert([{
       name: b.name, version: b.version, description: b.description, 
       zip_path: b.zip_url||"", apk_path: b.apk_url||"", 
@@ -191,7 +175,6 @@ app.post("/api/software", auth, async (req, res) => {
     res.json({ success: true });
   } catch (e) { res.status(500).json({error: e.message}); }
 });
-
 app.put("/api/software/:id", auth, async (req, res) => {
   try {
     const b = req.body;
@@ -199,7 +182,6 @@ app.put("/api/software/:id", auth, async (req, res) => {
     
     const { data: oldData } = await supabase.from('software').select('x_tweet_id').eq('id', targetId).single();
     let newTweetId = oldData ? oldData.x_tweet_id : null;
-
     if (rwClient) {
       if (newTweetId) {
         try { await rwClient.v2.deleteTweet(newTweetId); } catch (err) {}
@@ -212,7 +194,6 @@ app.put("/api/software/:id", auth, async (req, res) => {
         } catch (err) { console.error("X Post Error:", err); }
       } else { newTweetId = null; }
     }
-
     await supabase.from('software').update({
       name: b.name, version: b.version, description: b.description, 
       zip_path: b.zip_url||"", apk_path: b.apk_url||"", 
@@ -225,7 +206,6 @@ app.put("/api/software/:id", auth, async (req, res) => {
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-
 app.delete("/api/software/:id", auth, async (req, res) => {
   try {
     const targetId = req.params.id;
@@ -234,19 +214,16 @@ app.delete("/api/software/:id", auth, async (req, res) => {
     if (rwClient && oldData && oldData.x_tweet_id) {
       try { await rwClient.v2.deleteTweet(oldData.x_tweet_id); } catch (err) {}
     }
-
     await supabase.from('software').delete().eq('id', targetId);
     res.json({ success: true });
   } catch(e) { res.status(500).json({error: e.message}); }
 });
-
 app.post("/api/download/:id/:type", async (req, res) => {
   try {
     const { id, type } = req.params;
     const { data: item } = await supabase.from('software').select('*').eq('id', id).single();
     if(!item) return res.status(404).json({error:"Not found"});
     if(item.is_maintenance === 1) return res.status(403).json({error:"Maintenance"});
-
     if (type === 'zip' && item.zip_path) {
       await supabase.from('software').update({ zip_downloads: item.zip_downloads + 1 }).eq('id', id);
       return res.json({ link: item.zip_path });
@@ -258,21 +235,40 @@ app.post("/api/download/:id/:type", async (req, res) => {
     }
   } catch(e) { res.status(500).json({error: "Server error"}); }
 });
-
+/* ===== Web Tabs API ===== */
+app.get("/api/webtabs", async (req, res) => {
+  const { data } = await supabase.from('web_tabs').select('*').order('created_at', { ascending: false });
+  res.json(data || []);
+});
+app.post("/api/webtabs", auth, async (req, res) => {
+  try {
+    await supabase.from('web_tabs').insert([{ name: req.body.name, url: req.body.url, description: req.body.description }]);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({error: e.message}); }
+});
+app.put("/api/webtabs/:id", auth, async (req, res) => {
+  try {
+    await supabase.from('web_tabs').update({ name: req.body.name, url: req.body.url, description: req.body.description }).eq('id', req.params.id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({error: e.message}); }
+});
+app.delete("/api/webtabs/:id", auth, async (req, res) => {
+  try {
+    await supabase.from('web_tabs').delete().eq('id', req.params.id);
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({error: e.message}); }
+});
 /* ===== その他 (User Soft / SNS / Recruit) ===== */
 app.get("/api/user_software", async (req, res) => { const { data } = await supabase.from('user_software').select('*').order('created_at', { ascending: false }); res.json(data ||[]); });
 app.post("/api/user_software", async (req, res) => { try { const b = req.body; await supabase.from('user_software').insert([{ name:b.name, version:b.version, description:b.description, zip_url:b.zip_url||"", apk_url:b.apk_url||"", is_original:b.is_original?1:0, is_thirdparty:b.is_thirdparty?1:0, author_name:b.author_name||"Anonymous" }]); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
 app.delete("/api/user_software/:id", auth, async (req, res) => { await supabase.from('user_software').delete().eq('id', req.params.id); res.json({ success: true }); });
 app.post("/api/download_user/:id", async (req, res) => { try { const { data: item } = await supabase.from('user_software').select('downloads').eq('id', req.params.id).single(); if(item) await supabase.from('user_software').update({ downloads: item.downloads + 1 }).eq('id', req.params.id); res.json({ success: true }); } catch(e) { res.status(500).json({error: "Server error"}); } });
-
 app.get("/api/sns", async (req, res) => { const { data } = await supabase.from('sns_promotions').select('*').order('created_at', { ascending: false }); res.json(data ||[]); });
 app.post("/api/sns", async (req, res) => { try { await supabase.from('sns_promotions').insert([{ user_name:req.body.user_name, sns_type:req.body.sns_type, url:req.body.url, description:req.body.description }]); res.json({ success: true }); } catch(e) { res.status(500).json({error: e.message}); } });
 app.delete("/api/sns/:id", auth, async (req, res) => { await supabase.from('sns_promotions').delete().eq('id', req.params.id); res.json({ success: true }); });
-
 app.get("/api/me/applicant", (req, res) => { res.json(req.session.applicant ? { loggedIn: true, user: req.session.applicant } : { loggedIn: false }); });
 app.post("/api/recruit/apply", async (req, res) => { if (!req.session.applicant) return res.status(401).send(); await supabase.from('recruit_applications').insert([{ discord_id: req.session.applicant.id, discord_username: req.session.applicant.username, message: req.body.message }]); req.session.applicant = null; res.json({ success: true }); });
 app.get("/api/recruit/applications", auth, async (req, res) => { const { data } = await supabase.from('recruit_applications').select('*').order('created_at', { ascending: false }); res.json(data ||[]); });
 app.delete("/api/recruit/applications/:id", auth, async (req, res) => { await supabase.from('recruit_applications').delete().eq('id', req.params.id); res.json({ success: true }); });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`>> Server running on port ${PORT}`));
