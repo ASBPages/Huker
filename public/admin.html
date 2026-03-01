@@ -13,20 +13,16 @@
   .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:30px; margin-bottom:20px; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: fadeIn 0.3s; }
   .panel h2 { margin-top:0; font-size:18px; border-bottom:1px solid var(--border); padding-bottom:10px; margin-bottom:20px; color:#fff; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
   input, textarea, select { width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:12px; border-radius:6px; margin-bottom:15px; box-sizing:border-box; font-family:'Inter',sans-serif; }
   input:focus, textarea:focus { outline:none; border-color:var(--primary); }
   input[type="file"] { padding:10px; background:#1a1a1f; cursor:pointer; }
-
   button.action-btn { width:100%; padding:14px; background:var(--primary); color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; transition:0.2s; }
   button.action-btn:hover { opacity:0.9; transform:translateY(-1px); }
   button.discord-btn { background:var(--discord); color:#fff; font-size:16px; display:flex; justify-content:center; align-items:center; gap:10px; }
-
   .admin-tabs { display:flex; gap:10px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:15px; overflow-x:auto;}
   .admin-tab { padding:10px 20px; background:transparent; border:1px solid var(--border); border-radius:6px; cursor:pointer; font-weight:bold; color:var(--text); transition:0.2s; white-space:nowrap; }
   .admin-tab:hover { background:var(--border); }
   .admin-tab.active { background:var(--primary); color:#000; border-color:var(--primary); }
-
   .options-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:20px; }
   .toggle-wrap { background:#1a1a1f; padding:8px 10px; border-radius:6px; display:flex; align-items:center; gap:8px; cursor:pointer; border:1px solid transparent; transition:0.2s; font-size:13px; }
   .toggle-wrap:has(input:checked) { border-color:var(--primary); background:rgba(139,233,255,0.1); }
@@ -48,7 +44,6 @@
   .tag-select-container { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
   .tag-option { padding:5px 10px; border-radius:15px; border:1px solid var(--border); cursor:pointer; font-size:12px; transition:0.2s; user-select:none; }
   .tag-option.selected { border-color:var(--primary); box-shadow:0 0 5px var(--primary); }
-
   .preview-media { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); background:#000; margin-top:10px; display:none; }
   .stats-container { display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap; }
   .stat-box { flex:1; min-width:120px; background:#1a1a1f; border:1px solid var(--border); padding:15px; border-radius:8px; text-align:center; }
@@ -57,31 +52,27 @@
 </style>
 </head>
 <body>
-
 <div class="container">
   <h1>ASB SYSTEM ADMIN</h1>
-
   <div id="loginPanel" class="panel" style="text-align:center; display:none;">
     <h2>RESTRICTED ACCESS</h2>
     <button class="action-btn discord-btn" onclick="location.href='/auth/discord/admin'">Login with Discord</button>
   </div>
-
   <div id="dashboard" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <p>Logged in as: <strong id="adminName" style="color:var(--primary);"></strong></p>
       <button onclick="location.href='/logout'" style="padding:8px 16px; background:#333; color:#fff; border:none; border-radius:4px; cursor:pointer;">Logout</button>
     </div>
-
     <!-- TABS -->
     <div class="admin-tabs">
       <div class="admin-tab active" onclick="switchAdminTab('softwareTab', this)">OFFICIAL</div>
+      <div class="admin-tab" onclick="switchAdminTab('webtabsTab', this); loadWebTabs();">WEB TABS</div>
       <div class="admin-tab" onclick="switchAdminTab('tagManagerTab', this)">TAGS</div>
       <div class="admin-tab" onclick="switchAdminTab('recruitTab', this); loadRecruits();">RECRUIT</div>
       <div class="admin-tab" onclick="switchAdminTab('userSoftsTab', this); loadUserItems();">COMMUNITY</div>
       <div class="admin-tab" onclick="switchAdminTab('snsPromoTab', this); loadSnsItems();">PROMOS</div>
       <div class="admin-tab" onclick="switchAdminTab('settingsTab', this)">SETTINGS</div>
     </div>
-
     <!-- OFFICIAL SOFTWARE TAB -->
     <div id="softwareTab">
       <div class="stats-container">
@@ -114,7 +105,20 @@
         <div id="list">loading...</div>
       </div>
     </div>
-
+    <!-- WEB TABS TAB -->
+    <div id="webtabsTab" style="display:none;">
+      <div class="panel">
+        <h2>ADD WEB TAB</h2>
+        <input id="webtabName" placeholder="Web Tab Name">
+        <input type="url" id="webtabUrl" placeholder="URL (e.g. https://example.com)">
+        <textarea id="webtabDesc" placeholder="Description"></textarea>
+        <button class="action-btn" onclick="addWebTab()">ADD WEB TAB</button>
+      </div>
+      <div class="panel">
+        <h2>WEB TABS LIST</h2>
+        <div id="webtabs-list">loading...</div>
+      </div>
+    </div>
     <!-- TAG MANAGER TAB -->
     <div id="tagManagerTab" style="display:none;">
       <div class="panel">
@@ -127,7 +131,6 @@
       </div>
       <div class="panel"><h2>EXISTING TAGS</h2><div id="tagList"></div></div>
     </div>
-
     <!-- RECRUIT TAB -->
     <div id="recruitTab" style="display:none;">
       <div class="panel">
@@ -139,17 +142,14 @@
       </div>
       <div class="panel"><h2>APPLICATIONS</h2><div id="recruit-list">loading...</div></div>
     </div>
-
     <!-- USER SOFTS TAB -->
     <div id="userSoftsTab" style="display:none;">
       <div class="panel"><h2>COMMUNITY UPLOADS</h2><div id="user-list">loading...</div></div>
     </div>
-
     <!-- SNS PROMOS TAB -->
     <div id="snsPromoTab" style="display:none;">
       <div class="panel"><h2>USER PROMOTIONS</h2><div id="sns-list">loading...</div></div>
     </div>
-
     <!-- SITE SETTINGS TAB -->
     <div id="settingsTab" style="display:none;">
       <div class="panel">
@@ -174,7 +174,6 @@
     </div>
   </div>
 </div>
-
 <!-- EDIT MODAL -->
 <div id="editModal" class="modal-overlay">
   <div class="modal-content">
@@ -199,18 +198,25 @@
     <div style="display:flex; gap:10px;"><button class="action-btn" style="background:#444;" onclick="closeModal()">CANCEL</button><button class="action-btn" onclick="saveEdit()">SAVE</button></div>
   </div>
 </div>
-
+<!-- WEBTAB EDIT MODAL -->
+<div id="editWebTabModal" class="modal-overlay">
+  <div class="modal-content">
+    <h2>EDIT WEB TAB</h2><input type="hidden" id="editWebTabId">
+    <input id="editWebTabName" placeholder="Name">
+    <input type="url" id="editWebTabUrl" placeholder="URL">
+    <textarea id="editWebTabDesc" placeholder="Description"></textarea>
+    <div style="display:flex; gap:10px;"><button class="action-btn" style="background:#444;" onclick="closeWebTabModal()">CANCEL</button><button class="action-btn" onclick="saveWebTabEdit()">SAVE</button></div>
+  </div>
+</div>
 <script>
 let currentData = [], availableTags =[];
-
-function switchAdminTab(tabId, el) {['softwareTab', 'tagManagerTab', 'recruitTab', 'userSoftsTab', 'snsPromoTab', 'settingsTab'].forEach(id => document.getElementById(id).style.display='none');
+function switchAdminTab(tabId, el) {['softwareTab', 'webtabsTab', 'tagManagerTab', 'recruitTab', 'userSoftsTab', 'snsPromoTab', 'settingsTab'].forEach(id => document.getElementById(id).style.display='none');
   document.getElementById(tabId).style.display='block';
   document.querySelectorAll('.admin-tab').forEach(e => e.classList.remove('active')); el.classList.add('active');
   if(tabId==='tagManagerTab') loadTags();
   if(tabId==='softwareTab') { loadTags(); loadItems(); }
   if(tabId==='settingsTab') loadSettings();
 }
-
 async function checkAuth() {
   try {
     const res = await fetch("/api/me"); const data = await res.json();
@@ -218,7 +224,6 @@ async function checkAuth() {
     else document.getElementById("loginPanel").style.display = "block";
   } catch (e) { document.getElementById("loginPanel").style.display = "block"; }
 }
-
 document.getElementById('set_bg_image').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if(file) {
@@ -227,7 +232,6 @@ document.getElementById('set_bg_image').addEventListener('change', function(e) {
     else { vidPrev.style.display='none'; imgPrev.src = URL.createObjectURL(file); imgPrev.style.display='block'; }
   }
 });
-
 async function loadSettings() {
   const res = await fetch("/api/settings"); const data = await res.json();
   document.getElementById("set_hero_title").value = data.hero_title || ""; document.getElementById("set_hero_subtitle").value = data.hero_subtitle || "";
@@ -244,7 +248,6 @@ async function saveSettings() {
   const bgFile = document.getElementById("set_bg_image").files[0]; if(bgFile) fd.append("bg_image", bgFile);
   await fetch("/api/settings", { method: "POST", body: fd }); alert("Saved!"); loadSettings();
 }
-
 async function loadTags() {
   const res = await fetch("/api/tags"); availableTags = await res.json();
   document.getElementById("tagList").innerHTML = availableTags.map(t => `<div class="item"><div class="item-info"><strong style="color:${t.color}">${t.name}</strong></div><button class="del-btn" onclick="delTag(${t.id})">DEL</button></div>`).join("");
@@ -255,7 +258,6 @@ async function delTag(id) { if(confirm("Del?")) { await fetch("/api/tags/"+id, {
 function renderTagSelector(cid, sIds=[]) { const c = document.getElementById(cid); c.innerHTML = ""; availableTags.forEach(t => { const isSel = sIds.includes(t.id) ? "selected" : ""; const style = isSel ? `background:${t.color}22; border-color:${t.color}; color:${t.color};` : `border-color:#444; color:#888;`; c.innerHTML += `<div class="tag-option ${isSel}" style="${style}" onclick="toggleTag(this,${t.id})" data-id="${t.id}">${t.name}</div>`; }); }
 function toggleTag(el, id) { el.classList.toggle("selected"); const t = availableTags.find(x=>x.id===id); el.style.cssText = el.classList.contains("selected") ? `background:${t.color}22; border-color:${t.color}; color:${t.color};` : `border-color:#444; color:#888;`; }
 function getSelectedTagIds(cid) { return Array.from(document.querySelectorAll(`#${cid} .tag-option.selected`)).map(e => parseInt(e.dataset.id)); }
-
 async function loadItems(){
   const res = await fetch("/api/software"); currentData = await res.json();
   document.getElementById("statTotal").innerText = currentData.length; document.getElementById("statZipDl").innerText = currentData.reduce((s,i)=>s+(i.zip_downloads||0),0); document.getElementById("statApkDl").innerText = currentData.reduce((s,i)=>s+(i.apk_downloads||0),0);
@@ -294,14 +296,19 @@ async function saveEdit() {
   if(res.ok) { closeModal(); loadItems(); } else { alert("Update failed."); }
 }
 async function delItem(id){ if(confirm("Delete?")) { await fetch("/api/software/" + id, { method: "DELETE" }); loadItems(); } }
-
 async function loadRecruits() { const res = await fetch("/api/recruit/applications"); const data = await res.json(); document.getElementById("recruit-list").innerHTML = data.length ? data.map(i => `<div class="item"><div class="item-info"><strong style="color:var(--primary);">${i.discord_username} (${i.discord_id})</strong><p style="font-size:12px;">${i.message}</p></div><button class="del-btn" onclick="delRecruit(${i.id})">DEL</button></div>`).join("") : "<p>No apps</p>"; }
 async function delRecruit(id){ if(confirm("Del?")) { await fetch("/api/recruit/applications/"+id, {method:"DELETE"}); loadRecruits(); }}
 async function loadUserItems() { const res = await fetch("/api/user_software"); const data = await res.json(); document.getElementById("user-list").innerHTML = data.map(i=>`<div class="item"><div class="item-info"><strong>${i.name}</strong><span>by ${i.author_name}</span></div><button class="del-btn" onclick="delUser(${i.id})">DEL</button></div>`).join(""); }
 async function delUser(id){ if(confirm("Del?")) { await fetch("/api/user_software/"+id, {method:"DELETE"}); loadUserItems(); }}
 async function loadSnsItems() { const res = await fetch("/api/sns"); const data = await res.json(); document.getElementById("sns-list").innerHTML = data.map(i=>`<div class="item"><div class="item-info"><strong>${i.user_name}</strong><span>${i.url}</span></div><button class="del-btn" onclick="delSns(${i.id})">DEL</button></div>`).join(""); }
 async function delSns(id){ if(confirm("Del?")) { await fetch("/api/sns/"+id, {method:"DELETE"}); loadSnsItems(); }}
-
+let webTabsData = [];
+async function loadWebTabs() { const res = await fetch("/api/webtabs"); webTabsData = await res.json(); document.getElementById("webtabs-list").innerHTML = webTabsData.length ? webTabsData.map(i => `<div class="item"><div class="item-info"><strong style="color:var(--primary);">${i.name}</strong><p style="font-size:12px;">${i.url}</p><p style="font-size:11px; color:#aaa;">${i.description || ""}</p></div><div class="btn-group"><button class="edit-btn" onclick="openWebTabEdit(${i.id})">EDIT</button><button class="del-btn" onclick="delWebTab(${i.id})">DEL</button></div></div>`).join("") : "<p>No Web Tabs</p>"; }
+async function addWebTab() { const name = document.getElementById("webtabName").value; const url = document.getElementById("webtabUrl").value; const desc = document.getElementById("webtabDesc").value; if(!name || !url) return alert("Name and URL required"); await fetch("/api/webtabs", { method: "POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name, url, description:desc}) }); document.getElementById("webtabName").value=""; document.getElementById("webtabUrl").value=""; document.getElementById("webtabDesc").value=""; loadWebTabs(); }
+async function delWebTab(id) { if(confirm("Del?")) { await fetch("/api/webtabs/"+id, {method:"DELETE"}); loadWebTabs(); } }
+function openWebTabEdit(id) { const item = webTabsData.find(d => d.id === id); if(!item) return; document.getElementById("editWebTabId").value = item.id; document.getElementById("editWebTabName").value = item.name; document.getElementById("editWebTabUrl").value = item.url; document.getElementById("editWebTabDesc").value = item.description || ""; document.getElementById("editWebTabModal").style.display = "flex"; }
+function closeWebTabModal() { document.getElementById("editWebTabModal").style.display = "none"; }
+async function saveWebTabEdit() { const id = document.getElementById("editWebTabId").value; await fetch("/api/webtabs/"+id, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name: document.getElementById("editWebTabName").value, url: document.getElementById("editWebTabUrl").value, description: document.getElementById("editWebTabDesc").value})}); closeWebTabModal(); loadWebTabs(); }
 window.onload = checkAuth;
 </script>
 </body>
